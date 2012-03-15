@@ -1,0 +1,24 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="horizontal"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:padding="10dp">
+    <TextView android:id="@+id/inputDialogMessage"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"/>
+    <EditText android:id="@+id/inputDialogField"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"/>
+    <LinearLayout android:orientation="vertical"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content">
+        <Button android:id="@+id/inputDialogOk"
+                android:text="@string/inputDialogOk"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        <Button android:id="@+id/inputDialogCancel"
+                android:text="@string/inputDialogCancel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+    </LinearLayout>
+</LinearLayout>

@@ -3,4 +3,10 @@
     <string name="registerProduct">Register</string>
     <string name="showProduct">Show</string>
     <string name="removeProduct">Remove</string>
+
+    <string name="mockScanTitle">Mock Scan Code Input</string>
+    <string name="mockScanMessage">Enter code</string>
+
+    <string name="inputDialogOk">Ok</string>
+    <string name="inputDialogCancel">Cancel</string>
 </resources>
