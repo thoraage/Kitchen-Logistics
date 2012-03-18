@@ -1,26 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
+              a:orientation="vertical"
+              a:layout_width="wrap_content"
+              a:layout_height="wrap_content">
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content">
+    <LinearLayout a:orientation="horizontal"
+                  a:layout_width="wrap_content"
+                  a:layout_height="wrap_content">
+        <Button a:id="@+id/registerProductButton"
+                a:text="@string/registerProduct"
+                a:layout_width="wrap_content"
+                a:layout_height="wrap_content"/>
 
-    <TextView android:id="@+id/textview"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"/>
+        <Button a:id="@+id/showProductButton"
+                a:text="@string/showProduct"
+                a:layout_width="wrap_content"
+                a:layout_height="wrap_content"/>
 
-    <Button android:id="@+id/registerProductButton"
-            android:text="@string/registerProduct"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+        <Button a:id="@+id/removeProductButton"
+                a:text="@string/removeProduct"
+                a:layout_width="wrap_content"
+                a:layout_height="wrap_content"/>
+    </LinearLayout>
 
-    <Button android:id="@+id/showProductButton"
-            android:text="@string/showProduct"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-
-    <Button android:id="@+id/removeProductButton"
-            android:text="@string/removeProduct"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+    <ListView a:id="@+id/scannedItemList"
+              a:layout_width="fill_parent"
+              a:layout_height="fill_parent"/>
 
 </LinearLayout>
