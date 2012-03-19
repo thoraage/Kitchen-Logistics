@@ -5,18 +5,22 @@ import android.view.View
 import android.widget.ArrayAdapter
 import collection.JavaConversions._
 
-class MainActivity extends TypedActivity with LocalSQLiteStorage with MockDialogScanner with Dialogs {
+class MainActivity extends TypedActivity with LocalSQLiteStorage with ZXingScanner with Dialogs {
+
+  def updateItemsList() {
+    val items = database.findItems().map(_.product.name)
+    findView(TR.scannedItemList).setAdapter(new ArrayAdapter(this, R.layout.itemlistitem, items))
+  }
 
   override def onCreate(bundle: Bundle) {
     super.onCreate(bundle)
     setContentView(R.layout.main)
-
+    updateItemsList()
     findView(TR.registerProductButton).setOnClickListener {
       (_: View) => startScanner {
         def createItem(product: Product) {
           database.saveItem(Item(None, product.id.get))
-          val items = database.findItems().map(_.product.name)
-          findView(TR.scannedItemList).setAdapter(new ArrayAdapter(this, R.layout.itemlistitem, items))
+          updateItemsList()
         }
         code =>
           database.findProductByCode(code).map(createItem).getOrElse {
