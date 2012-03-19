@@ -7,6 +7,9 @@
     <string name="mockScanTitle">Mock Scan Code Input</string>
     <string name="mockScanMessage">Enter code</string>
 
+    <string name="productNameTitle">Unknown Product</string>
+    <string name="productNameMessage">Please enter name</string>
+
     <string name="inputDialogOk">Ok</string>
     <string name="inputDialogCancel">Cancel</string>
 </resources>
