@@ -62,10 +62,11 @@ trait LocalSQLiteStorage extends Storage {
 
     def retrieveAll[T](cursor: Cursor)(f: => T): Seq[T] = {
       var result: List[T] = Nil
-      cursor.moveToFirst()
-      do {
-        result = f :: result
-      } while (cursor.moveToNext())
+      if (cursor.moveToFirst()) {
+        do {
+          result = f :: result
+        } while (cursor.moveToNext())
+      }
       result
     }
 

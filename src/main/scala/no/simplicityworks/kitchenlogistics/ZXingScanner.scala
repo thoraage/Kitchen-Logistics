@@ -7,19 +7,20 @@ object ZXingScanner {
   val scannerRequestCode = 6739477
 }
 
-trait ZXingScanner extends Scanner {
+trait ZXingScanner extends Scanner with Dialogs {
   this: Activity with TypedActivity with Storage =>
 
-  var f: Option[(String) => Unit] = None
+  var onScanSuccess: Option[(String) => Unit] = None
 
   override def startScanner(f: (String) => Unit) {
     try {
-      this.f = Some(f)
+      this.onScanSuccess = Some(f)
       val intent = new Intent("com.google.zxing.client.android.SCAN");
       startActivityForResult(intent, ZXingScanner.scannerRequestCode);
     } catch {
       case e: ActivityNotFoundException =>
-        // TODO
+      this.onScanSuccess = None
+      createInfoDialog(935723, R.string.scanNotInstalledTitle, R.string.scanNotInstalledMessage)
     }
   }
 
@@ -27,10 +28,11 @@ trait ZXingScanner extends Scanner {
     if (requestCode == ZXingScanner.scannerRequestCode) {
       if (resultCode == Activity.RESULT_OK) {
         val code = intent.getStringExtra("SCAN_RESULT")
-        f.map(_(code))
+        onScanSuccess.map(_(code))
       } else if (resultCode == Activity.RESULT_CANCELED) {
-        // TODO
+        createInfoDialog(8768343, R.string.noResultTitle, R.string.noResultMessage)
       }
+      onScanSuccess = None
     }
     // TODO super.onActivityResult(requestCode, resultCode, intent)
   }
