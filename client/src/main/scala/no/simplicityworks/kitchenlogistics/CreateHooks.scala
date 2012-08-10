@@ -1,9 +1,7 @@
 package no.simplicityworks.kitchenlogistics
 
-/**
- * @author Thor Åge Eldby (thoraageeldby@gmail.com)
- */
+import android.os.Bundle
 
 trait CreateHooks {
-
+  var createHooks: Seq[(Bundle) => Unit] = Nil
 }

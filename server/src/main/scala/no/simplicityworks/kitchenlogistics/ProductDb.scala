@@ -7,9 +7,9 @@ import org.scalaquery.ql.TypeMapper._
 import java.sql.{DriverManager, Connection}
 import org.scalaquery.session.{BaseSession, Database}
 
-object PersonDb {
+object ProductDb {
 
-  val T = new ExtendedTable[(Int, String)]("TTT") {
+  val Products = new ExtendedTable[(Int, String)]("TTT") {
     def id = column[Int]("ID", O.PrimaryKey)
 
     def name = column[String]("NAME")
@@ -30,13 +30,11 @@ object PersonDb {
   }*/
 
   database withSession {
-    T.ddl.create
-    T.insert(1, "Hei")
-    T.insert(2, "Yo")
-    println("### yes")
-    (for (t <- T) yield t.name)
-      .foreach(println)
-    println("### lets do it")
+    Products.ddl.create
+/*    Products insertAll(
+      (1, "Hei"),
+      (2, "Yo")
+      )*/
   }
 
 }

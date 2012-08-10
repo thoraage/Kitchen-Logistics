@@ -3,11 +3,17 @@ package no.simplicityworks.kitchenlogistics
 import android.app.Dialog
 import android.view.View
 
+object Dialogs {
+  var inputSuccessFunctionMap: Map[Int, (String) => Unit] = Map()
+}
+
 trait Dialogs {
   this: TypedActivity =>
 
+  var createDialogMap: Map[Int, () => Dialog] = Map()
+
   def createInputDialog(dialogDiscriminatorId: Int, titleId: Int, messageId: Int, f: (String) => Unit) {
-    inputSuccessFunctionMap += (dialogDiscriminatorId -> f)
+    Dialogs.inputSuccessFunctionMap += (dialogDiscriminatorId -> f)
     createDialog(dialogDiscriminatorId) {
       () =>
         val dialog = new Dialog(this) with TypedDialog
@@ -15,13 +21,14 @@ trait Dialogs {
         dialog.setTitle(titleId)
         dialog.findView(TR.inputDialogMessage).setText(messageId)
         def removeDialog(dialog: Dialog with TypedDialog) {
-          inputSuccessFunctionMap -= dialogDiscriminatorId
+          Dialogs.inputSuccessFunctionMap -= dialogDiscriminatorId
+          createDialogMap -= dialogDiscriminatorId
           dialog.dismiss()
         }
         dialog.findView(TR.inputDialogOk).setOnClickListener {
           (_: View) =>
             val input = dialog.findView(TR.inputDialogField)
-            inputSuccessFunctionMap.get(dialogDiscriminatorId).map(_(input.getText.toString))
+            Dialogs.inputSuccessFunctionMap.get(dialogDiscriminatorId).map(_(input.getText.toString))
             input.getText.clear()
             removeDialog(dialog)
         }
@@ -43,14 +50,12 @@ trait Dialogs {
         dialog.findView(TR.inputDialogMessage).setText(messageId)
         dialog.findView(TR.inputDialogOk).setOnClickListener {
           (_: View) =>
+            createDialogMap -= dialogDiscriminatorId
             dialog.dismiss()
         }
         dialog
     }
   }
-
-  var inputSuccessFunctionMap: Map[Int, (String) => Unit] = Map()
-  var createDialogMap: Map[Int, () => Dialog] = Map()
 
   def createDialog(id: Int)(createF: () => Dialog) {
     createDialogMap += (id -> createF)
@@ -65,7 +70,6 @@ trait Dialogs {
         // TODO nothing?
         null
     }
-    createDialogMap -= id
     dialog
   }
 
