@@ -1,35 +1,32 @@
 package no.simplicityworks.kitchenlogistics
 
-import org.specs2.mutable._
-import cc.spray._
-import test._
-import http._
-import HttpMethods._
-import StatusCodes._
 import org.scalaquery.session._
 import org.scalaquery.ql.basic.BasicDriver.Implicit._
+import org.specs.Specification
+import dispatch.Http
 
-class StorageServiceSpec extends Specification with SprayTest with StorageService {
+class StorageServiceSpec extends Specification with unfiltered.spec.jetty.Served {
 
-  ProductDb.database withSession { session: Session =>
-    implicit val s = session
-    ProductDb.Products insertAll(
-      (1, "Hei"),
-      (2, "Yo")
-      )
+  ProductDb.database withSession {
+    session: Session =>
+      implicit val s = session
+      Products insertAll(
+        Product(Some(1), "11", "Hei"),
+        Product(Some(2), "21", "Yo")
+        )
+  }
+
+  def setup = {
+    _.filter(new StorageService {})
   }
 
   "The StorageService" should {
-    "return a list of products for GET requests on existing products" in {
-      testService(HttpRequest(GET, "/rest/products")) {
-        storageService
-      }.response.content.as[String] mustEqual Right("Say hello to Spray!")
+    "return empty list of products for non-matching code" in {
+      Http(host / "rest/products/code:78" as_str) must_== "[]"
     }
 
-    "return saved product with product id for accepted PUT requests" in {
-      testService(HttpRequest(POST, "/rest/products?code=271")) {
-        storageService
-      }.response mustEqual HttpResponse(MethodNotAllowed, "HTTP method not allowed, supported methods: GET")
+    "return single item list of products for matching code" in {
+      Http(host / "rest/products/code:11" as_str) must_== """[{"id":1,"code":"11","name":"Hei"}]"""
     }
   }
 
