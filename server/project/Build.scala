@@ -19,6 +19,7 @@ object Build extends sbt.Build {
       libraryDependencies ++= Seq(
         Compile.akkaActor,
         Compile.sprayServer,
+        Compile.sprayJson,
         Compile.scalaQuery,
         Compile.h2,
         Compile.c3p0,
@@ -50,6 +51,7 @@ object Dependencies {
   object Compile {
     val akkaActor   = "se.scalablesolutions.akka" %  "akka-actor"      % V.akka    % "compile"
     val sprayServer = "cc.spray"                  %  "spray-server"    % V.spray   % "compile"
+    val sprayJson   = "cc.spray"                  %% "spray-json"      % "1.1.1"   % "compile"
     val scalaQuery  = "org.scalaquery"            %% "scalaquery"      % "0.10.0-M1" % "compile"
     val h2          = "com.h2database"            %  "h2"              % "1.3.166" % "compile"
     val c3p0        = "c3p0"                      %  "c3p0"            % "0.9.1.2" % "compile"

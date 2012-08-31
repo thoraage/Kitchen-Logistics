@@ -7,15 +7,24 @@ import org.scalaquery.ql.TypeMapper._
 import java.sql.{DriverManager, Connection}
 import org.scalaquery.session.{BaseSession, Database}
 
+
+case class Product(id: Option[Int], code: String, name: String)
+
+case class Item(id: Option[Int], productId: Long) {
+  //lazy val product = database.findProductById(productId)
+}
+
+object Products extends ExtendedTable[Product]("PRODUCT") {
+  def id = column[Int]("ID", O.PrimaryKey)
+
+  def code = column[String]("CODE")
+
+  def name = column[String]("NAME")
+
+  def * = id.orElse(null) ~ code ~ name <> (Product, Product.unapply _)
+}
+
 object ProductDb {
-
-  val Products = new ExtendedTable[(Int, String)]("TTT") {
-    def id = column[Int]("ID", O.PrimaryKey)
-
-    def name = column[String]("NAME")
-
-    def * = id ~ name
-  }
 
   //val database = Database.forURL("jdbc:h2:mem:test1", driver = "org.h2.Driver")
 
