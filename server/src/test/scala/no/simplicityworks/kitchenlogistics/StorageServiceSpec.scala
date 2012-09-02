@@ -11,8 +11,8 @@ class StorageServiceSpec extends Specification with unfiltered.spec.jetty.Served
     session: Session =>
       implicit val s = session
       Products insertAll(
-        Product(Some(1), "11", "Hei"),
-        Product(Some(2), "21", "Yo")
+        Product(None, "11", "Hei"),
+        Product(None, "21", "Yo")
         )
   }
 
@@ -22,11 +22,18 @@ class StorageServiceSpec extends Specification with unfiltered.spec.jetty.Served
 
   "The StorageService" should {
     "return empty list of products for non-matching code" in {
-      Http(host / "rest/products/code:78" as_str) must_== "[]"
+      val result = Http(host / "rest/products" <<? Map("code" -> "78") as_str)
+      result must_== "[]"
     }
 
-    "return single item list of products for matching code" in {
-      Http(host / "rest/products/code:11" as_str) must_== """[{"id":1,"code":"11","name":"Hei"}]"""
+    "return single product for matching code" in {
+      val result = Http(host / "rest/products" <<? Map("code" -> "11") as_str)
+      result must_== """[{"id":1,"code":"11","name":"Hei"}]"""
+    }
+
+    "be able to put a product and get it in return with id" in {
+      val result = Http(host / "rest/products" <<< """{"code":"28","name":"Hopp"}""" as_str)
+      result must beMatching("""\{"id":\d+,"code":"28","name":"Hopp"\}""")
     }
   }
 

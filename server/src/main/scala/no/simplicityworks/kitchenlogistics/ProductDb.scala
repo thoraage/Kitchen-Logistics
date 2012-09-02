@@ -4,8 +4,6 @@ import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.ql.extended.ExtendedTable
 import org.scalaquery.ql.extended.H2Driver.Implicit._
 import org.scalaquery.ql.TypeMapper._
-import java.sql.{DriverManager, Connection}
-import org.scalaquery.session.{BaseSession, Database}
 
 
 case class Product(id: Option[Int], code: String, name: String)
@@ -15,7 +13,8 @@ case class Item(id: Option[Int], productId: Long) {
 }
 
 object Products extends ExtendedTable[Product]("PRODUCT") {
-  def id = column[Int]("ID", O.PrimaryKey)
+
+  def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
 
   def code = column[String]("CODE")
 
