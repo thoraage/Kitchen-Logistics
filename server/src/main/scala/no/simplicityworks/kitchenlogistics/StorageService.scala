@@ -13,6 +13,7 @@ trait StorageService extends unfiltered.filter.Plan {
   val identityFunction = SimpleFunction.nullary[Int]("identity")
 
   val ProductsPath = "rest" :: "products" :: Nil
+  val ItemsPath = "rest" :: "items" :: Nil
 
   override def intent = {
     case GET(Path(Seg(ProductsPath))) & Params(params) =>
@@ -35,9 +36,17 @@ trait StorageService extends unfiltered.filter.Plan {
             implicit val s = session
             Products insertValue(read[Product](Body.string(req)))
             Query(Products).where(_.id === Query(identityFunction).first).list.head
-            //JInt(Query(identityFunction).first)
         })
       )
 
+    case req @ PUT(Path(Seg(ItemsPath))) =>
+      ResponseString(
+        write(ProductDb.database withSession {
+          session: Session =>
+            implicit val s = session
+            Items insertValue read[Item](Body.string(req))
+            Query(Items).where(_.id === Query(identityFunction).first).list.head
+        })
+      )
   }
 }

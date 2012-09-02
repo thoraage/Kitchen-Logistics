@@ -35,6 +35,11 @@ class StorageServiceSpec extends Specification with unfiltered.spec.jetty.Served
       val result = Http(host / "rest/products" <<< """{"code":"28","name":"Hopp"}""" as_str)
       result must beMatching("""\{"id":\d+,"code":"28","name":"Hopp"\}""")
     }
+
+    "be able to put an item on a product and get it in return with id" in {
+      val result = Http(host / "rest/items" <<< """{"productId": 1}""" as_str)
+      result must beMatching("""\{"id":\d+\,"productId":1\}""")
+    }
   }
 
 }
