@@ -17,7 +17,7 @@ class StorageServiceSpec extends Specification with unfiltered.spec.jetty.Served
   }
 
   def setup = {
-    _.filter(new StorageService {})
+    _.filter(new StorageService with ThreadMountedScalaQuerySession {})
   }
 
   "The StorageService" should {

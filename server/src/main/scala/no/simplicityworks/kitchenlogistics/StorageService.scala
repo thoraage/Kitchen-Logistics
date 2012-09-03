@@ -3,12 +3,12 @@ package no.simplicityworks.kitchenlogistics
 import net.liftweb.json._
 import Serialization._
 import org.scalaquery.ql.basic.BasicDriver.Implicit._
-import org.scalaquery.session.Session
 import unfiltered.request._
 import unfiltered.response._
 import org.scalaquery.ql.{SimpleFunction, Query}
+import unfiltered.filter.Plan
 
-trait StorageService extends unfiltered.filter.Plan {
+trait StorageService extends Plan with ScalaQuerySession {
   implicit val formats = DefaultFormats
   val identityFunction = SimpleFunction.nullary[Int]("identity")
 
@@ -19,34 +19,17 @@ trait StorageService extends unfiltered.filter.Plan {
     case GET(Path(Seg(ProductsPath))) & Params(params) =>
       params.get("code") match {
         case Some(Seq(code)) =>
-          ResponseString(
-            write(ProductDb.database withSession {
-              session: Session =>
-                implicit val s = session
-                Query(Products).where(_.code === code).list
-            }))
+          ResponseString(write(Query(Products).where(_.code === code).list))
         case _ =>
           NotFound ~> ResponseString("Missing code")
       }
 
-    case req @ PUT(Path(Seg(ProductsPath))) =>
-      ResponseString(
-        write(ProductDb.database withSession {
-          session: Session =>
-            implicit val s = session
-            Products insertValue(read[Product](Body.string(req)))
-            Query(Products).where(_.id === Query(identityFunction).first).list.head
-        })
-      )
+    case req@PUT(Path(Seg(ProductsPath))) =>
+      Products insertValue (read[Product](Body.string(req)))
+      ResponseString(write(Query(Products).where(_.id === Query(identityFunction).first).list.head))
 
-    case req @ PUT(Path(Seg(ItemsPath))) =>
-      ResponseString(
-        write(ProductDb.database withSession {
-          session: Session =>
-            implicit val s = session
-            Items insertValue read[Item](Body.string(req))
-            Query(Items).where(_.id === Query(identityFunction).first).list.head
-        })
-      )
+    case req@PUT(Path(Seg(ItemsPath))) =>
+      Items insertValue read[Item](Body.string(req))
+      ResponseString(write(Query(Items).where(_.id === Query(identityFunction).first).list.head))
   }
 }
