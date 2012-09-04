@@ -12,9 +12,10 @@ trait ThreadMountedScalaQuerySession extends ScalaQuerySession {
   override def intent = {
     case req =>
       ProductDb.database withSession {
-        session => sessionDynamicVariable.withValue(Some(session)) {
-          super.intent(req)
-        }
+        session =>
+          sessionDynamicVariable.withValue(Some(session)) {
+            super.intent(req)
+          }
       }
   }
 

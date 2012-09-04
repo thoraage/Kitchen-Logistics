@@ -5,7 +5,7 @@ import unfiltered.filter.Plan
 
 trait ScalaQuerySession extends Plan {
 
-  implicit def session: Session
+  protected implicit def session: Session
 
   def intent = {
     case _ => sys.error("Need to be backed by a real plan intent")
