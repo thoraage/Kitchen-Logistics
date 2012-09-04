@@ -5,44 +5,33 @@ import org.scalaquery.ql.extended.ExtendedTable
 import org.scalaquery.ql.extended.H2Driver.Implicit._
 import org.scalaquery.ql.TypeMapper._
 
-
 case class Product(id: Option[Int], code: String, name: String)
 
 case class Item(id: Option[Int], productId: Int) {
   //lazy val product = database.findProductById(productId)
 }
 
-object Products extends ExtendedTable[Product]("PRODUCT") {
-  def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
+trait ProductDatabase {
 
-  def code = column[String]("CODE")
+  object Products extends ExtendedTable[Product]("PRODUCT") {
+    def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
 
-  def name = column[String]("NAME")
+    def code = column[String]("CODE")
 
-  def * = id.orElse(null) ~ code ~ name <> (Product, Product.unapply _)
-}
+    def name = column[String]("NAME")
 
-object Items extends ExtendedTable[Item]("ITEM") {
-  def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
+    def * = id.orElse(null) ~ code ~ name <>(Product, Product.unapply _)
+  }
 
-  def productId = column[Int]("PRODUCT_ID")
+  object Items extends ExtendedTable[Item]("ITEM") {
+    def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
 
-  def * = id.orElse(null) ~ productId <> (Item, Item.unapply _)
-}
+    def productId = column[Int]("PRODUCT_ID")
 
-object ProductDb {
+    def * = id.orElse(null) ~ productId <>(Item, Item.unapply _)
+  }
 
-  //val database = Database.forURL("jdbc:h2:mem:test1", driver = "org.h2.Driver")
-
-  val database = new C3P0Database("jdbc:h2:mem:test1")/*new Database {
-    Class.forName("org.h2.Driver")
-
-    protected[session] def createConnection(): Connection = DriverManager.getConnection("jdbc:h2:mem:test1", null)
-
-    override def createSession() = new BaseSession(this) {
-      override def close() {}
-    }
-  }*/
+  val database = new C3P0Database("jdbc:h2:mem:test1")
 
   database withSession {
     Products.ddl.create

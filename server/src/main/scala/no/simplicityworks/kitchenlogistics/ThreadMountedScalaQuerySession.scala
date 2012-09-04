@@ -3,7 +3,7 @@ package no.simplicityworks.kitchenlogistics
 import util.DynamicVariable
 import org.scalaquery.session.Session
 
-trait ThreadMountedScalaQuerySession extends ScalaQuerySession {
+trait ThreadMountedScalaQuerySession extends ScalaQuerySession with ProductDatabase {
 
   private val sessionDynamicVariable = new DynamicVariable[Option[Session]](None)
 
@@ -11,7 +11,7 @@ trait ThreadMountedScalaQuerySession extends ScalaQuerySession {
 
   override def intent = {
     case req =>
-      ProductDb.database withSession {
+      database withSession {
         session =>
           sessionDynamicVariable.withValue(Some(session)) {
             super.intent(req)

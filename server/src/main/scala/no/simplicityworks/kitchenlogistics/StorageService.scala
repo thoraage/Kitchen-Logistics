@@ -8,7 +8,7 @@ import unfiltered.response._
 import org.scalaquery.ql.{SimpleFunction, Query}
 import unfiltered.filter.Plan
 
-trait StorageService extends Plan with ScalaQuerySession {
+trait StorageService extends Plan with ScalaQuerySession with ProductDatabase {
   implicit val formats = DefaultFormats
   val identityFunction = SimpleFunction.nullary[Int]("identity")
 

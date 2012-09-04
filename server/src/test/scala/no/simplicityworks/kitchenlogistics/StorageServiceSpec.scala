@@ -7,17 +7,17 @@ import dispatch.Http
 
 class StorageServiceSpec extends Specification with unfiltered.spec.jetty.Served {
 
-  ProductDb.database withSession {
-    session: Session =>
-      implicit val s = session
-      Products insertAll(
-        Product(None, "11", "Hei"),
-        Product(None, "21", "Yo")
-        )
-  }
-
   def setup = {
-    _.filter(new StorageService with ThreadMountedScalaQuerySession {})
+    _.filter(new StorageService with ThreadMountedScalaQuerySession with ProductDatabase {
+      database withSession {
+        session: Session =>
+          implicit val s = session
+          Products insertAll(
+            Product(None, "11", "Hei"),
+            Product(None, "21", "Yo")
+            )
+      }
+    })
   }
 
   "The StorageService" should {
