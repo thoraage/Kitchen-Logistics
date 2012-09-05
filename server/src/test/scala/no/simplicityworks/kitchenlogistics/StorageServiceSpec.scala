@@ -3,7 +3,7 @@ package no.simplicityworks.kitchenlogistics
 import org.scalaquery.session._
 import org.scalaquery.ql.basic.BasicDriver.Implicit._
 import org.specs.Specification
-import dispatch.Http
+import dispatch.{StatusCode, Http}
 
 class StorageServiceSpec extends Specification with unfiltered.spec.jetty.Served {
 
@@ -39,6 +39,22 @@ class StorageServiceSpec extends Specification with unfiltered.spec.jetty.Served
     "be able to put an item on a product and get it in return with id" in {
       val result = Http(host / "rest/items" <<< """{"productId": 1}""" as_str)
       result must beMatching("""\{"id":\d+\,"productId":1\}""")
+    }
+
+    "be able to delete an item" in {
+      val Id = """.*"id" *: *(\d)*.*""".r
+      Http(host / "rest/items" <<< """{"productId": 1}""" as_str) match {
+        case Id(id) =>
+          Http((host / ("rest/items/" + id) DELETE) as_str)
+          try {
+            Http(host / ("rest/items/" + id) as_str)
+            fail("Not deleted")
+          } catch {
+            case e: StatusCode => e.code must_== 404
+            case e => fail("Wrong error: " + e.toString)
+          }
+        case _ => fail("Id not found")
+      }
     }
   }
 
