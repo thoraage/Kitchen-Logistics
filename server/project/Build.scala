@@ -21,6 +21,7 @@ object Build extends sbt.Build {
         "net.databinder" %% "unfiltered-json" % "0.6.4",
         "org.scalaquery" %% "scalaquery" % "0.10.0-M1",
         "com.h2database" % "h2" % "1.3.166",
+        "net.databinder" %% "unfiltered-jetty" % "0.6.4",
         "c3p0" % "c3p0" % "0.9.1.2"
       ).map(_ % "compile"),
       Seq("javax.servlet" % "javax.servlet-api" % "3.0.1" % "provided->default"),
@@ -30,7 +31,6 @@ object Build extends sbt.Build {
       ).map(_ % "test"),
       Seq(
         "org.eclipse.jetty" % "jetty-webapp" % "8.1.0.v20120127",
-        "net.databinder" %% "unfiltered-jetty" % "0.6.4",
         "org.slf4j" % "slf4j-api" % "1.6.4",
         "ch.qos.logback" % "logback-classic" % "1.0.0"
       ).map(_ % "container")

@@ -1,9 +1,7 @@
 package no.simplicityworks.kitchenlogistics
 
-class Boot {
+object Boot extends App {
   
-  val mainModule = new StorageService with ThreadMountedScalaQuerySession {
-    // bake your module cake here
-  }
+  new StorageServiceComponent {}
 
 }
