@@ -11,31 +11,35 @@ case class Item(id: Option[Int], productId: Int) {
   //lazy val product = database.findProductById(productId)
 }
 
-trait ProductDatabase {
+trait ProductDatabaseComponent {
 
-  object Products extends ExtendedTable[Product]("PRODUCT") {
-    def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
+//  trait ProductDatabase {
 
-    def code = column[String]("CODE")
+    object Products extends ExtendedTable[Product]("PRODUCT") {
+      def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
 
-    def name = column[String]("NAME")
+      def code = column[String]("CODE")
 
-    def * = id.orElse(null) ~ code ~ name <>(Product, Product.unapply _)
-  }
+      def name = column[String]("NAME")
 
-  object Items extends ExtendedTable[Item]("ITEM") {
-    def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
+      def * = id.orElse(null) ~ code ~ name <>(Product, Product.unapply _)
+    }
 
-    def productId = column[Int]("PRODUCT_ID")
+    object Items extends ExtendedTable[Item]("ITEM") {
+      def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
 
-    def * = id.orElse(null) ~ productId <>(Item, Item.unapply _)
-  }
+      def productId = column[Int]("PRODUCT_ID")
 
-  val database = new C3P0Database("jdbc:h2:mem:test1")
+      def * = id.orElse(null) ~ productId <>(Item, Item.unapply _)
+    }
 
-  database withSession {
-    Products.ddl.create
-    Items.ddl.create
-  }
+    val database = new C3P0Database("jdbc:h2:mem:test1")
+
+    database withSession {
+      Products.ddl.create
+      Items.ddl.create
+    }
+
+//  }
 
 }

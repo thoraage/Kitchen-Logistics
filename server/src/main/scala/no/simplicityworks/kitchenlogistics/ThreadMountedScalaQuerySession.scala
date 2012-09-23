@@ -3,20 +3,25 @@ package no.simplicityworks.kitchenlogistics
 import util.DynamicVariable
 import org.scalaquery.session.Session
 
-trait ThreadMountedScalaQuerySession extends ScalaQuerySession with ProductDatabase {
+trait ThreadMountedScalaQuerySessionComponent {
+  this: ProductDatabaseComponent =>
 
-  private val sessionDynamicVariable = new DynamicVariable[Option[Session]](None)
+  trait ThreadMountedScalaQuerySession extends ScalaQuerySession {
 
-  override def session = sessionDynamicVariable.value.get
+    private val sessionDynamicVariable = new DynamicVariable[Option[Session]](None)
 
-/*  override def intent = {
-    case req =>
-      database withSession {
-        session =>
-          sessionDynamicVariable.withValue(Some(session)) {
-            super.intent(req)
-          }
-      }
-  }*/
+    override def session = sessionDynamicVariable.value.get
+
+    override def intent = {
+      case req =>
+        database withSession {
+          session =>
+            sessionDynamicVariable.withValue(Some(session)) {
+              super.intent(req)
+            }
+        }
+    }
+
+  }
 
 }
