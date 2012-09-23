@@ -2,7 +2,6 @@ package no.simplicityworks.kitchenlogistics
 
 import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.ql.extended.ExtendedTable
-import org.scalaquery.ql.extended.H2Driver.Implicit._
 import org.scalaquery.ql.TypeMapper._
 
 case class Product(id: Option[Int], code: String, name: String)
@@ -12,8 +11,6 @@ case class Item(id: Option[Int], productId: Int) {
 }
 
 trait ProductDatabaseComponent {
-
-//  trait ProductDatabase {
 
     object Products extends ExtendedTable[Product]("PRODUCT") {
       def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
@@ -39,7 +36,5 @@ trait ProductDatabaseComponent {
       Products.ddl.create
       Items.ddl.create
     }
-
-//  }
 
 }
