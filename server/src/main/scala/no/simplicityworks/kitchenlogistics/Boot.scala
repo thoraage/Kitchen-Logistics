@@ -2,6 +2,6 @@ package no.simplicityworks.kitchenlogistics
 
 object Boot extends App {
   
-  new StorageServiceComponent {}
+  new WebServiceComponent {}
 
 }

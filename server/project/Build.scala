@@ -19,6 +19,7 @@ object Build extends sbt.Build {
         "net.databinder" %% "unfiltered" % "0.6.4",
         "net.databinder" %% "unfiltered-filter" % "0.6.4",
         "net.databinder" %% "unfiltered-json" % "0.6.4",
+        "net.databinder" %% "unfiltered-agents" % "0.6.4",
         "org.scalaquery" %% "scalaquery" % "0.10.0-M1",
         "com.h2database" % "h2" % "1.3.166",
         "net.databinder" %% "unfiltered-jetty" % "0.6.4",

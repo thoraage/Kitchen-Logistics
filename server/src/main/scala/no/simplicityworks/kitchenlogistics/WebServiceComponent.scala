@@ -1,18 +1,20 @@
 package no.simplicityworks.kitchenlogistics
 
 import net.liftweb.json._
-import Serialization._
-import org.scalaquery.ql.basic.BasicDriver.Implicit._
 import unfiltered.request._
 import unfiltered.response._
-import org.scalaquery.ql.{SimpleFunction, Query}
+import org.scalaquery.ql.{Query, SimpleFunction}
 import unfiltered.filter.Plan
 
-trait StorageServiceComponent {
+trait WebServiceComponent {
 
-  unfiltered.jetty.Http(8080).filter(new StorageService with ThreadMountedScalaQuerySession).run()
+  unfiltered.jetty.Http(8080).context("/") {
+    _.resources(getClass.getResource("/public"))
+  }.context("/scan") {
+    _.filter(new ScanServicePlan with ThreadMountedScalaQuerySession)
+  }.run()
 
-  trait StorageService extends Plan with ScalaQuerySession with ProductDatabase {
+  trait ScanServicePlan extends Plan with ScalaQuerySession with ProductDatabase {
     implicit val formats = DefaultFormats
     val identityFunction = SimpleFunction.nullary[Int]("identity")
 
@@ -37,20 +39,12 @@ trait StorageServiceComponent {
     }
 
     override def intent = {
-      case req @ GET(Path(Seg("scan" :: Nil))) =>
-        val url = req.underlying.getRequestURL
-        println("REQUEST URI: " + url)
-        Html5(
-          <h1>Hei</h1>
-          <a href={"http://zxing.appspot.com/scan?ret=" + url + "/products/{CODE}"}>Scan</a>
-        )
 
-      case GET(Path(Seg("scan" :: "products" :: code))) =>
-        println("CODE: " + code)
-        Html5(
-          <h1>Koden er</h1>
-          <span>{code}</span>
-        )
+      case GET(Path(Seg("scan" :: "products" :: code :: Nil))) =>
+        Items insertValue read[Item](Body.string(req))
+        ResponseString(write(Query(Items).where(_.id === Query(identityFunction).first).list.head))
+        Redirect("/public/")
+
     }
   }
 
