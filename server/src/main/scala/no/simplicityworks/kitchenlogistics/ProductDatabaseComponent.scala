@@ -2,6 +2,7 @@ package no.simplicityworks.kitchenlogistics
 
 import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.ql.extended.ExtendedTable
+import org.scalaquery.ql.extended.H2Driver.Implicit._
 import org.scalaquery.ql.TypeMapper._
 
 case class Product(id: Option[Int], code: String, name: String)
