@@ -2,8 +2,6 @@ package no.simplicityworks.kitchenlogistics
 
 import net.liftweb.json._
 import Serialization._
-import org.scalaquery.ql.basic.BasicDriver.Implicit._
-import org.scalaquery.ql.Query
 import unfiltered.request._
 import unfiltered.response.{Ok, NotFound, ResponseString}
 import scala.Some
@@ -42,25 +40,25 @@ trait RestWebPlanComponent extends WebPlanComponent with ThreadMountedScalaQuery
       case GET(Path(Seg(ProductsPath))) & Params(params) =>
         params.get("code") match {
           case Some(Seq(code)) =>
-            ResponseString(write(Query(Products).where(_.code === code).list))
+            ResponseString(write(Products.findByCode(code)))
           case _ =>
             NotFound ~> ResponseString("Missing code")
         }
 
       case req@PUT(Path(Seg(ProductsPath))) =>
-        Products insertValue (read[Product](Body.string(req)))
-        ResponseString(write(Query(Products).where(_.id === Query(identityFunction).first).list.head))
+        val product = Products.insert(read[Product](Body.string(req)))
+        ResponseString(write(product))
 
       case req@PUT(Path(Seg(ItemsPath))) =>
-        Items insertValue read[Item](Body.string(req))
-        ResponseString(write(Query(Items).where(_.id === Query(identityFunction).first).list.head))
+        val item = Items.insert(read[Item](Body.string(req)))
+        ResponseString(write(item))
 
       case DELETE(Path(Seg(ItemsIdPath(id)))) =>
-        Query(Items).where(_.id === id).mutate(_.delete())
+        Items.delete(id)
         Ok
 
       case GET(Path(Seg(ItemsIdPath(id)))) =>
-        val items = Query(Items).where(_.id === id).list
+        val items = Items.findById(id)
         items.headOption.map(item => ResponseString(write(item))).getOrElse(NotFound)
     }
   }
