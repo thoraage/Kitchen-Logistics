@@ -51,6 +51,8 @@ trait ProductDatabaseComponent {
       Items insertValue item
       Query(Items).where(_.id === Query(identityFunction).first).list.head
     }
+
+    def all(implicit session: Session) = Query(Items).list
   }
 
   val database = new C3P0Database("jdbc:h2:mem:test1")

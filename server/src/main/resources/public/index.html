@@ -8,8 +8,35 @@
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link rel="shortcut icon" href="img/favicon.ico">
 </head>
-<body ng-controller="PhoneListCtrl">
+<body>
 <div class="container">
+
+    <div id="scanCodeIdentification" class="hidden">
+        <h2>Unknown Scan Code</h2>
+
+        <form class="form-horizontal" ng-controller="ProductCtrl">
+            <div class="control-group">
+                <label class="control-label" for="scanCode">Code</label>
+
+                <div class="controls">
+                    <input type="text" ng-model="product.code" id="scanCode" class="span2" disabled>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="productName">Product name</label>
+
+                <div class="controls">
+                    <input type="text" ng-model="product.name" id="productName">
+                </div>
+            </div>
+            <div class="control-group">
+                <div class="controls">
+                    <button ng-click="update(product)" type="submit" class="btn">Submit</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
     <div class="row-fluid">
         <div class="span2">
             <button id="scanBtn" class="btn btn-primary btn-large btn-block">Scan</button>
@@ -18,14 +45,20 @@
             <button id="scanManyBtn" class="btn btn-primary btn-large btn-block">... continually</button>
         </div>
     </div>
-    <table class="table">
-        <tr ng-repeat="phone in phones"><td>{{phone.name}}</td><td>{{phone.snippet}}</td></tr>
+    <table class="table" ng-controller="PhoneListCtrl">
+        <tr ng-repeat="phone in phones">
+            <td>{{phone.name}}</td>
+            <td>{{phone.snippet}}</td>
+        </tr>
     </table>
 </div>
 
 <script src="js/jquery-1.8.2.min.js"></script>
 <script src="js/bootstrap.min.js"></script>
 <script src="js/angular.min.js"></script>
+<script src="js/angular-resource.min.js"></script>
+<script src="jsint/functions.js"></script>
+<script src="jsint/controllers.js"></script>
 <script src="jsint/initialise.js"></script>
 </body>
 </html>

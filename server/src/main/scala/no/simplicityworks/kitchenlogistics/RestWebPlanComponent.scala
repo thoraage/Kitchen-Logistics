@@ -37,6 +37,9 @@ trait RestWebPlanComponent extends WebPlanComponent with ThreadMountedScalaQuery
     }
 
     override def intent = {
+      case GET(Path(Seg(ItemsPath))) =>
+        ResponseString(write(Items.all))
+
       case GET(Path(Seg(ProductsPath))) & Params(params) =>
         params.get("code") match {
           case Some(Seq(code)) =>
