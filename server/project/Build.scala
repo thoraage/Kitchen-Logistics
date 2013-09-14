@@ -1,68 +1,46 @@
 import sbt._
-import com.github.siasia._
-import WebPlugin._
-import PluginKeys._
+//import com.github.siasia._
+//import WebPlugin._
+//import PluginKeys._
 import Keys._
 
 object Build extends sbt.Build {
   import Dependencies._
 
-  lazy val myProject = Project("spray-template", file("."))
-    .settings(WebPlugin.webSettings: _*)
-    .settings(port in config("container") := 8080)
+  lazy val myProject = Project("kitchen-logistics", file("."))
+//    .settings(WebPlugin.webSettings: _*)
+//    .settings(port in config("container") := 8080)
     .settings(
       organization  := "com.example",
       version       := "0.9.0",
-      scalaVersion  := "2.9.1",
+      scalaVersion  := "2.10.2",
       scalacOptions := Seq("-deprecation", "-encoding", "utf8"),
-      resolvers     ++= Dependencies.resolutionRepos,
       libraryDependencies ++= Seq(
-        Compile.akkaActor,
-        Compile.sprayServer,
-        Compile.scalaQuery,
-        Compile.h2,
-        Compile.c3p0,
-        Test.specs2,
-        Container.jettyWebApp,
-        Container.akkaSlf4j,
-        Container.slf4j,
-        Container.logback
+        "net.databinder"            %% "unfiltered-directives" % V.unfiltered,
+        "net.databinder"            %% "unfiltered-jetty" % V.unfiltered,
+        "net.databinder"            %% "unfiltered-filter" % V.unfiltered,
+        "net.databinder"            %% "unfiltered-directives" % V.unfiltered,
+        "net.databinder"            %% "unfiltered-spec" % V.unfiltered % "test",
+        "javax.servlet"             % "servlet-api"      % "2.3" % "provided",
+//        "org.eclipse.jetty"         % "jetty-webapp"     % "7.4.5.v20110725" % "container",
+    //    "org.scalaquery"            %% "scalaquery"      % "0.10.0-M1" % "compile",
+        "com.h2database"            %  "h2"              % "1.3.166" % "compile",
+        "c3p0"                      %  "c3p0"            % "0.9.1.2" % "compile",
+        "org.specs2"                %% "specs2"          % V.specs2  % "test",
+  //      "org.eclipse.jetty"         %  "jetty-webapp"    % V.jetty   % "container",
+        "org.slf4j"                 %  "slf4j-api"       % V.slf4j,
+        "ch.qos.logback"            %  "logback-classic" % V.logback
       )
     )
 }
 
 object Dependencies {
-  val resolutionRepos = Seq(
-    ScalaToolsSnapshots,
-    "Typesafe repo" at "http://repo.typesafe.com/typesafe/releases/",
-    "spray repo" at "http://repo.spray.cc/"
-  )
 
   object V {
-    val akka    = "1.3.1"
-    val spray   = "0.9.0"
-    val specs2  = "1.7.1"
+    val specs2  = "2.2"
     val jetty   = "8.1.0.v20120127"
     val slf4j   = "1.6.4"
     val logback = "1.0.0"
-  }
-
-  object Compile {
-    val akkaActor   = "se.scalablesolutions.akka" %  "akka-actor"      % V.akka    % "compile"
-    val sprayServer = "cc.spray"                  %  "spray-server"    % V.spray   % "compile"
-    val scalaQuery  = "org.scalaquery"            %% "scalaquery"      % "0.10.0-M1" % "compile"
-    val h2          = "com.h2database"            %  "h2"              % "1.3.166" % "compile"
-    val c3p0        = "c3p0"                      %  "c3p0"            % "0.9.1.2" % "compile"
-  }
-
-  object Test {
-    val specs2      = "org.specs2"                %% "specs2"          % V.specs2  % "test"
-  }
-
-  object Container {
-    val jettyWebApp = "org.eclipse.jetty"         %  "jetty-webapp"    % V.jetty   % "container"
-    val akkaSlf4j   = "se.scalablesolutions.akka" %  "akka-slf4j"      % V.akka
-    val slf4j       = "org.slf4j"                 %  "slf4j-api"       % V.slf4j
-    val logback     = "ch.qos.logback"            %  "logback-classic" % V.logback
+    val unfiltered = "0.7.0"
   }
 }
