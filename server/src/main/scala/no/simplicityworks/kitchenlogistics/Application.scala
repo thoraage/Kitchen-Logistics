@@ -7,5 +7,5 @@ object Application extends App{
   http.current.setBaseResource(Resource.newResource(getClass.getResource("/public").getFile, false))
       //.resources(getClass.getResource("/public"))
       //.context("/") { ctx: ContextBuilder => ctx.resources(getClass.getResource("/public")) }
-  http.plan(Plans.TestPlan).run()
+  http.plan(RestPlan).run()
 }
