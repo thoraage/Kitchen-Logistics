@@ -7,7 +7,7 @@ function getParameterByName(name) {
 }
 
 $(document).ready(function(){
-    var code = getParameterByName('code');
+/*    var code = getParameterByName('code');
     if (code) {
         $('#codeField').val(code);
         $('#newProductForm').removeClass('hide');
@@ -16,4 +16,5 @@ $(document).ready(function(){
     var scanPath = "zxing://scan/?ret=" + encodeURIComponent(path + "?code={CODE}");
     $('#scan-new-button').attr('href', scanPath);
     $('#scan-new-button-repeat').attr('href', scanPath + "&repeat");
+*/
 });

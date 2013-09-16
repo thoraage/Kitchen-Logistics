@@ -1,15 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app>
 <head>
     <title>Kitchen Logistics</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/bootstrap.min.css">
-    <script src="js/jquery-2.0.3.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
+    <script src="js/jquery-2.0.3.js"></script>
+    <script src="js/bootstrap.js"></script>
+    <script src="js/angular.js"></script>
     <script src="js/action.js"></script>
+    <script src="js/scan-controller.js"></script>
 </head>
-<body>
+<body ng-controller="ScanController">
     <h1>Kitchen Logistics</h1>
+    <table class="table table-striped">
+        <thead><tr><th>Code</th><th>Product Name</th></tr></thead>
+        <tr ng-repeat="product in products">
+            <td>{{product.code}}</td>
+            <td>{{product.name}}</td>
+        </tr>
+    </table>
     <div class="hide" id="newProductForm">
         <h2>Unknown Code</h2>
         <form role="form">
