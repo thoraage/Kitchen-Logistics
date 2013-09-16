@@ -10,7 +10,7 @@ $(document).ready(function(){
     var code = getParameterByName('code');
     if (code) {
         $('#codeField').val(code);
-        $('#newProductForm').setVisible(true);
+        $('#newProductForm').removeClass('hide');
     }
     var path = document.location.href.split('?')[0];
     var scanPath = "zxing://scan/?ret=" + encodeURIComponent(path + "?code={CODE}");
