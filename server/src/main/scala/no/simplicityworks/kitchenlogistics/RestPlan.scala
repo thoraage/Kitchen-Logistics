@@ -21,9 +21,19 @@ object RestPlan extends Plan {
     case Seg("rest" :: "product" :: Nil) =>
       for {
         _ <- GET
-        _ <- contentType("application/json")
+        _ <- Accepts.Json
         r <- request[Any]
-      } yield Ok ~> ResponseString("Hei")
+      } yield Ok ~> ResponseString(
+        """
+          |[
+          |        {"name": "Nexus S",
+          |         "code": "5423"},
+          |        {"name": "Motorola XOOM™ with Wi-Fi",
+          |         "code": "43123"},
+          |        {"name": "MOTOROLA XOOM™",
+          |         "code": "43728432"}
+          |]
+        """.stripMargin)
   }
 
 }
