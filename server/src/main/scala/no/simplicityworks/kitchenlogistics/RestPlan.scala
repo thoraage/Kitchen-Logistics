@@ -5,12 +5,18 @@ import unfiltered.request._
 import unfiltered.response._
 import unfiltered.directives._
 import unfiltered.directives.Directives._
-import scala.io.Source
+import org.json4s.native.Serialization
+import org.json4s.native.Serialization.write
+import org.json4s.NoTypeHints
 
 object RestPlan extends Plan {
 
-  def contentType(tpe:String) =
-    when{ case RequestContentType(`tpe`) => } orElse UnsupportedMediaType ~> ResponseString("Content type supported: " + tpe)
+  implicit val formats = Serialization.formats(NoTypeHints)
+
+  def contentType(tpe: String) =
+    when {
+      case RequestContentType(`tpe`) =>
+    } orElse UnsupportedMediaType ~> ResponseString("Content type supported: " + tpe)
 
   def intent = Directive.Intent.Path {
     case Seg(Nil) =>
@@ -23,17 +29,10 @@ object RestPlan extends Plan {
         _ <- GET
         _ <- Accepts.Json
         r <- request[Any]
-      } yield Ok ~> ResponseString(
-        """
-          |[
-          |        {"name": "Nexus S",
-          |         "code": "5423"},
-          |        {"name": "Motorola XOOM™ with Wi-Fi",
-          |         "code": "43123"},
-          |        {"name": "MOTOROLA XOOM™",
-          |         "code": "43728432"}
-          |]
-        """.stripMargin)
+      } yield Ok ~> ResponseString(write(
+        Product("5423", "Nexus S") ::
+          Product("43123", "Motorola XOOM™ with Wi-Fi") ::
+          Product("43728432", "ROLA XOOM™") :: Nil))
   }
 
 }

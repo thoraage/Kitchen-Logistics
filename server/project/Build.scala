@@ -20,6 +20,7 @@ object Build extends sbt.Build {
         "net.databinder"            %% "unfiltered-jetty" % V.unfiltered,
         "net.databinder"            %% "unfiltered-filter" % V.unfiltered,
         "net.databinder"            %% "unfiltered-directives" % V.unfiltered,
+        "net.databinder"            %% "unfiltered-json4s" % V.unfiltered,
         "net.databinder"            %% "unfiltered-spec" % V.unfiltered % "test",
         "javax.servlet"             % "servlet-api"      % "2.3" % "provided",
 //        "org.eclipse.jetty"         % "jetty-webapp"     % "7.4.5.v20110725" % "container",
