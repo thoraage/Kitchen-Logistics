@@ -1,9 +1,22 @@
 function ScanController($scope, $http) {
-//    $http.defaults.headers.put['Content-Type'] = 'application/json';
-    $http.get('rest/product?' + getParameterByName('code')).success(function(data) {
-        $scope.products = data;
-        //$('#newProductForm').removeClass('hide');
+    var code = getParameterByName('code');
+    $http.get('rest/product?' + code).success(function(data) {
+        console.log("Length: " + data.length)
+        if (data.length > 1) {
+            $scope.products = data;
+            $('#multipleMatchingProductsList').removeClass('hide');
+        } else if (data.length == 0) {
+            $scope.newProduct = { code: code };
+            $('#newProductForm').removeClass('hide');
+        }
     });
+
+    $scope.saveProduct = function(product) {
+        $http.put('rest/product', product).success(function(data) {
+            alert("Da sa han: " + data);
+        });
+    };
+
     /*$scope.products = [
         {"name": "Nexus S",
          "code": "5423"},

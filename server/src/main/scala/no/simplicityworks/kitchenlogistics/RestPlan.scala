@@ -8,6 +8,7 @@ import unfiltered.directives.Directives._
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.write
 import org.json4s.NoTypeHints
+import scala.util.Random
 
 object RestPlan extends Plan {
 
@@ -30,9 +31,11 @@ object RestPlan extends Plan {
         _ <- Accepts.Json
         r <- request[Any]
       } yield Ok ~> ResponseString(write(
-        Product("5423", "Nexus S") ::
+        Array(Product("5423", "Nexus S") ::
           Product("43123", "Motorola XOOM™ with Wi-Fi") ::
-          Product("43728432", "ROLA XOOM™") :: Nil))
+          Product("43728432", "ROLA XOOM™") :: Nil,
+          Product("3748", "Dull") :: Nil,
+          Nil).apply(Random.nextInt(3))))
   }
 
 }

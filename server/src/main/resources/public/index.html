@@ -11,31 +11,43 @@
     <script src="js/scan-controller.js"></script>
 </head>
 <body ng-controller="ScanController">
-    <h1>Kitchen Logistics</h1>
-    <table class="table table-striped">
-        <thead><tr><th>Code</th><th>Product Name</th></tr></thead>
-        <tr ng-repeat="product in products">
-            <td>{{product.code}}</td>
-            <td>{{product.name}}</td>
-        </tr>
-    </table>
-    <div class="hide" id="newProductForm">
-        <h2>Unknown Code</h2>
-        <form role="form">
-            <div class="form-group">
-                <label for="codeField">Bar code</label>
-                <input type="text" disabled class="form-control" id="codeField" placeholder="Enter bar code">
-            </div>
-            <div class="form-group">
-                <label for="productNameField">Product name</label>
-                <input type="text" class="form-control" id="productNameField" placeholder="Product name">
-            </div>
-            <button type="submit" class="btn btn-default">Submit</button>
-        </form>
+
+    <div class="container">
+
+        <h1>Kitchen Logistics</h1>
+
+        <div class="hide well" id="multipleMatchingProductsList">
+            <h2>Multiple </h2>
+            <table class="table table-striped">
+                <thead><tr><th>Code</th><th>Product Name</th></tr></thead>
+                <tr ng-repeat="product in products">
+                    <td>{{product.code}}</td>
+                    <td>{{product.name}}</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="hide well" id="newProductForm">
+            <h2>Unknown Code</h2>
+            <form role="form">
+                <div class="form-group">
+                    <label for="codeField">Bar code</label>
+                    <span id="codeField">{{newProduct.code}}</span>
+                </div>
+                <div class="form-group">
+                    <label for="productNameField">Product name</label>
+                    <input type="text" class="form-control" id="productNameField" placeholder="Product name" ng-model="newProduct.name">
+                </div>
+                <button ng-click="saveProduct(newProduct)" class="btn btn-default">Submit</button>
+            </form>
+        </div>
+
+        <div class="btn-group">
+            <a id="scan-new-button" href="#" class="btn btn-default"><span class="glyphicon glyphicon-floppy-save"></span> Scan new</a>
+            <a id="scan-new-button-repeat" href="#" class="btn btn-default"><span class="glyphicon glyphicon-repeat"></span></a>
+        </div>
+
     </div>
-    <div class="btn-group">
-        <a id="scan-new-button" href="#" class="btn btn-default"><span class="glyphicon glyphicon-floppy-save"></span> Scan new</a>
-        <a id="scan-new-button-repeat" href="#" class="btn btn-default"><span class="glyphicon glyphicon-repeat"></span></a>
-    </div>
+
 </body>
 </html>
