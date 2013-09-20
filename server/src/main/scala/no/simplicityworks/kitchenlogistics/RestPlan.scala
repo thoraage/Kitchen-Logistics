@@ -20,22 +20,27 @@ object RestPlan extends Plan {
     } orElse UnsupportedMediaType ~> ResponseString("Content type supported: " + tpe)
 
   def intent = Directive.Intent.Path {
-    case Seg(Nil) =>
-      for {
-        _ <- GET
-      } yield Redirect("/index.html")
+    case Seg("rest" :: Nil) =>
+      GET.flatMap(_ => Accepts.Json.flatMap(_ => request[Any].map(r => Ok ~> ResponseString("Hei"))))
+        .orElse(PUT.flatMap(_ => request[Any].map(r => Ok ~> ResponseString("Hei"))))
 
     case Seg("rest" :: "product" :: Nil) =>
-      for {
+      (for {
         _ <- GET
         _ <- Accepts.Json
         r <- request[Any]
       } yield Ok ~> ResponseString(write(
-        Array(Product("5423", "Nexus S") ::
-          Product("43123", "Motorola XOOM™ with Wi-Fi") ::
-          Product("43728432", "ROLA XOOM™") :: Nil,
-          Product("3748", "Dull") :: Nil,
-          Nil).apply(Random.nextInt(3))))
+          Array(Product("5423", "Nexus S") ::
+            Product("43123", "Motorola XOOM™ with Wi-Fi") ::
+            Product("43728432", "ROLA XOOM™") :: Nil,
+            Product("3748", "Dull") :: Nil,
+            Nil).apply(Random.nextInt(3)))))
+        .orElse(
+        for {
+          _ <- PUT
+          _ <- Accepts.Json
+          r <- request[Any]
+        } yield Ok ~> ResponseString(Body string r))
   }
 
 }
