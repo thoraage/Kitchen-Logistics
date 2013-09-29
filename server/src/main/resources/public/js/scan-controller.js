@@ -4,10 +4,12 @@ function ScanController($scope, $http) {
         console.log("Length: " + data.length)
         if (data.length > 1) {
             $scope.products = data;
-            $('#multipleMatchingProductsList').removeClass('hide');
         } else if (data.length == 0) {
             $scope.newProduct = { code: code };
-            $('#newProductForm').removeClass('hide');
+        } else {
+            $http.put('rest/product/item', {'code': code, 'productId': data[0].id}).success(function(data) {
+
+            })
         }
     });
 
