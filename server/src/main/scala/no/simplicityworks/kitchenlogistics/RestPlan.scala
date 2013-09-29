@@ -25,17 +25,17 @@ object RestPlan extends Plan {
   def intent = Directive.Intent.Path {
     case Seg("rest" :: "product" :: Nil) =>
       (for {
-        _ <- GET
+        method <- GET
         _ <- Accepts.Json
         code <- extract
         r <- request[Any]
-      } yield Ok ~> ResponseString(write(Products.findByCode(code))))
-        /*.orElse(
+      } yield Ok ~> ResponseString(write(Products.findByCode(code)))
+        ).orElse(
         for {
           _ <- PUT
           _ <- Accepts.Json
           r <- request[Any]
-        } yield Ok ~> ResponseString(Body string r))*/
+        } yield Ok ~> ResponseString(Body string r))
   }
 
 
