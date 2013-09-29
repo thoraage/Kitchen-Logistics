@@ -6,12 +6,9 @@ import unfiltered.response._
 import unfiltered.directives._
 import unfiltered.directives.Directives._
 import org.json4s.native.Serialization
-import org.json4s.native.Serialization.write
+import org.json4s.native.Serialization.{write, read}
 import org.json4s.NoTypeHints
-import scala.util.Random
-import no.simplicityworks.kitchenlogistics.DatabaseModule.{Products, Product}
-import scala.Product
-import scala.slick.lifted.Query
+import no.simplicityworks.kitchenlogistics.DatabaseModule.Products
 
 object RestPlan extends Plan {
 
@@ -21,6 +18,9 @@ object RestPlan extends Plan {
     when {
       case RequestContentType(`tpe`) =>
     } orElse UnsupportedMediaType ~> ResponseString("Content type supported: " + tpe)
+
+  def extract: Params.Extract[Nothing, String] =
+    new Params.Extract("code", Params.first ~> Params.nonempty)
 
   def intent = Directive.Intent.Path {
     case Seg("rest" :: "product" :: Nil) =>
@@ -35,11 +35,10 @@ object RestPlan extends Plan {
           _ <- PUT
           _ <- Accepts.Json
           r <- request[Any]
-        } yield Ok ~> ResponseString(Body string r))
+        } yield {
+          Products.insert(read[DatabaseModule.Product](Body string r))
+          Ok ~> NoContent
+        })
   }
 
-
-  def extract: Params.Extract[Nothing, String] = {
-    new Params.Extract("code", Params.first ~> Params.nonempty)
-  }
 }

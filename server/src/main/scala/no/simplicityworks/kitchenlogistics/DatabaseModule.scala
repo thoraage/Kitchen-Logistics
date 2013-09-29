@@ -17,6 +17,11 @@ object DatabaseModule {
       database withSession { implicit session: Session =>
         Query(Products).where(_.code === code).list
       }
+    def forInsert = code ~ name <> ({t => Product(None, t._1, t._2)}, {(p: Product) => Some((p.code, p.name))})
+    def insert(product: Product): Int =
+      database withSession { implicit session: Session =>
+        Products.forInsert insert product
+      }
   }
 
   private val database = Database.forDataSource(new ComboPooledDataSource())
