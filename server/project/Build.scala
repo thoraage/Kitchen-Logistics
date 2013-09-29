@@ -1,7 +1,4 @@
 import sbt._
-//import com.github.siasia._
-//import WebPlugin._
-//import PluginKeys._
 import Keys._
 
 object Build extends sbt.Build {
@@ -15,6 +12,7 @@ object Build extends sbt.Build {
       version       := "0.9.0",
       scalaVersion  := "2.10.2",
       scalacOptions := Seq("-deprecation", "-encoding", "utf8"),
+      resolvers    ++= Seq("Maven repo" at "http://central.maven.org/maven2/"),
       libraryDependencies ++= Seq(
         "net.databinder"            %% "unfiltered-directives" % V.unfiltered,
         "net.databinder"            %% "unfiltered-jetty" % V.unfiltered,
@@ -22,6 +20,8 @@ object Build extends sbt.Build {
         "net.databinder"            %% "unfiltered-directives" % V.unfiltered,
         "net.databinder"            %% "unfiltered-json4s" % V.unfiltered,
         "net.databinder"            %% "unfiltered-spec" % V.unfiltered % "test",
+        "com.typesafe.slick"        %% "slick" % "1.0.1",
+        "com.github.tototoshi"      %% "slick-joda-mapper" % "0.4.0",
         "javax.servlet"             % "servlet-api"      % "2.3" % "provided",
 //        "org.eclipse.jetty"         % "jetty-webapp"     % "7.4.5.v20110725" % "container",
     //    "org.scalaquery"            %% "scalaquery"      % "0.10.0-M1" % "compile",

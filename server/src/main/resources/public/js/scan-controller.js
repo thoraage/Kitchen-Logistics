@@ -1,6 +1,6 @@
 function ScanController($scope, $http) {
     var code = getParameterByName('code');
-    $http.get('rest/product?' + code).success(function(data) {
+    $http.get('rest/product?code=' + code).success(function(data) {
         console.log("Length: " + data.length)
         if (data.length > 1) {
             $scope.products = data;

@@ -9,6 +9,9 @@ import org.json4s.native.Serialization
 import org.json4s.native.Serialization.write
 import org.json4s.NoTypeHints
 import scala.util.Random
+import no.simplicityworks.kitchenlogistics.DatabaseModule.{Products, Product}
+import scala.Product
+import scala.slick.lifted.Query
 
 object RestPlan extends Plan {
 
@@ -20,27 +23,23 @@ object RestPlan extends Plan {
     } orElse UnsupportedMediaType ~> ResponseString("Content type supported: " + tpe)
 
   def intent = Directive.Intent.Path {
-    case Seg("rest" :: Nil) =>
-      GET.flatMap(_ => Accepts.Json.flatMap(_ => request[Any].map(r => Ok ~> ResponseString("Hei"))))
-        .orElse(PUT.flatMap(_ => request[Any].map(r => Ok ~> ResponseString("Hei"))))
-
     case Seg("rest" :: "product" :: Nil) =>
       (for {
         _ <- GET
         _ <- Accepts.Json
+        code <- extract
         r <- request[Any]
-      } yield Ok ~> ResponseString(write(
-          Array(Product("5423", "Nexus S") ::
-            Product("43123", "Motorola XOOM™ with Wi-Fi") ::
-            Product("43728432", "ROLA XOOM™") :: Nil,
-            Product("3748", "Dull") :: Nil,
-            Nil).apply(Random.nextInt(3)))))
-        .orElse(
+      } yield Ok ~> ResponseString(write(Products.findByCode(code))))
+        /*.orElse(
         for {
           _ <- PUT
           _ <- Accepts.Json
           r <- request[Any]
-        } yield Ok ~> ResponseString(Body string r))
+        } yield Ok ~> ResponseString(Body string r))*/
   }
 
+
+  def extract: Params.Extract[Nothing, String] = {
+    new Params.Extract("code", Params.first ~> Params.nonempty)
+  }
 }
