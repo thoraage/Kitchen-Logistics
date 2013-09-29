@@ -8,7 +8,7 @@ import unfiltered.directives.Directives._
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{write, read}
 import org.json4s.NoTypeHints
-import no.simplicityworks.kitchenlogistics.DatabaseModule.Products
+import no.simplicityworks.kitchenlogistics.DatabaseModule._
 
 object RestPlan extends Plan {
 
@@ -23,7 +23,7 @@ object RestPlan extends Plan {
     new Params.Extract("code", Params.first ~> Params.nonempty)
 
   def intent = Directive.Intent.Path {
-    case Seg("rest" :: "product" :: Nil) =>
+    case Seg("rest" :: "products" :: Nil) =>
       (for {
         method <- GET
         _ <- Accepts.Json
@@ -33,10 +33,23 @@ object RestPlan extends Plan {
         ).orElse(
         for {
           _ <- PUT
-          _ <- Accepts.Json
           r <- request[Any]
         } yield {
-          Products.insert(read[DatabaseModule.Product](Body string r))
+          Products.insert(read[Product](Body string r))
+          Ok ~> NoContent
+        })
+    case Seg("rest" :: "products" :: "items" :: Nil) =>
+      (for {
+        method <- GET
+        _ <- Accepts.Json
+        r <- request[Any]
+      } yield Ok ~> ResponseString(write(Items.all))
+        ).orElse(
+        for {
+          _ <- PUT
+          r <- request[Any]
+        } yield {
+          Items.insert(read[Item](Body string r))
           Ok ~> NoContent
         })
   }
