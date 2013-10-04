@@ -13,7 +13,7 @@ function ScanController($scope, $http) {
             } else if (data.length == 0) {
                 $scope.newProduct = { code: code };
             } else {
-                $http.put('rest/products/items', {'code': code, 'productId': data[0].id}).success(function(data) {
+                $http.put('rest/products/items', {'productId': data[0].id}).success(function(data) {
                     populateItems();
                 })
             }

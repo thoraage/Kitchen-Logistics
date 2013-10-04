@@ -36,8 +36,8 @@ object RestPlan extends Plan {
           _ <- PUT
           r <- request[Any]
         } yield {
-          Products.insert(read[Product](Body string r))
-          Ok ~> NoContent
+          val id = Products.insert(read[Product](Body string r))
+          Ok ~> ResponseString(write(Map("id" -> id)))
         })
     case Seg("rest" :: "products" :: "items" :: Nil) =>
       (for {
@@ -57,8 +57,8 @@ object RestPlan extends Plan {
           _ <- PUT
           r <- request[Any]
         } yield {
-          Items.insert(read[Item](Body string r))
-          Ok ~> NoContent
+          val id = Items.insert(read[Item](Body string r))
+          Ok ~> ResponseString(write(Map("id" -> id)))
         })
   }
 

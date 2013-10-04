@@ -28,7 +28,7 @@ object DatabaseModule {
       }
     def insert(product: Product): Int =
       database withSession { implicit session: Session =>
-        Products.forInsert insert product
+        forInsert returning id insert product
       }
   }
 
@@ -44,7 +44,7 @@ object DatabaseModule {
       Query(Items).list
     }
     def insert(item: Item): Int = database withSession { implicit session: Session =>
-      Items.forInsert insert item
+      forInsert returning id insert item
     }
   }
 
