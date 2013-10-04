@@ -5,6 +5,12 @@ function ScanController($scope, $http) {
         })
     }
 
+    function putItemAndPopulate(id) {
+        $http.put('rest/products/items', {'productId': id}).success(function(data) {
+            populateItems();
+        })
+    }
+
     var code = getParameterByName('code');
     if (code) {
         $http.get('rest/products?code=' + code).success(function(data) {
@@ -13,9 +19,7 @@ function ScanController($scope, $http) {
             } else if (data.length == 0) {
                 $scope.newProduct = { code: code };
             } else {
-                $http.put('rest/products/items', {'productId': data[0].id}).success(function(data) {
-                    populateItems();
-                })
+                putItemAndPopulate(data[0].id);
             }
         });
     } else {
@@ -25,7 +29,7 @@ function ScanController($scope, $http) {
     $scope.saveProduct = function(product) {
         $http.put('rest/products', product).success(function(data) {
             $scope.newProduct = null;
-            populateItems();
+            putItemAndPopulate(data.id);
         });
     };
 
