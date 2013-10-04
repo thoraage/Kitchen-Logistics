@@ -12,53 +12,78 @@
 </head>
 <body ng-controller="ScanController">
 
-    <div class="container">
+<div class="container">
 
-        <h1>Kitchen Logistics</h1>
+    <h1>Kitchen Logistics</h1>
 
-        <div class="well" ng-show="items">
-            <h2>Scanned</h2>
-            <table class="table table-striped">
-                <thead><tr><th>Count</th><th>Product</th></tr></thead>
-                <tr ng-repeat="item in items">
-                    <td>{{item.count}}</td>
-                    <td>{{item.product.name}}</td>
-                </tr>
-            </table>
-        </div>
-
-        <div class="well" ng-show="products">
-            <h2>Multiple </h2>
-            <table class="table table-striped">
-                <thead><tr><th>Code</th><th>Product Name</th></tr></thead>
-                <tr ng-repeat="product in products">
-                    <td>{{product.code}}</td>
-                    <td>{{product.name}}</td>
-                </tr>
-            </table>
-        </div>
-
-        <div class="well" ng-show="newProduct">
-            <h2>Unknown Code</h2>
-            <form role="form">
-                <div class="form-group">
-                    <label for="codeField">Bar code</label>
-                    <span id="codeField">{{newProduct.code}}</span>
-                </div>
-                <div class="form-group">
-                    <label for="productNameField">Product name</label>
-                    <input type="text" class="form-control" id="productNameField" placeholder="Product name" ng-model="newProduct.name">
-                </div>
-                <button ng-click="saveProduct(newProduct)" class="btn btn-default">Submit</button>
-            </form>
-        </div>
-
-        <div class="btn-group">
-            <a id="scan-new-button" href="#" class="btn btn-default"><span class="glyphicon glyphicon-floppy-save"></span> Scan new</a>
-            <a id="scan-new-button-repeat" href="#" class="btn btn-default"><span class="glyphicon glyphicon-repeat"></span></a>
-        </div>
-
+    <div class="well" ng-show="items">
+        <h2>Scanned</h2>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Count</th>
+                <th>Product</th>
+            </tr>
+            </thead>
+            <tr ng-repeat="item in items">
+                <td>{{item.count}}</td>
+                <td>{{item.product.name}}</td>
+            </tr>
+        </table>
     </div>
+
+    <div class="well" ng-show="products">
+        <h2>Multiple </h2>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Code</th>
+                <th>Product Name</th>
+            </tr>
+            </thead>
+            <tr ng-repeat="product in products">
+                <td>{{product.code}}</td>
+                <td>{{product.name}}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="well" ng-show="newProduct">
+        <h2>Unknown Code</h2>
+
+        <form role="form">
+            <div class="form-group">
+                <label for="codeField">Bar code</label>
+                <span id="codeField">{{newProduct.code}}</span>
+            </div>
+            <div class="form-group">
+                <label for="productNameField">Product name</label>
+                <input type="text" class="form-control" id="productNameField" placeholder="Product name"
+                       ng-model="newProduct.name">
+            </div>
+            <button ng-click="saveProduct(newProduct)" class="btn btn-default">Submit</button>
+        </form>
+    </div>
+
+    <div class="btn-toolbar">
+        <div class="btn-group btn-group-lg">
+            <a id="scan-new-button" href="#" class="btn btn-default"><span
+                    class="glyphicon glyphicon-barcode"></span> New</a>
+            <a id="scan-new-button-repeat" href="#" class="btn btn-default"><span
+                    class="glyphicon glyphicon-repeat"></span></a>
+        </div>
+    </div>
+    <br/>
+    <div class="btn-toolbar">
+        <div class="btn-group btn-group-lg">
+            <a id="scan-remove-button" href="#" class="btn btn-default"><span
+                    class="glyphicon glyphicon-barcode"></span> Remove</a>
+            <a id="scan-remove-button-repeat" href="#" class="btn btn-default"><span
+                    class="glyphicon glyphicon-repeat"></span></a>
+        </div>
+    </div>
+
+</div>
 
 </body>
 </html>

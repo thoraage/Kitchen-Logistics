@@ -24,16 +24,9 @@ function ScanController($scope, $http) {
 
     $scope.saveProduct = function(product) {
         $http.put('rest/products', product).success(function(data) {
-            alert("Da sa han: " + data);
+            $scope.newProduct = null;
+            populateItems();
         });
     };
 
-    /*$scope.products = [
-        {"name": "Nexus S",
-         "code": "5423"},
-        {"name": "Motorola XOOM™ with Wi-Fi",
-         "code": "43123"},
-        {"name": "MOTOROLA XOOM™",
-         "code": "43728432"}
-      ];*/
 }
