@@ -19,9 +19,10 @@
         <div class="well" ng-show="items">
             <h2>Scanned</h2>
             <table class="table table-striped">
-                <thead><tr><th>Product</th></tr></thead>
+                <thead><tr><th>Count</th><th>Product</th></tr></thead>
                 <tr ng-repeat="item in items">
-                    <td>{{item.productId}}</td>
+                    <td>{{item.count}}</td>
+                    <td>{{item.product.name}}</td>
                 </tr>
             </table>
         </div>

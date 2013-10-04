@@ -4,6 +4,8 @@ import scala.slick.driver.H2Driver.simple._
 import scala.slick.lifted.Query
 import com.mchange.v2.c3p0.ComboPooledDataSource
 import java.sql.Date
+import scala.slick.session.Session
+import org.json4s.JsonAST.JObject
 
 object DatabaseModule {
 
@@ -13,7 +15,7 @@ object DatabaseModule {
 
   case class Item(id: Option[Int], productId: Int, created: Date = now)
 
-  object Products extends Table[Product]("product") {
+  object Products extends Table[Product]("global_product") {
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
     def code = column[String]("code")
     def name = column[String]("name")
@@ -30,12 +32,14 @@ object DatabaseModule {
       }
   }
 
-  object Items extends Table[Item]("item") {
+  object Items extends Table[Item]("user_item") {
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
     def productId = column[Int]("product_id")
     def created = column[Date]("created")
+    def product = foreignKey("item_product_fk", productId, Products)(_.id)
     def * = id.? ~ productId ~ created <> (Item, Item.unapply _)
     def forInsert = productId ~ created <> ({t => Item(None, t._1, t._2)}, {(i: Item) => Some((i.productId, i.created))})
+
     def all = database withSession { implicit session: Session =>
       Query(Items).list
     }
@@ -44,7 +48,7 @@ object DatabaseModule {
     }
   }
 
-  private val database = Database.forDataSource(new ComboPooledDataSource())
+  val database = Database.forDataSource(new ComboPooledDataSource())
   database withSession { implicit session: Session =>
     Products.ddl.create
     Items.ddl.create
