@@ -49,8 +49,10 @@ object RestPlan extends Plan {
           (for {
             item <- Items
             product <- item.product
-          } yield product).groupBy(p => (p.id, p.name)).map { case (id, product) => (id, product.length) }.list
-        }).map(p => Map("count" -> p._2, "product" -> Map("id" -> p._1._1, "name" -> p._1._2)))
+          } yield (product, item))
+            .groupBy(p => (p._1.id, p._1.name))
+            .map { case (id, pair) => (id, pair.length, pair.map(_._2.id).max) }.list
+        }).map(p => Map("count" -> p._2, "product" -> Map("id" -> p._1._1, "name" -> p._1._2), "lastItemId" -> p._3))
         Ok ~> ResponseString(write(items))
       }).orElse(
         for {

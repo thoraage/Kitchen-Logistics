@@ -12,7 +12,7 @@ function ScanController($scope, $http) {
     }
 
     var code = getParameterByName('code');
-    if (code) {
+    if (code && getParameterByName('add')) {
         $http.get('rest/products?code=' + code).success(function(data) {
             if (data.length > 1) {
                 $scope.products = data;
@@ -22,6 +22,8 @@ function ScanController($scope, $http) {
                 putItemAndPopulate(data[0].id);
             }
         });
+    } else if (code && getParameterByName('remove')) {
+        alert("doh");
     } else {
         populateItems();
     }
@@ -32,5 +34,9 @@ function ScanController($scope, $http) {
             putItemAndPopulate(data.id);
         });
     };
+
+    $scope.removeItem = function(itemId) {
+       alert("item id: " + itemId);
+   }
 
 }

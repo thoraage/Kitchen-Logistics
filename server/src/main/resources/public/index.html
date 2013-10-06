@@ -28,6 +28,11 @@
             <tr ng-repeat="item in items">
                 <td>{{item.count}}</td>
                 <td>{{item.product.name}}</td>
+                <td>
+                    <button ng-click="removeItem(item.lastItemId)" class="btn btn-xs btn-link">
+                        <span class="glyphicon glyphicon-remove"></span>
+                    </button>
+                </td>
             </tr>
         </table>
     </div>

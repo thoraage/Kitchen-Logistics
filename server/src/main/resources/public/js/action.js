@@ -7,14 +7,10 @@ function getParameterByName(name) {
 }
 
 $(document).ready(function(){
-/*    var code = getParameterByName('code');
-    if (code) {
-        $('#codeField').val(code);
-        $('#newProductForm').removeClass('hide');
-    }
     var path = document.location.href.split('?')[0];
     var scanPath = "zxing://scan/?ret=" + encodeURIComponent(path + "?code={CODE}");
-    $('#scan-new-button').attr('href', scanPath);
-    $('#scan-new-button-repeat').attr('href', scanPath + "&repeat");
-*/
+    $('#scan-new-button').attr('href', scanPath + "&op=add");
+    $('#scan-new-button-repeat').attr('href', scanPath + "&repeat=1&add=1");
+    $('#scan-remove-button').attr('href', scanPath + "&op=remove");
+    $('#scan-remove-button-repeat').attr('href', scanPath + "&repeat=1&remove=1");
 });
