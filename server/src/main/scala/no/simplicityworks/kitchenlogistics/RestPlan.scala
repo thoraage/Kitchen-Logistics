@@ -62,6 +62,18 @@ object RestPlan extends Plan {
           val id = Items.insert(read[Item](Body string r))
           Ok ~> ResponseString(write(Map("id" -> id)))
         })
+    case Seg("rest" :: "products" :: "items" :: IntString(itemId) :: Nil) =>
+      for {
+        _ <- DELETE
+      } yield {
+        Items.delete(itemId)
+        Ok ~> NoContent
+      }
+  }
+
+  object IntString {
+    def unapply(v: String) = try Some(v.toInt)
+    catch { case _: NumberFormatException => None }
   }
 
 }

@@ -46,6 +46,10 @@ object DatabaseModule {
     def insert(item: Item): Int = database withSession { implicit session: Session =>
       forInsert returning id insert item
     }
+    def delete(id: Int): Int = database withSession { implicit session: Session =>
+      Query(Items).where(_.id === id).delete
+    }
+
   }
 
   val database = Database.forDataSource(new ComboPooledDataSource())

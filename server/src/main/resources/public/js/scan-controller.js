@@ -36,7 +36,9 @@ function ScanController($scope, $http) {
     };
 
     $scope.removeItem = function(itemId) {
-       alert("item id: " + itemId);
-   }
+       $http.delete('rest/products/items/' + itemId).success(function() {
+            populateItems();
+       });
+   };
 
 }
