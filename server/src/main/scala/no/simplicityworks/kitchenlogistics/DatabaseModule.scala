@@ -5,15 +5,8 @@ import scala.slick.lifted.Query
 import com.mchange.v2.c3p0.ComboPooledDataSource
 import java.sql.Date
 import scala.slick.session.Session
-import org.json4s.JsonAST.JObject
 
-object DatabaseModule {
-
-  def now = new Date(System.currentTimeMillis())
-
-  case class Product(id: Option[Int], code: String, name: String, created: Date = now)
-
-  case class Item(id: Option[Int], productId: Int, created: Date = now)
+trait DatabaseModule {
 
   object Products extends Table[Product]("global_product") {
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
@@ -63,3 +56,4 @@ object DatabaseModule {
   }
 
 }
+
