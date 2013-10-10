@@ -1,12 +1,11 @@
 package no.simplicityworks.kitchenlogistics
 
-import scala.slick.driver.H2Driver.simple._
-import scala.slick.lifted.Query
 import com.mchange.v2.c3p0.ComboPooledDataSource
 import java.sql.Date
-import scala.slick.session.Session
 
-trait DatabaseModule {
+trait DatabaseModule extends DatabaseProfileModule {
+
+  import driver.simple._
 
   object Products extends Table[Product]("global_product") {
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
@@ -45,7 +44,7 @@ trait DatabaseModule {
 
   }
 
-  val database = Database.forDataSource(new ComboPooledDataSource())
+  lazy val database = Database.forDataSource(new ComboPooledDataSource())
   database withSession { implicit session: Session =>
     Products.ddl.create
     Items.ddl.create
