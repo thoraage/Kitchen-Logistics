@@ -24,6 +24,11 @@ trait DatabaseModule extends DatabaseProfileModule {
       }
   }
 
+  object ItemGroups extends Table[ItemGroup]("user_item_group") {
+    def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
+    def name = column[String]("name")
+  }
+
   object Items extends Table[Item]("user_item") {
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
     def productId = column[Int]("product_id")
@@ -48,6 +53,7 @@ trait DatabaseModule extends DatabaseProfileModule {
   database withSession { implicit session: Session =>
     Products.ddl.create
     Items.ddl.create
+    ItemGroups.ddl.create
     Products.insertAll(
       Product(None, "5423", "Nexus S"),
       Product(None, "43123", "Motorola XOOM™ with Wi-Fi"),
