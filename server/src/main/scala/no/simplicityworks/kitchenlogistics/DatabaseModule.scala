@@ -12,8 +12,10 @@ trait DatabaseModule extends DatabaseProfileModule {
     def code = column[String]("code")
     def name = column[String]("name")
     def created = column[Date]("created")
+
     def * = id.? ~ code ~ name ~ created <> (Product, Product.unapply _)
     def forInsert = code ~ name ~ created <> ({t => Product(None, t._1, t._2, t._3)}, {(p: Product) => Some((p.code, p.name, p.created))})
+
     def findByCode(code: String) =
       database withSession { implicit session: Session =>
         Query(Products).where(_.code === code).list
@@ -26,16 +28,32 @@ trait DatabaseModule extends DatabaseProfileModule {
 
   object ItemGroups extends Table[ItemGroup]("user_item_group") {
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
+    def userId = column[Int]("userId")
     def name = column[String]("name")
+    def created = column[Date]("created")
+
+    def user = foreignKey("item_group_user_fk", userId, Users)(_.id)
+
+    def * = id.? ~ userId ~ name ~ created <> (ItemGroup, ItemGroup.unapply _)
+
+    def getAll = database withSession { implicit session: Session =>
+      Query(ItemGroups).list
+    }
   }
 
   object Items extends Table[Item]("user_item") {
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
+    def userId = column[Int]("user_id")
     def productId = column[Int]("product_id")
+    def itemGroupId = column[Int]("item_group_id")
     def created = column[Date]("created")
+
+    def user = foreignKey("item_user_fk", userId, Users)(_.id)
     def product = foreignKey("item_product_fk", productId, Products)(_.id)
-    def * = id.? ~ productId ~ created <> (Item, Item.unapply _)
-    def forInsert = productId ~ created <> ({t => Item(None, t._1, t._2)}, {(i: Item) => Some((i.productId, i.created))})
+    def itemGroup = foreignKey("item_item_group_fk", itemGroupId, ItemGroups)(_.id)
+
+    def * = id.? ~ userId ~ productId ~ itemGroupId ~ created <> (Item, Item.unapply _)
+    def forInsert = userId ~ productId ~ itemGroupId ~ created <> ({t => Item(None, t._1, t._2, t._3, t._4)}, {(i: Item) => Some((i.userId, i.productId, i.itemGroupId, i.created))})
 
     def all = database withSession { implicit session: Session =>
       Query(Items).list
@@ -49,15 +67,33 @@ trait DatabaseModule extends DatabaseProfileModule {
 
   }
 
+  object Users extends Table[User]("user") {
+    def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
+    def username = column[String]("username")
+    def email = column[String]("email")
+    def created = column[Date]("created")
+    def password = column[Array[Byte]]("password")
+
+    def * = id.? ~ username ~ email ~ password ~ created <> (User, User.unapply _)
+    def forInsert = username ~ email ~ password ~ created <> ({t => User(None, t._1, t._2, t._3, t._4)}, {(i: User) => Some((i.username, i.email, i.password, i.created))})
+
+    def insert(user: User): Int = database withSession { implicit session: Session =>
+      forInsert returning id insert user
+    }
+  }
+
   lazy val database = Database.forDataSource(new ComboPooledDataSource())
   database withSession { implicit session: Session =>
     Products.ddl.create
-    Items.ddl.create
+    Users.ddl.create
     ItemGroups.ddl.create
+    Items.ddl.create
     Products.insertAll(
       Product(None, "5423", "Nexus S"),
       Product(None, "43123", "Motorola XOOM™ with Wi-Fi"),
       Product(None, "43728432", "ROLA XOOM™"))
+    val userId = Users.insert(User(None, "thoredge", "thoraageeldby@gmail.com"))
+    ItemGroups.insert(ItemGroup(None, userId, "Kjøleskap"))
   }
 
 }

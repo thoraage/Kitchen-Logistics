@@ -1,15 +1,32 @@
-function ScanController($scope, $http) {
+var kitLogApp = angular.module('KitLogApp', ['ngCookies']);
+
+kitLogApp.controller('ScanController', function ScanController($scope, $http, $cookies) {
     function populateItems() {
-        $http.get('rest/products/items').success(function(data) {
+        $http.get('rest/items').success(function(data) {
             $scope.items = data;
-        })
+        });
     }
 
     function putItemAndPopulate(id) {
-        $http.put('rest/products/items', {'productId': id}).success(function(data) {
+        $http.put('rest/items', {'productId': id}).success(function(data) {
             populateItems();
-        })
+        });
     }
+
+    $http.get('rest/itemGroups').success(function(data) {
+        var itemGroupId = $cookies.selectedItemGroupId;
+        if (itemGroupId) {
+            itemGroupId = parseInt(itemGroupId);
+        }
+        data.push({id: -1, name: 'New item group'});
+        $scope.itemGroups = data;
+        for (i = 0; i < $scope.itemGroups.length; ++i) {
+            var itemGroup = $scope.itemGroups[i];
+            if (itemGroup.id == itemGroupId) {
+                $scope.itemGroup = itemGroup;
+            }
+        }
+    });
 
     var code = getParameterByName('code');
     if (code && getParameterByName('add')) {
@@ -36,9 +53,18 @@ function ScanController($scope, $http) {
     };
 
     $scope.removeItem = function(itemId) {
-       $http.delete('rest/products/items/' + itemId).success(function() {
+       $http.delete('rest/items/' + itemId).success(function() {
             populateItems();
        });
-   };
+    };
 
-}
+    $scope.changeItemGroup = function() {
+        if ($scope.itemGroup) {
+            if ($scope.itemGroup.id == -1) {
+            } else {
+                $cookies.selectedItemGroupId = $scope.itemGroup.id.toString();
+            }
+        }
+    };
+
+});

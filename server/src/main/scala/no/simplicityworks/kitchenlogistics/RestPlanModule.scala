@@ -41,7 +41,7 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
             val id = Products.insert(read[Product](Body string r))
             Ok ~> ResponseString(write(Map("id" -> id)))
           })
-      case Seg("rest" :: "products" :: "items" :: Nil) =>
+      case Seg("rest" :: "items" :: Nil) =>
         (for {
           method <- GET
           _ <- Accepts.Json
@@ -64,13 +64,20 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
             val id = Items.insert(read[Item](Body string r))
             Ok ~> ResponseString(write(Map("id" -> id)))
           })
-      case Seg("rest" :: "products" :: "items" :: IntString(itemId) :: Nil) =>
+      case Seg("rest" :: "items" :: IntString(itemId) :: Nil) =>
         for {
           _ <- DELETE
         } yield {
           Items.delete(itemId)
           Ok ~> NoContent
         }
+
+      case Seg("rest" :: "itemGroups" :: Nil) =>
+        for {
+          _ <- GET
+          _ <- Accepts.Json
+          r <- request[Any]
+        } yield ResponseString(write(ItemGroups.getAll))
     }
 
     object IntString {

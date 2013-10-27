@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" ng-app>
+<html lang="en" ng-app="KitLogApp">
 <head>
     <title>Kitchen Logistics</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +7,7 @@
     <script src="js/jquery-2.0.3.js"></script>
     <script src="js/bootstrap.js"></script>
     <script src="js/angular.js"></script>
+    <script src="js/angular-cookies.js"></script>
     <script src="js/action.js"></script>
     <script src="js/scan-controller.js"></script>
 </head>
@@ -72,19 +73,20 @@
 
     <div class="btn-toolbar">
         <div class="btn-group btn-group-lg">
-            <a id="scan-new-button" href="#" class="btn btn-default"><span
-                    class="glyphicon glyphicon-barcode"></span> New</a>
-            <a id="scan-new-button-repeat" href="#" class="btn btn-default"><span
-                    class="glyphicon glyphicon-repeat"></span></a>
+            <button id="scan-new-button" class="btn btn-default" ng-disabled="!itemGroup"><span
+                    class="glyphicon glyphicon-barcode"></span> New</button>
+            <button id="scan-new-button-repeat" class="btn btn-default" ng-disabled="!itemGroup"><span
+                    class="glyphicon glyphicon-repeat"></span></button>
+            <select ng-change="changeItemGroup()" ng-model="itemGroup" ng-options="ig.name for ig in itemGroups"></select>
         </div>
     </div>
     <br/>
     <div class="btn-toolbar">
         <div class="btn-group btn-group-lg">
-            <a id="scan-remove-button" href="#" class="btn btn-default"><span
-                    class="glyphicon glyphicon-barcode"></span> Remove</a>
-            <a id="scan-remove-button-repeat" href="#" class="btn btn-default"><span
-                    class="glyphicon glyphicon-repeat"></span></a>
+            <button id="scan-remove-button" class="btn btn-default"><span
+                    class="glyphicon glyphicon-barcode"></span> Remove</button>
+            <button id="scan-remove-button-repeat" class="btn btn-default"><span
+                    class="glyphicon glyphicon-repeat"></span></button>
         </div>
     </div>
 
