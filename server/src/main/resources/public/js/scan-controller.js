@@ -13,20 +13,24 @@ kitLogApp.controller('ScanController', function ScanController($scope, $http, $c
         });
     }
 
-    $http.get('rest/itemGroups').success(function(data) {
-        var itemGroupId = $cookies.selectedItemGroupId;
-        if (itemGroupId) {
-            itemGroupId = parseInt(itemGroupId);
-        }
-        data.push({id: -1, name: 'New item group'});
-        $scope.itemGroups = data;
-        for (i = 0; i < $scope.itemGroups.length; ++i) {
-            var itemGroup = $scope.itemGroups[i];
-            if (itemGroup.id == itemGroupId) {
-                $scope.itemGroup = itemGroup;
+    function loadItemGroups() {
+        $http.get('rest/itemGroups').success(function(data) {
+            var itemGroupId = $cookies.selectedItemGroupId;
+            if (itemGroupId) {
+                itemGroupId = parseInt(itemGroupId);
             }
-        }
-    });
+            data.push({id: -1, name: 'New item group'});
+            $scope.itemGroups = data;
+            for (i = 0; i < $scope.itemGroups.length; ++i) {
+                var itemGroup = $scope.itemGroups[i];
+                if (itemGroup.id == itemGroupId) {
+                    $scope.itemGroup = itemGroup;
+                }
+            }
+        });
+    }
+
+    loadItemGroups();
 
     var code = getParameterByName('code');
     if (code && getParameterByName('add')) {
@@ -61,10 +65,21 @@ kitLogApp.controller('ScanController', function ScanController($scope, $http, $c
     $scope.changeItemGroup = function() {
         if ($scope.itemGroup) {
             if ($scope.itemGroup.id == -1) {
+                $scope.editItemGroup = {};
+                $scope.itemGroup = null;
+                $cookies.selectedItemGroupId = null;
             } else {
                 $cookies.selectedItemGroupId = $scope.itemGroup.id.toString();
             }
         }
     };
+
+
+    $scope.saveItemGroup = function(newItemGroup) {
+        $http.put('rest/itemGroups', newItemGroup).success(function(id) {
+            $cookies.selectedItemGroupId = id;
+            loadItemGroups();
+        });
+    }
 
 });

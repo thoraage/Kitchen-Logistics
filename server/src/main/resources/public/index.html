@@ -71,6 +71,19 @@
         </form>
     </div>
 
+    <div class="well" ng-show="editItemGroup">
+        <h2>Item Group</h2>
+
+        <form role="form">
+            <div class="form-group">
+                <label for="itemGroupNameField">Item group name</label>
+                <input type="text" class="form-control" id="itemGroupNameField" placeholder="Item group name"
+                       ng-model="editItemGroup.name">
+            </div>
+            <button ng-click="saveItemGroup(newItemGroup)" class="btn btn-default"><Submit></Submit></button>
+        </form>
+    </div>
+
     <div class="btn-toolbar">
         <div class="btn-group btn-group-lg">
             <button id="scan-new-button" class="btn btn-default" ng-disabled="!itemGroup"><span
