@@ -73,11 +73,19 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
         }
 
       case Seg("rest" :: "itemGroups" :: Nil) =>
-        for {
+        (for {
           _ <- GET
           _ <- Accepts.Json
           r <- request[Any]
-        } yield ResponseString(write(ItemGroups.getAll))
+        } yield Ok ~> ResponseString(write(ItemGroups.getAll))).orElse(
+          for {
+            _ <- PUT
+            r <- request[Any]
+          } yield {
+            val id = ItemGroups.insert(read[ItemGroup](Body string r))
+            Ok ~> ResponseString(write(Map("id" -> id)))
+          }
+        )
     }
 
     object IntString {

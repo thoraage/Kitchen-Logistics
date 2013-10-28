@@ -35,9 +35,13 @@ trait DatabaseModule extends DatabaseProfileModule {
     def user = foreignKey("item_group_user_fk", userId, Users)(_.id)
 
     def * = id.? ~ userId ~ name ~ created <> (ItemGroup, ItemGroup.unapply _)
+    def forInsert = userId ~ name ~ created <> ({t => ItemGroup(None, t._1, t._2, t._3)}, {(i: ItemGroup) => Some((i.userId, i.name, i.created))})
 
     def getAll = database withSession { implicit session: Session =>
       Query(ItemGroups).list
+    }
+    def insert(itemGroup: ItemGroup): Int = database withSession { implicit s: Session =>
+      forInsert returning id insert itemGroup
     }
   }
 
