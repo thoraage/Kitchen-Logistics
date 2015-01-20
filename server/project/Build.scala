@@ -1,12 +1,11 @@
+import com.earldouglas.xwp.XwpPlugin
 import sbt._
 import Keys._
 
-object Build extends sbt.Build {
+object Build extends Build {
   import Dependencies._
 
   lazy val myProject = Project("kitchen-logistics", file("."))
-//    .settings(WebPlugin.webSettings: _*)
-//    .settings(port in config("container") := 8080)
     .settings(
       organization  := "com.example",
       version       := "0.9.0",
@@ -23,16 +22,14 @@ object Build extends sbt.Build {
         "com.typesafe.slick"        %% "slick" % "1.0.1",
         "com.github.tototoshi"      %% "slick-joda-mapper" % "0.4.0",
         "javax.servlet"             % "servlet-api"      % "2.3" % "provided",
-//        "org.eclipse.jetty"         % "jetty-webapp"     % "7.4.5.v20110725" % "container",
-    //    "org.scalaquery"            %% "scalaquery"      % "0.10.0-M1" % "compile",
         "com.h2database"            %  "h2"              % "1.3.166" % "compile",
         "c3p0"                      %  "c3p0"            % "0.9.1.2" % "compile",
         "org.specs2"                %% "specs2"          % V.specs2  % "test",
-  //      "org.eclipse.jetty"         %  "jetty-webapp"    % V.jetty   % "container",
         "org.slf4j"                 %  "slf4j-api"       % V.slf4j,
         "ch.qos.logback"            %  "logback-classic" % V.logback
       )
     )
+    .settings(XwpPlugin.jetty() :_*)
 }
 
 object Dependencies {

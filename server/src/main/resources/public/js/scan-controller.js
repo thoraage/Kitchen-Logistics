@@ -1,6 +1,6 @@
 var kitLogApp = angular.module('KitLogApp', ['ngCookies']);
 
-kitLogApp.controller('ScanController', function ScanController($scope, $http, $cookies) {
+kitLogApp.controller('ScanController', function ScanController($scope, $http, $cookies, $log, $location, $window) {
     function populateItems() {
         $http.get('rest/items').success(function(data) {
             $scope.items = data;
@@ -81,5 +81,13 @@ kitLogApp.controller('ScanController', function ScanController($scope, $http, $c
             loadItemGroups();
         });
     }
+
+    function createScanUrl(add, multiple) {
+        var ret = encodeURIComponent($location.absUrl().replace(/\?.*/, '') + '?code={CODE}&' + (add?'add':'remove') + '=1' + (multiple?'&repeat':''));
+        $window.location.href = 'zxing://scan/?ret=' + ret;
+    }
+
+    $scope.scanNew = function(multiple) { createScanUrl(true, multiple); }
+    $scope.scanRemove = function(multiple) { createScanUrl(false, multiple); }
 
 });

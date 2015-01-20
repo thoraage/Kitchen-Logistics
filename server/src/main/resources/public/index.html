@@ -86,20 +86,24 @@
 
     <div class="btn-toolbar">
         <div class="btn-group btn-group-lg">
-            <button id="scan-new-button" class="btn btn-default" ng-disabled="!itemGroup"><span
-                    class="glyphicon glyphicon-barcode"></span> New</button>
-            <button id="scan-new-button-repeat" class="btn btn-default" ng-disabled="!itemGroup"><span
-                    class="glyphicon glyphicon-repeat"></span></button>
+            <button id="scan-new-button" class="btn btn-default" ng-disabled="!itemGroup" ng-click="scanNew(false)">
+                <span class="glyphicon glyphicon-barcode"></span> New
+            </button>
+            <button id="scan-new-button-repeat" class="btn btn-default" ng-disabled="!itemGroup" ng-click="scanNew(true)">
+                <span class="glyphicon glyphicon-repeat"></span>
+            </button>
             <select ng-change="changeItemGroup()" ng-model="itemGroup" ng-options="ig.name for ig in itemGroups"></select>
         </div>
     </div>
     <br/>
     <div class="btn-toolbar">
         <div class="btn-group btn-group-lg">
-            <button id="scan-remove-button" class="btn btn-default"><span
-                    class="glyphicon glyphicon-barcode"></span> Remove</button>
-            <button id="scan-remove-button-repeat" class="btn btn-default"><span
-                    class="glyphicon glyphicon-repeat"></span></button>
+            <button id="scan-remove-button" class="btn btn-default" ng-click="scanRemove(false)">
+                <span class="glyphicon glyphicon-barcode"></span> Remove
+            </button>
+            <button id="scan-remove-button-repeat" class="btn btn-default" ng-click="scanRemove(true)">
+                <span class="glyphicon glyphicon-repeat"></span>
+            </button>
         </div>
     </div>
 
