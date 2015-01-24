@@ -74,10 +74,10 @@ kitLogApp.controller('ScanController', function ScanController($scope, $http, $c
         }
     };
 
-
-    $scope.saveItemGroup = function(newItemGroup) {
-        $http.put('rest/itemGroups', newItemGroup).success(function(id) {
-            $cookies.selectedItemGroupId = id;
+    $scope.saveItemGroup = function() {
+        $http.put('rest/itemGroups', $scope.editItemGroup).success(function(generated) {
+            $scope.editItemGroup = null;
+            $cookies.selectedItemGroupId = generated.id;
             loadItemGroups();
         });
     }

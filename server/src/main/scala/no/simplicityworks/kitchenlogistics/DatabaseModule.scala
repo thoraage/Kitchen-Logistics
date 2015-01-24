@@ -34,8 +34,8 @@ trait DatabaseModule extends DatabaseProfileModule {
 
     def user = foreignKey("item_group_user_fk", userId, Users)(_.id)
 
-    def * = id.? ~ userId ~ name ~ created <> (ItemGroup, ItemGroup.unapply _)
-    def forInsert = userId ~ name ~ created <> ({t => ItemGroup(None, t._1, t._2, t._3)}, {(i: ItemGroup) => Some((i.userId, i.name, i.created))})
+    def * = id.? ~ userId.? ~ name ~ created <> (ItemGroup, ItemGroup.unapply _)
+    def forInsert = userId.? ~ name ~ created <> ({t => ItemGroup(None, t._1, t._2, t._3)}, {(i: ItemGroup) => Some((i.userId, i.name, i.created))})
 
     def getAll = database withSession { implicit session: Session =>
       Query(ItemGroups).list
@@ -56,8 +56,8 @@ trait DatabaseModule extends DatabaseProfileModule {
     def product = foreignKey("item_product_fk", productId, Products)(_.id)
     def itemGroup = foreignKey("item_item_group_fk", itemGroupId, ItemGroups)(_.id)
 
-    def * = id.? ~ userId ~ productId ~ itemGroupId ~ created <> (Item, Item.unapply _)
-    def forInsert = userId ~ productId ~ itemGroupId ~ created <> ({t => Item(None, t._1, t._2, t._3, t._4)}, {(i: Item) => Some((i.userId, i.productId, i.itemGroupId, i.created))})
+    def * = id.? ~ userId.? ~ productId ~ itemGroupId ~ created <> (Item, Item.unapply _)
+    def forInsert = userId.? ~ productId ~ itemGroupId ~ created <> ({t => Item(None, t._1, t._2, t._3, t._4)}, {(i: Item) => Some((i.userId, i.productId, i.itemGroupId, i.created))})
 
     def all = database withSession { implicit session: Session =>
       Query(Items).list
@@ -86,7 +86,11 @@ trait DatabaseModule extends DatabaseProfileModule {
     }
   }
 
-  lazy val database = Database.forDataSource(new ComboPooledDataSource())
+  lazy val database = {
+    val ds = new ComboPooledDataSource()
+    ds.setAutoCommitOnClose(true)
+    Database.forDataSource(ds)
+  }
   database withSession { implicit session: Session =>
     Products.ddl.create
     Users.ddl.create
@@ -97,7 +101,7 @@ trait DatabaseModule extends DatabaseProfileModule {
       Product(None, "43123", "Motorola XOOM™ with Wi-Fi"),
       Product(None, "43728432", "ROLA XOOM™"))
     val userId = Users.insert(User(None, "thoredge", "thoraageeldby@gmail.com"))
-    ItemGroups.insert(ItemGroup(None, userId, "Kjøleskap"))
+    ItemGroups.insert(ItemGroup(None, Some(userId), "Kjøleskap"))
   }
 
 }

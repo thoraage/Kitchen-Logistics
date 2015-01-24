@@ -8,6 +8,7 @@
     <script src="js/bootstrap.js"></script>
     <script src="js/angular.js"></script>
     <script src="js/angular-cookies.js"></script>
+    <script src="js/lodash.js"></script>
     <script src="js/action.js"></script>
     <script src="js/scan-controller.js"></script>
 </head>
@@ -80,7 +81,7 @@
                 <input type="text" class="form-control" id="itemGroupNameField" placeholder="Item group name"
                        ng-model="editItemGroup.name">
             </div>
-            <button ng-click="saveItemGroup(newItemGroup)" class="btn btn-default"><Submit></Submit></button>
+            <button ng-click="saveItemGroup()" class="btn btn-default">Submit</button>
         </form>
     </div>
 
