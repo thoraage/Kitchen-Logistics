@@ -86,11 +86,7 @@ trait DatabaseModule extends DatabaseProfileModule {
     }
   }
 
-  lazy val database = {
-    val ds = new ComboPooledDataSource()
-    ds.setAutoCommitOnClose(true)
-    Database.forDataSource(ds)
-  }
+  lazy val database = Database.forDataSource(new ComboPooledDataSource())
   database withSession { implicit session: Session =>
     Products.ddl.create
     Users.ddl.create
