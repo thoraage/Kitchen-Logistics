@@ -1,4 +1,4 @@
-kitLogApplication.controller('LoginController', function LoginController($scope, $http, authService) {
+kitLogApplication.controller('LoginController', function($scope, $http, authService) {
 
     $scope.$on('event:auth-loginRequired', function() {
         $('#loginModal').modal('show');
