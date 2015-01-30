@@ -4,10 +4,12 @@
     <title>Kitchen Logistics</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/bootstrap.min.css">
+    <script src="js/base64.js"></script>
     <script src="js/jquery-2.0.3.js"></script>
     <script src="js/bootstrap.js"></script>
     <script src="js/angular.js"></script>
     <script src="js/angular-cookies.js"></script>
+    <script src="js/http-auth-interceptor.js"></script>
     <script src="js/lodash.js"></script>
     <script src="js/action.js"></script>
     <script src="js/scan-controller.js"></script>
@@ -105,6 +107,28 @@
             <button id="scan-remove-button-repeat" class="btn btn-default" ng-click="scanRemove(true)">
                 <span class="glyphicon glyphicon-repeat"></span>
             </button>
+        </div>
+    </div>
+
+    <div class="modal fade" id="loginModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form role="form">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="usernameField">User name</label>
+                            <input type="text" class="form-control" id="usernameField" placeholder="Username" ng-model="login.username">
+                        </div>
+                        <div class="form-group">
+                            <label for="passwordField">Password</label>
+                            <input type="password" class="form-control" id="passwordField" placeholder="Password" ng-model="login.password">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary btn-default" ng-click="login.login()">Login</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 

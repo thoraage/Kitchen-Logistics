@@ -1,5 +1,7 @@
 package no.simplicityworks.kitchenlogistics
 
+import java.security.MessageDigest
+
 import com.mchange.v2.c3p0.ComboPooledDataSource
 import java.sql.Date
 
@@ -72,6 +74,7 @@ trait DatabaseModule extends DatabaseProfileModule {
   }
 
   object Users extends Table[User]("user") {
+    val passwordSalt = "kitlogsaltysalt"
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
     def username = column[String]("username")
     def email = column[String]("email")
@@ -88,6 +91,7 @@ trait DatabaseModule extends DatabaseProfileModule {
 
   lazy val database = Database.forDataSource(new ComboPooledDataSource())
   database withSession { implicit session: Session =>
+    val md5 = MessageDigest.getInstance("MD5")
     Products.ddl.create
     Users.ddl.create
     ItemGroups.ddl.create
@@ -96,7 +100,7 @@ trait DatabaseModule extends DatabaseProfileModule {
       Product(None, "5423", "Nexus S"),
       Product(None, "43123", "Motorola XOOM™ with Wi-Fi"),
       Product(None, "43728432", "ROLA XOOM™"))
-    val userId = Users.insert(User(None, "thoredge", "thoraageeldby@gmail.com"))
+      val userId = Users.insert(User(None, "thoredge", "thoraageeldby@gmail.com",  md5.digest((Users.passwordSalt + "pass").getBytes("UTF-8"))))
     ItemGroups.insert(ItemGroup(None, Some(userId), "Kjøleskap"))
   }
 

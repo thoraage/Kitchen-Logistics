@@ -1,18 +1,52 @@
 package no.simplicityworks.kitchenlogistics
 
-import unfiltered.filter.Plan
+import java.security.MessageDigest
+import java.util.UUID
+
+import org.json4s.NoTypeHints
+import org.json4s.native.Serialization
+import org.json4s.native.Serialization.{read, write}
+import unfiltered.Cookie
+import unfiltered.directives.Directives._
+import unfiltered.directives._
+import unfiltered.filter.{Plan, Planify}
 import unfiltered.request._
 import unfiltered.response._
-import unfiltered.directives._
-import unfiltered.directives.Directives._
-import org.json4s.native.Serialization
-import org.json4s.native.Serialization.{write, read}
-import org.json4s.NoTypeHints
+
 import scala.slick.driver.H2Driver.simple._
 
 trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
 
-  override def plans = RestPlan :: super.plans
+  override def plans = authenticationPlan :: RestPlan :: super.plans
+
+  // TODO cache should empty itself
+  private val sessionCache = collection.mutable.Map[UUID, String]()
+  private val md5 = MessageDigest.getInstance("MD5")
+
+    def compare(bs1: Array[Byte], bs2: Array[Byte]) = {
+        if (bs1.size != bs2.size) false
+        else bs1.zip(bs2).forall(b => b._1 == b._2)
+    }
+
+    def getAuthenticatedUser(uuid: String) = sessionCache.get(UUID.fromString(uuid))
+
+    private val authenticationPlan = Planify {
+        case Path(Seg("rest" :: _)) & Cookies(cookies) if cookies("auth").map(_.value).exists(s => getAuthenticatedUser(s).isDefined) =>
+            Pass
+        case Path(Seg("rest" :: "authenticate" :: Nil)) & BasicAuth(name, pass) =>
+            val user = database withSession { implicit session: Session =>
+                (for {user <- Query(Users) if user.username === name} yield user).firstOption
+            }
+            if (user.exists(user => compare(user.password, md5.digest((Users.passwordSalt + pass).getBytes("UTF-8"))))) {
+                val uuid = UUID.randomUUID
+                synchronized(sessionCache += (uuid -> name))
+                SetCookies(Cookie("auth", uuid.toString, maxAge = Some(1000*60*30))) ~> Ok
+            } else {
+                Unauthorized ~> ResponseString("Not authorized")
+            }
+        case req @ Path(Seg("rest" :: _)) =>
+            Unauthorized ~> ResponseString("Not authorized")
+  }
 
   private object RestPlan extends Plan {
     implicit val formats = Serialization.formats(NoTypeHints)
@@ -43,7 +77,7 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
           })
       case Seg("rest" :: "items" :: Nil) =>
         (for {
-          method <- GET
+          _ <- GET
           _ <- Accepts.Json
           r <- request[Any]
         } yield {
