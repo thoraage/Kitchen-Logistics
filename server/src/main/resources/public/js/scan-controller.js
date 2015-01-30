@@ -1,6 +1,4 @@
-var kitLogApp = angular.module('KitLogApp', ['ngCookies', 'http-auth-interceptor']);
-
-kitLogApp.controller('ScanController', function ScanController($scope, $http, $cookies, $log, $location, $window, authService) {
+kitLogApplication.controller('ScanController', function ScanController($scope, $http, $cookies, $log, $location, $window, authService) {
     function populateItems() {
         $http.get('rest/items').success(function(data) {
             $scope.items = data;
