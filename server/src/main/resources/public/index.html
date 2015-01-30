@@ -14,6 +14,7 @@
     <script src="js/action.js"></script>
     <script src="js/kit-log-application.js"></script>
     <script src="js/scan-controller.js"></script>
+    <script src="js/login-controller.js"></script>
 </head>
 <body ng-controller="ScanController">
 
@@ -111,22 +112,22 @@
         </div>
     </div>
 
-    <div class="modal fade" id="loginModal">
+    <div ng-controller="LoginController" class="modal fade" id="loginModal">
         <div class="modal-dialog">
             <div class="modal-content">
                 <form role="form">
                     <div class="modal-body">
                         <div class="form-group">
                             <label for="usernameField">User name</label>
-                            <input type="text" class="form-control" id="usernameField" placeholder="Username" ng-model="login.username">
+                            <input type="text" class="form-control" id="usernameField" placeholder="Username" ng-model="username">
                         </div>
                         <div class="form-group">
                             <label for="passwordField">Password</label>
-                            <input type="password" class="form-control" id="passwordField" placeholder="Password" ng-model="login.password">
+                            <input type="password" class="form-control" id="passwordField" placeholder="Password" ng-model="password">
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-primary btn-default" ng-click="login.login()">Login</button>
+                        <button type="button" class="btn btn-primary btn-default" ng-click="login()">Login</button>
                     </div>
                 </form>
             </div>

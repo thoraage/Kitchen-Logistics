@@ -1,4 +1,5 @@
 kitLogApplication.controller('ScanController', function ScanController($scope, $http, $cookies, $log, $location, $window, authService) {
+
     function populateItems() {
         $http.get('rest/items').success(function(data) {
             $scope.items = data;
@@ -83,22 +84,6 @@ kitLogApplication.controller('ScanController', function ScanController($scope, $
     function createScanUrl(add, multiple) {
         var ret = encodeURIComponent($location.absUrl().replace(/\?.*/, '') + '?code={CODE}&' + (add?'add':'remove') + '=1' + (multiple?'&repeat':''));
         $window.location.href = 'zxing://scan/?ret=' + ret;
-    }
-
-    $scope.$on('event:auth-loginRequired', function() {
-        $('#loginModal').modal('show');
-    });
-    $scope.$on('event:auth-loginConfirmed', function() {
-        console.log("Logged in");
-        $('#loginModal').modal('hide');
-    });
-    $scope.login = {};
-    $scope.login.login = function() {
-        $http({method: 'PUT', url: 'rest/authenticate', headers: {
-            'Authorization': 'Basic ' + Base64.encode($scope.login.username + ':' + $scope.login.password)}
-        }).success(function(data, status, headers, config) {
-            authService.loginConfirmed();
-        });
     }
 
     $scope.scanNew = function(multiple) { createScanUrl(true, multiple); }
