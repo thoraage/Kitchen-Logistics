@@ -7,17 +7,22 @@ kitLogApplication.controller('ScanController', function($scope, $http, $cookies,
     }
 
     function putItemAndPopulate(id) {
-        $http.put('rest/items', {'productId': id}).success(function(data) {
+        $http.put('rest/items', {'productId': id, 'itemGroupId': cookieItemGroupId()}).success(function(data) {
             populateItems();
         });
     }
 
+    function cookieItemGroupId() {
+        var itemGroupId = $cookies.selectedItemGroupId;
+        if (itemGroupId) {
+            return parseInt(itemGroupId);
+        }
+        return null;
+    }
+
     function loadItemGroups() {
         $http.get('rest/itemGroups').success(function(data) {
-            var itemGroupId = $cookies.selectedItemGroupId;
-            if (itemGroupId) {
-                itemGroupId = parseInt(itemGroupId);
-            }
+            var itemGroupId = cookieItemGroupId();
             data.push({id: -1, name: 'New item group'});
             $scope.itemGroups = data;
             for (i = 0; i < $scope.itemGroups.length; ++i) {
