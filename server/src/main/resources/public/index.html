@@ -22,27 +22,6 @@
 
     <h1>Kitchen Logistics</h1>
 
-    <div class="well" ng-show="items">
-        <h2>Scanned</h2>
-        <table class="table table-striped">
-            <thead>
-            <tr>
-                <th>Count</th>
-                <th>Product</th>
-            </tr>
-            </thead>
-            <tr ng-repeat="item in items">
-                <td>{{item.count}}</td>
-                <td>{{item.product.name}}</td>
-                <td>
-                    <button ng-click="removeItem(item.lastItemId)" class="btn btn-xs btn-link">
-                        <span class="glyphicon glyphicon-remove"></span>
-                    </button>
-                </td>
-            </tr>
-        </table>
-    </div>
-
     <div class="well" ng-show="products">
         <h2>Multiple </h2>
         <table class="table table-striped">
@@ -110,6 +89,29 @@
                 <span class="glyphicon glyphicon-repeat"></span>
             </button>
         </div>
+    </div>
+
+    <p/>
+
+    <div class="well" ng-show="items">
+        <h2>Scanned</h2>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Count</th>
+                <th>Product</th>
+            </tr>
+            </thead>
+            <tr ng-repeat="item in items">
+                <td>{{item.count}}</td>
+                <td>{{item.product.name}}</td>
+                <td>
+                    <button ng-click="removeItem(item.lastItemId)" class="btn btn-xs btn-link">
+                        <span class="glyphicon glyphicon-remove"></span>
+                    </button>
+                </td>
+            </tr>
+        </table>
     </div>
 
     <div ng-controller="LoginController" class="modal fade" id="loginModal">
