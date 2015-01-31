@@ -17,7 +17,7 @@ import scala.slick.driver.H2Driver.simple._
 
 trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
 
-  override def plans = authenticationPlan :: RestPlan :: super.plans
+  override def plans = authenticationPlan :: restPlan :: super.plans
 
   // TODO cache should empty itself
   private val sessionCache = collection.mutable.Map[UUID, String]()
@@ -35,23 +35,22 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
             for {
                 cookieMap <- Cookies.unapply(req)
                 authCookie <- cookieMap("auth")
-                _ <- sessionCache.get(UUID.fromString(authCookie.value))
-            } yield authCookie.value
+                username <- sessionCache.get(UUID.fromString(authCookie.value))
+            } yield username
     }
 
     object AuthenticatedUser {
         def unapply[T](req: HttpRequest[T]): Option[User] =
             database withSession { implicit session: Session =>
                 for {
-                    username <- AuthenticatedUsername.unapply(req)
-                    user <- (for {user <- Query(Users) if user.username === username} yield user).firstOption
+                    uuid <- AuthenticatedUsername.unapply(req)
+                    user <- (for {user <- Query(Users) if user.username === uuid} yield user).firstOption
                 } yield user
             }
     }
 
     private val authenticationPlan = Planify {
         case Path(Seg("rest" :: _)) & AuthenticatedUsername(username) =>
-            println("USERNAME " + username)
             Pass
         case Path(Seg("rest" :: "authenticate" :: Nil)) & BasicAuth(name, pass) =>
             val user = database withSession { implicit session: Session =>
@@ -68,19 +67,18 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
             Unauthorized ~> ResponseString("Not authorized")
   }
 
-  private object RestPlan extends Plan {
-    implicit val formats = Serialization.formats(NoTypeHints)
+    private implicit val formats = Serialization.formats(NoTypeHints)
 
-    def contentType(tpe: String) =
-      when {
-        case RequestContentType(`tpe`) =>
-      } orElse UnsupportedMediaType ~> ResponseString("Content type supported: " + tpe)
+    private def contentType(tpe: String) =
+        when {
+            case RequestContentType(`tpe`) =>
+        } orElse UnsupportedMediaType ~> ResponseString("Content type supported: " + tpe)
 
-    def extract: Params.Extract[Nothing, String] =
-      new Params.Extract("code", Params.first ~> Params.nonempty)
+    private def extract: Params.Extract[Nothing, String] =
+        new Params.Extract("code", Params.first ~> Params.nonempty)
 
-    def intent = Directive.Intent.Path {
-      case Seg("rest" :: "products" :: Nil) =>
+    private val restPlan = unfiltered.filter.Planify { Directive.Intent {
+      case Path(Seg("rest" :: "products" :: Nil)) =>
         (for {
           _ <- GET
           _ <- Accepts.Json
@@ -95,30 +93,20 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
             val id = Products.insert(read[Product](Body string r))
             Ok ~> ResponseString(write(Map("id" -> id)))
           })
-      case Seg("rest" :: "items" :: Nil) =>
-        (for {
-          _ <- GET
-          _ <- Accepts.Json
-          r <- request[Any]
-        } yield {
+      case Path(Seg("rest" :: "items" :: Nil)) & AuthenticatedUser(user) =>
+        (for { _ <- GET; _ <- Accepts.Json; r <- request[Any] } yield {
           val items = (database withSession { implicit session: Session =>
-            (for {
-              item <- Items
-              product <- item.product
-            } yield (product, item))
+            (for { item <- Items; product <- item.product } yield (product, item))
               .groupBy(p => (p._1.id, p._1.name))
               .map { case (id, pair) => (id, pair.length, pair.map(_._2.id).max) }.list
           }).map(p => Map("count" -> p._2, "product" -> Map("id" -> p._1._1, "name" -> p._1._2), "lastItemId" -> p._3))
           Ok ~> ResponseString(write(items))
         }).orElse(
-          for {
-            _ <- PUT
-            r <- request[Any]
-          } yield {
-            val id = Items.insert(read[Item](Body string r))
+          for { _ <- PUT; r <- request[Any] } yield {
+            val id = Items.insert(read[Item](Body string r).copy(userId = user.id))
             Ok ~> ResponseString(write(Map("id" -> id)))
           })
-      case Seg("rest" :: "items" :: IntString(itemId) :: Nil) =>
+      case Path(Seg("rest" :: "items" :: IntString(itemId) :: Nil)) =>
         for {
           _ <- DELETE
         } yield {
@@ -126,7 +114,7 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
           Ok ~> NoContent
         }
 
-      case Seg("rest" :: "itemGroups" :: Nil) =>
+      case Path(Seg("rest" :: "itemGroups" :: Nil)) =>
         (for {
           _ <- GET
           _ <- Accepts.Json
@@ -141,11 +129,11 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
           }
         )
     }
+    }
 
     object IntString {
       def unapply(v: String) = try Some(v.toInt)
       catch { case _: NumberFormatException => None }
     }
-  }
 
 }
