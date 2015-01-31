@@ -28,10 +28,30 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
         else bs1.zip(bs2).forall(b => b._1 == b._2)
     }
 
-    def getAuthenticatedUser(uuid: String) = sessionCache.get(UUID.fromString(uuid))
+    def getAuthenticatedUsername(uuid: String) = sessionCache.get(UUID.fromString(uuid))
+
+    object AuthenticatedUsername {
+        def unapply[T](req: HttpRequest[T]): Option[String] =
+            for {
+                cookieMap <- Cookies.unapply(req)
+                authCookie <- cookieMap("auth")
+                _ <- sessionCache.get(UUID.fromString(authCookie.value))
+            } yield authCookie.value
+    }
+
+    object AuthenticatedUser {
+        def unapply[T](req: HttpRequest[T]): Option[User] =
+            database withSession { implicit session: Session =>
+                for {
+                    username <- AuthenticatedUsername.unapply(req)
+                    user <- (for {user <- Query(Users) if user.username === username} yield user).firstOption
+                } yield user
+            }
+    }
 
     private val authenticationPlan = Planify {
-        case Path(Seg("rest" :: _)) & Cookies(cookies) if cookies("auth").map(_.value).exists(s => getAuthenticatedUser(s).isDefined) =>
+        case Path(Seg("rest" :: _)) & AuthenticatedUsername(username) =>
+            println("USERNAME " + username)
             Pass
         case Path(Seg("rest" :: "authenticate" :: Nil)) & BasicAuth(name, pass) =>
             val user = database withSession { implicit session: Session =>
