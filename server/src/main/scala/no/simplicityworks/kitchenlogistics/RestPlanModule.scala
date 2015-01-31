@@ -72,57 +72,47 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
 
     private val restPlan = unfiltered.filter.Planify {
         Directive.Intent {
-            case Path(Seg("rest" :: "products" :: Nil)) =>
-                (for {
-                    _ <- GET
-                    _ <- Accepts.Json
-                    Some(code) <- data.as.String named "code"
-                    r <- request[Any]
-                } yield Ok ~> ResponseString(write(Products.findByCode(code)))
-                    ).orElse(
-                        for {
-                            _ <- PUT
-                            r <- request[Any]
-                        } yield {
-                            val id = Products.insert(read[Product](Body string r))
-                            Ok ~> ResponseString(write(Map("id" -> id)))
-                        })
-            case Path(Seg("rest" :: "items" :: Nil)) & AuthenticatedUser(user) =>
-                (for {_ <- GET; _ <- Accepts.Json; r <- request[Any]} yield {
+            case Path(Seg("rest" :: "products" :: Nil)) => {
+                for {_ <- GET; _ <- Accepts.Json; Some(code) <- data.as.String named "code"; r <- request[Any]} yield
+                    Ok ~> ResponseString(write(Products.findByCode(code)))
+            } orElse {
+                for {_ <- PUT; r <- request[Any]} yield {
+                    val id = Products.insert(read[Product](Body string r))
+                    Ok ~> ResponseString(write(Map("id" -> id)))
+                }
+            }
+
+            case Path(Seg("rest" :: "items" :: Nil)) & AuthenticatedUser(user) => {
+                for {_ <- GET; _ <- Accepts.Json; r <- request[Any]} yield {
                     val items = (database withSession { implicit session: Session =>
                         (for {item <- Items if item.userId === user.id; product <- item.product} yield (product, item))
                             .groupBy(p => (p._1.id, p._1.name))
                             .map { case (id, pair) => (id, pair.length, pair.map(_._2.id).max)}.list
                     }).map(p => Map("count" -> p._2, "product" -> Map("id" -> p._1._1, "name" -> p._1._2), "lastItemId" -> p._3))
                     Ok ~> ResponseString(write(items))
-                }).orElse {
-                    for {_ <- PUT; r <- request[Any]} yield {
-                        val id = Items.insert(read[Item](Body string r).copy(userId = user.id))
-                        Ok ~> ResponseString(write(Map("id" -> id)))
-                    }
                 }
+            } orElse {
+                for {_ <- PUT; r <- request[Any]} yield {
+                    val id = Items.insert(read[Item](Body string r).copy(userId = user.id))
+                    Ok ~> ResponseString(write(Map("id" -> id)))
+                }
+            }
+
             case Path(Seg("rest" :: "items" :: IntString(itemId) :: Nil)) =>
-                for {
-                    _ <- DELETE
-                } yield {
+                for {_ <- DELETE} yield {
                     Items.delete(itemId)
                     Ok ~> NoContent
                 }
 
-            case Path(Seg("rest" :: "itemGroups" :: Nil)) =>
-                (for {
-                    _ <- GET
-                    _ <- Accepts.Json
-                    r <- request[Any]
-                } yield Ok ~> ResponseString(write(ItemGroups.getAll))).orElse(
-                        for {
-                            _ <- PUT
-                            r <- request[Any]
-                        } yield {
-                            val id = ItemGroups.insert(read[ItemGroup](Body string r))
-                            Ok ~> ResponseString(write(Map("id" -> id)))
-                        }
-                    )
+            case Path(Seg("rest" :: "itemGroups" :: Nil)) => {
+                for {_ <- GET; _ <- Accepts.Json; r <- request[Any]} yield
+                    Ok ~> ResponseString(write(ItemGroups.getAll))
+            } orElse {
+                for {_ <- PUT; r <- request[Any]} yield {
+                    val id = ItemGroups.insert(read[ItemGroup](Body string r))
+                    Ok ~> ResponseString(write(Map("id" -> id)))
+                }
+            }
         }
     }
 
