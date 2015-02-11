@@ -1,0 +1,1 @@
+insert into "user" ("username", "mail", "password", "created") values ('thoredge', 'thoraageeldby@gmail.com', decode(md5('kitlogsaltysalt' || 'pass'), 'hex'), now());
