@@ -101,7 +101,7 @@ trait DatabaseModule extends DatabaseProfileModule {
 
         def username = column[String]("username")
 
-        def email = column[String]("mail")
+        def email = column[String]("email")
 
         def created = column[Date]("created")
 
