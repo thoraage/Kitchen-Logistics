@@ -1,2 +1,2 @@
-web: sbt "runMain no.simplicityworks.kitchenlogistics.ApplicationProduction"
+web: sbt "runMain no.simplicityworks.kitchenlogistics.ApplicationDevelopment"
 
