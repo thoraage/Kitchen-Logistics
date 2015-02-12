@@ -9,7 +9,7 @@ import org.flywaydb.core.Flyway
 
 trait DatabaseModule extends DatabaseProfileModule {
 
-    import driver.simple._
+    import databaseProfile.driver.simple._
 
     object Products extends Table[Product]("global_product") {
         def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
@@ -118,25 +118,18 @@ trait DatabaseModule extends DatabaseProfileModule {
 
     lazy val database = {
         val ds = new ComboPooledDataSource()
-        if (driver.getClass.getName.contains("H2")) {
-            ds.setJdbcUrl("jdbc:h2:mem:test")
-            ds.setDriverClass("org.h2.Driver")
-            ds.setUser("root")
-            ds.setPassword("")
-        } else {
-            ds.setJdbcUrl("jdbc:postgresql://localhost/kitlog")
-            ds.setDriverClass("org.postgresql.Driver")
-            ds.setUser("kitlog")
-            ds.setPassword("kitlog")
-        }
-        if (driver.getClass.getName.contains("Postgres")) {
+        ds.setJdbcUrl(databaseProfile.jdbcUrl)
+        ds.setDriverClass(databaseProfile.driverClass)
+        ds.setUser(databaseProfile.username)
+        ds.setPassword(databaseProfile.password)
+        if (databaseProfile.generation == DatabaseGeneration.flyway) {
             val flyway = new Flyway
             flyway.setDataSource(ds)
             flyway.migrate()
         }
         Database.forDataSource(ds)
     }
-    if (driver.getClass.getName.contains("H2")) {
+    if (databaseProfile.generation == DatabaseGeneration.slickDdl) {
         database withSession { implicit session: Session =>
             val md5 = MessageDigest.getInstance("MD5")
             val ddls = Seq(Products.ddl, Users.ddl, ItemGroups.ddl, Items.ddl)
