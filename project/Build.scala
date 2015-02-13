@@ -1,11 +1,10 @@
-import com.earldouglas.xwp.XwpPlugin
 import sbt._
 import Keys._
 
 object Build extends Build {
   import Dependencies._
 
-  lazy val myProject = Project("kitchen-logistics", file("."))
+  lazy val myProject = Project("kitlog", file("."))
     .settings(
       organization  := "com.example",
       version       := "0.9.0",
@@ -31,7 +30,6 @@ object Build extends Build {
         "ch.qos.logback"            %  "logback-classic" % V.logback
       )
     )
-    .settings(XwpPlugin.jetty() :_*)
 }
 
 object Dependencies {

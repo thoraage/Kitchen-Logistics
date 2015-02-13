@@ -1,1 +1,1 @@
-addSbtPlugin("com.earldouglas" % "xsbt-web-plugin" % "1.0.0")
+addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "0.8.0")
