@@ -2,6 +2,6 @@ package no.simplicityworks.kitchenlogistics
 
 object ApplicationProduction extends Application {
 
-    lazy override val stack = new RestPlanModule with DatabaseModule with ProductionDatabaseProfileModule
+    lazy override val stack = new RestPlanModule with DatabaseModule with DevelopmentDatabaseProfileModule //ProductionDatabaseProfileModule
 
 }

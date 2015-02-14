@@ -1,2 +1,2 @@
-web: sbt "runMain no.simplicityworks.kitchenlogistics.ApplicationDevelopment"
+web: target/universal/stage/bin/kitlog
 

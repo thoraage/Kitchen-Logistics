@@ -2,7 +2,7 @@ import NativePackagerKeys._
 
 packageArchetype.java_application
 
-name := """kitlog"""
+name := "kitlog"
 
 version := "1.0"
 
