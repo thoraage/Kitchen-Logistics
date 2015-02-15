@@ -15,10 +15,20 @@
     <script src="js/kit-log-application.js"></script>
     <script src="js/scan-controller.js"></script>
     <script src="js/login-controller.js"></script>
+    <script src="js/error-handler.js"></script>
 </head>
 <body ng-controller="ScanController">
 
 <div class="container">
+
+    <div class="alert alert-danger alert-dismissible" role="alert" ng-show="error" ng-controller="ErrorHandlerController">
+        <button type="button" class="close" ng-click="error = undefined"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <p>{{error}}</p>
+        <div ng-show="errorDetails">
+            <a data-toggle="collapse" data-target="#collapseErrorDetails" href class="tableCollapserLink collapsed">Detaljer </a>
+            <p id="collapseErrorDetails" class="panel-collapse collapse">{{errorDetails}}</p>
+        </div>
+    </div>
 
     <h1>Kitchen Logistics</h1>
 
