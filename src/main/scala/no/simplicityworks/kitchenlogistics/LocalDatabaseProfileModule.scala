@@ -1,6 +1,6 @@
 package no.simplicityworks.kitchenlogistics
 
-trait ProductionDatabaseProfileModule extends DatabaseProfileModule {
+trait LocalDatabaseProfileModule extends DatabaseProfileModule {
 
     override lazy val databaseProfile = new DatabaseProfile {
         override val driver = scala.slick.driver.PostgresDriver
