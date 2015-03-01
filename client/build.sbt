@@ -16,7 +16,10 @@ proguardOptions in Android ++= Seq("-dontobfuscate", "-dontoptimize", "-keepattr
   , "-dontwarn scala.collection.**" // required from Scala 2.11.4
 )
 
-libraryDependencies += "org.scaloid" %% "scaloid" % "3.6.1-10" withSources() withJavadoc()
+libraryDependencies ++= Seq(
+    "org.scaloid" %% "scaloid" % "3.6.1-10" withSources() withJavadoc(),
+    "net.databinder.dispatch" %% "dispatch-core" % "0.11.2" withSources() withJavadoc()
+)
 
 scalacOptions in Compile += "-feature"
 

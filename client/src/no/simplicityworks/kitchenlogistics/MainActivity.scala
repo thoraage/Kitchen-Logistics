@@ -5,7 +5,7 @@ import android.view.View
 import android.widget.ArrayAdapter
 import collection.JavaConversions.seqAsJavaList
 
-class MainActivity extends TypedActivity with LocalSQLiteStorage with ZXingScanner with Dialogs {
+class MainActivity extends TypedActivity with KitLogRestStorage with ZXingScanner with Dialogs {
 
   def updateItemsList() {
     val itemNames = database.findItems().map(item => item.product.name + " - " + item.product.code)
