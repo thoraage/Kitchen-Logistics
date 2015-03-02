@@ -5,7 +5,6 @@ object ApplicationStaging extends Application {
     lazy override val stack = new RestPlanModule with DatabaseModule {
 
         override lazy val databaseProfile = new DatabaseProfile {
-            override val driver = scala.slick.driver.PostgresDriver
             override val generation = DatabaseGeneration.flyway
             override val password: String = "kitlog"
             override val username: String = "kitlog"

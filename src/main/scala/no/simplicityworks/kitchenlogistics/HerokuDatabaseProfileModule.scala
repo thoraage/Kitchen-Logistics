@@ -6,7 +6,6 @@ trait HerokuDatabaseProfileModule extends DatabaseProfileModule {
 
     override lazy val databaseProfile = new DatabaseProfile {
         private val dbUri = new URI(System.getenv("DATABASE_URL"))
-        override val driver = scala.slick.driver.PostgresDriver
         override val generation = DatabaseGeneration.flyway
         override val password: String = dbUri.getUserInfo.split(":")(1)
         override val username: String = dbUri.getUserInfo.split(":")(0)

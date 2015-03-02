@@ -9,11 +9,11 @@ import org.json4s.native.Serialization.{read, write}
 import unfiltered.Cookie
 import unfiltered.directives.Directives._
 import unfiltered.directives._
-import unfiltered.filter.{Plan, Planify}
+import unfiltered.filter.Planify
 import unfiltered.request._
 import unfiltered.response._
 
-import scala.slick.driver.H2Driver.simple._
+import scala.slick.driver.JdbcDriver.simple._
 
 trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
 
@@ -39,7 +39,7 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
             database withSession { implicit session: Session =>
                 for {
                     uuid <- AuthenticatedUsername.unapply(req)
-                    user <- (for {user <- Query(Users) if user.username === uuid} yield user).firstOption
+                    user <- (for {user <- TableQuery[Users] if user.username === uuid} yield user).firstOption
                 } yield user
             }
     }
@@ -49,7 +49,7 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
             Pass
         case Path(Seg("rest" :: "authenticate" :: Nil)) & BasicAuth(name, pass) =>
             val user = database withSession { implicit session: Session =>
-                (for {user <- Query(Users) if user.username === name} yield user).firstOption
+                (for {user <- TableQuery[Users] if user.username === name} yield user).firstOption
             }
             if (user.exists(user => user.password.sameElements(md5.digest((Users.passwordSalt + pass).getBytes("UTF-8"))))) {
                 val uuid = UUID.randomUUID
@@ -70,6 +70,8 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
     private def extract: Params.Extract[Nothing, String] =
         new Params.Extract("code", Params.first ~> Params.nonempty)
 
+    case class ItemSummary(count: Int, product: Product, lastItemId: Int)
+
     private val restPlan = unfiltered.filter.Planify {
         Directive.Intent {
             case Path(Seg("rest" :: "products" :: Nil)) => {
@@ -85,23 +87,27 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
             case Path(Seg("rest" :: "items" :: Nil)) & AuthenticatedUser(user) => {
                 for {_ <- GET; _ <- Accepts.Json; r <- request[Any]} yield {
                     val items = (database withSession { implicit session: Session =>
-                        (for {item <- Items if item.userId === user.id; product <- item.product} yield (product, item))
-                            .groupBy(p => (p._1.id, p._1.name))
-                            .map { case (id, pair) => (id, pair.length, pair.map(_._2.id).max)}.list
-                    }).map(p => Map("count" -> p._2, "product" -> Map("id" -> p._1._1, "name" -> p._1._2), "lastItemId" -> p._3))
+                        (for {item <- TableQuery[Items] if item.userId === user.id; product <- item.product} yield (product, item))
+                            .groupBy(p => p._1)
+                            .map { case (product, pair) => (product, pair.length, pair.map(_._2.id).max)}.list
+                    }).map(p => ItemSummary(p._2, p._1, p._3.get))
                     Ok ~> ResponseString(write(items))
                 }
             } orElse {
                 for {_ <- PUT; r <- request[Any]} yield {
-                    val id = Items.insert(read[Item](Body string r).copy(userId = user.id))
-                    Ok ~> ResponseString(write(Map("id" -> id)))
+                    database withSession { implicit session: Session =>
+                        val id = TableQuery[Items].insert(read[Item](Body string r).copy(userId = user.id))
+                        Ok ~> ResponseString(write(Map("id" -> id)))
+                    }
                 }
             }
 
             case Path(Seg("rest" :: "items" :: IntString(itemId) :: Nil)) =>
                 for {_ <- DELETE} yield {
-                    Items.delete(itemId)
-                    Ok ~> NoContent
+                    database withSession { implicit session: Session =>
+                        TableQuery[Items].filter(_.id === itemId).delete
+                        Ok ~> NoContent
+                    }
                 }
 
             case Path(Seg("rest" :: "itemGroups" :: Nil)) & AuthenticatedUser(user) => {

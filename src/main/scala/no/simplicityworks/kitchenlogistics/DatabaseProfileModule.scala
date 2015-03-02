@@ -9,7 +9,6 @@ trait DatabaseProfile {
     val username: String
     val driverClass: String
     val jdbcUrl: String
-    val driver: scala.slick.driver.ExtendedDriver
     val generation: DatabaseGeneration.Type
 }
 
