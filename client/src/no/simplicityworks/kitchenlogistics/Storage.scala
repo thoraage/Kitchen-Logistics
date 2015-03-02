@@ -1,6 +1,6 @@
 package no.simplicityworks.kitchenlogistics
 
-import android.content.Context
+import java.util.Date
 
 /**
  * @author Thor Åge Eldby (thoraageeldby@gmail.com)
@@ -15,11 +15,12 @@ trait Storage {
     def findProductByCode(identifier: String): Option[Product]
     def saveProduct(product: Product): Product
     def saveItem(item: Item): Item
-    def findItems(): Seq[Item]
+    def findItems(): Seq[ItemSummary]
   }
 
-  case class Product(id: Option[Long], code: String, name: String)
-  case class Item(id: Option[Long], productId: Long) {
+    case class Product(id: Option[Int], code: String, name: String, created: Date = new Date)
+    case class ItemSummary(count: Int, product: Product, lastItemId: Int)
+    case class Item(id: Option[Long], productId: Long) {
     lazy val product = database.findProductById(productId)
   }
 

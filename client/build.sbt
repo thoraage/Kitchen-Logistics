@@ -18,7 +18,8 @@ proguardOptions in Android ++= Seq("-dontobfuscate", "-dontoptimize", "-keepattr
 
 libraryDependencies ++= Seq(
     "org.scaloid" %% "scaloid" % "3.6.1-10" withSources() withJavadoc(),
-    "net.databinder.dispatch" %% "dispatch-core" % "0.11.2" withSources() withJavadoc()
+    "net.databinder.dispatch" %% "dispatch-core" % "0.11.2" withSources() withJavadoc(),
+    "net.databinder.dispatch" %% "dispatch-json4s-jackson" % "0.11.2" withSources() withJavadoc()
 )
 
 scalacOptions in Compile += "-feature"

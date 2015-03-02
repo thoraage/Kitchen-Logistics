@@ -2,12 +2,15 @@ package no.simplicityworks.kitchenlogistics
 
 import com.ning.http.client.cookie.Cookie
 import com.ning.http.client.{Request, AsyncHandler}
-import dispatch._, Defaults._
+import dispatch._, Defaults._, dispatch.as._
+import org.json4s._
+import org.json4s.jackson.Serialization
 
 import scala.collection.JavaConversions.asScalaIterator
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import org.json4s.DefaultJsonFormats
 
 trait KitLogRestStorage extends Storage {
 
@@ -24,15 +27,17 @@ trait KitLogRestStorage extends Storage {
                 f
         }
 
+        private implicit val formats = Serialization.formats(NoTypeHints)
+
         override def findProductByCode(identifier: String): Option[Product] = ???
 
         override def saveProduct(product: Product): Product = ???
 
         override def saveItem(item: Item): Item = ???
 
-        override def findItems(): Seq[Item] = auth {
+        override def findItems(): Seq[ItemSummary] = auth {
             val req = url(s"$host/rest/items").addCookie(authCookie.getOrElse(throw StatusCode(401))).addHeader("Accept", "application/json")
-            Await.result(http(req OK as.String), 5 seconds)
+            Await.result(http(req OK json4s.Json), 5 seconds).extract[Seq[ItemSummary]]
         }
 
         override def findProductById(id: Long): Product = ???
