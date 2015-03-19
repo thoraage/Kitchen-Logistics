@@ -18,10 +18,11 @@ trait Storage {
     def findItems(): Seq[ItemSummary]
   }
 
-    case class Product(id: Option[Int], code: String, name: String, created: Date = new Date)
-    case class ItemSummary(count: Int, product: Product, lastItemId: Int)
     case class Item(id: Option[Long], productId: Long) {
-    lazy val product = database.findProductById(productId)
-  }
+      lazy val product = database.findProductById(productId)
+    }
 
 }
+
+case class Product(id: Option[Int], code: String, name: String, created: String)
+case class ItemSummary(count: Int, product: Product, lastItemId: Int)

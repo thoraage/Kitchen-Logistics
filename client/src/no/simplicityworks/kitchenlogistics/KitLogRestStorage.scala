@@ -1,33 +1,42 @@
 package no.simplicityworks.kitchenlogistics
 
-import com.ning.http.client.cookie.Cookie
-import com.ning.http.client.{Request, AsyncHandler}
-import dispatch._, Defaults._, dispatch.as._
-import org.json4s._
-import org.json4s.jackson.Serialization
+import java.io.InputStreamReader
 
-import scala.collection.JavaConversions.asScalaIterator
-import scala.concurrent.Await
-import scala.concurrent.duration._
+import android.util.Log
+
+//import org.json4s._
+//import org.json4s.jackson.JsonMethods._
+import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
+import org.apache.http.client.methods.HttpGet
+import org.apache.http.impl.client.DefaultHttpClient
+//import org.json4s._
+//import org.json4s.jackson.Serialization.read
+
+import argonaut._, Argonaut._
+
+import scala.io.Source
 import scala.language.postfixOps
-import org.json4s.DefaultJsonFormats
 
 trait KitLogRestStorage extends Storage {
 
     val database = new Database {
-        val http = new Http
-        val host = "http://localhost:8080"
-        var authCookie: Option[Cookie] = None
+//        val host = "http://localhost:8080"
+//        val host = "http://192.168.0.198:8080"
+        val host = "http://10.20.11.167:8080"
+        val client = new DefaultHttpClient
+        client.getCredentialsProvider.setCredentials(new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT), new UsernamePasswordCredentials("thoredge", "pass"))
 
-        def auth[T](f: => T): T = try f catch {
-            case StatusCode(401) =>
-                val req = url(s"$host/rest/authenticate").as_!("thoredge", "pass")
-                val cookies = Await.result(for (res <- http(req)) yield res.getCookies, 5 seconds)
-                authCookie = asScalaIterator(cookies.iterator()).find(_.getName == "auth")
-                f
-        }
+        implicit def productCodecJson: CodecJson[Product] =
+            casecodec4(Product.apply, Product.unapply)("id", "code", "name", "created")
+        implicit def itemSummaryCodecJson: CodecJson[ItemSummary] =
+            casecodec3(ItemSummary.apply, ItemSummary.unapply)("count", "product", "lastItemId")
 
-        private implicit val formats = Serialization.formats(NoTypeHints)
+        case class Person(name: String, age: Option[Int], things: List[String])
+        implicit def PersonCodecJson: CodecJson[Person] =
+            casecodec3(Person.apply, Person.unapply)("name", "age", "things")
+
+        //        implicit val formats = DefaultFormats
+//        private implicit val formats = Serialization.formats(NoTypeHints)
 
         override def findProductByCode(identifier: String): Option[Product] = ???
 
@@ -35,9 +44,26 @@ trait KitLogRestStorage extends Storage {
 
         override def saveItem(item: Item): Item = ???
 
-        override def findItems(): Seq[ItemSummary] = auth {
-            val req = url(s"$host/rest/items").addCookie(authCookie.getOrElse(throw StatusCode(401))).addHeader("Accept", "application/json")
-            Await.result(http(req OK json4s.Json), 5 seconds).extract[Seq[ItemSummary]]
+        override def findItems(): Seq[ItemSummary] = {
+            Seq(ItemSummary(8, Product(None, "", "", ""), 8))
+            val request = new HttpGet(s"$host/rest/items")
+            request.setHeader("Accept", "application/json")
+            val response = client.execute(request)
+//            Log.e("Hei", classOf[ItemSummary].getConstructors.toList.mkString(", "))
+            if (response.getStatusLine.getStatusCode / 100 != 2) {
+                throw new RuntimeException(s"Invalid http status ${response.getStatusLine}")
+            }
+            //            read[Seq[ItemSummary]](new InputStreamReader(response.getEntity.getContent))
+            val string = Source.fromInputStream(response.getEntity.getContent).mkString
+            Parse.decodeOption[Stream[ItemSummary]](string).get
+//            read[Seq[ItemSummary]](string)
+//            parse(string) match {
+//                case JArray(list) => list.map {
+//                    case JObject(List((count,JInt(count)), (product,JObject(List((id,JInt(1)), (code,JString(8012156001185)), (name,JString(Tull)), (created,JString(2015-03-01T00:00:00.000Z))))), (lastItemId,JInt(3)))) =>
+//                        ItemSummary(count.intValue, Product(), )
+//                }
+//                case _ => sys.error(s"Unable to parse $string")
+//            }
         }
 
         override def findProductById(id: Long): Product = ???

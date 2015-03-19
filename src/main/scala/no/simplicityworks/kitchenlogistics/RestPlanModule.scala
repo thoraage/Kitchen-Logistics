@@ -4,8 +4,8 @@ import java.security.MessageDigest
 import java.util.UUID
 
 import org.json4s.NoTypeHints
-import org.json4s.native.Serialization
-import org.json4s.native.Serialization.{read, write}
+import org.json4s.jackson.Serialization
+import org.json4s.jackson.Serialization.{read, write}
 import unfiltered.Cookie
 import unfiltered.directives.Directives._
 import unfiltered.directives._
@@ -47,17 +47,19 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
     private val authenticationPlan = Planify {
         case Path(Seg("rest" :: _)) & AuthenticatedUsername(username) =>
             Pass
-        case Path(Seg("rest" :: "authenticate" :: Nil)) & BasicAuth(name, pass) =>
+        case Path(path) & BasicAuth(name, pass) =>
             val user = database withSession { implicit session: Session =>
                 (for {user <- TableQuery[Users] if user.username === name} yield user).firstOption
             }
             if (user.exists(user => user.password.sameElements(md5.digest((Users.passwordSalt + pass).getBytes("UTF-8"))))) {
                 val uuid = UUID.randomUUID
                 synchronized(sessionCache += (uuid -> name))
-                SetCookies(Cookie("auth", uuid.toString, maxAge = Some(1000 * 60 * 30))) ~> Ok
-            } else Unauthorized ~> ResponseString("Not authorized")
+                SetCookies(Cookie("auth", uuid.toString, maxAge = Some(1000 * 60 * 30))) ~> Redirect(path)
+            } else {
+                Unauthorized ~> ResponseHeader("WWW-Authenticate", "Basic realm=\"kitlog\"" :: Nil)
+            }
         case req@Path(Seg("rest" :: _)) =>
-            Unauthorized ~> ResponseString("Not authorized")
+            Unauthorized ~> ResponseHeader("WWW-Authenticate", "Basic realm=\"kitlog\"" :: Nil)
     }
 
     private implicit val formats = Serialization.formats(NoTypeHints)
@@ -67,16 +69,16 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
             case RequestContentType(`tpe`) =>
         } orElse UnsupportedMediaType ~> ResponseString("Content type supported: " + tpe)
 
-    private def extract: Params.Extract[Nothing, String] =
-        new Params.Extract("code", Params.first ~> Params.nonempty)
+//    private def extract: Params.Extract[Nothing, String] =
+//        new Params.Extract("code", Params.first ~> Params.nonempty)
 
     case class ItemSummary(count: Int, product: Product, lastItemId: Int)
 
     private val restPlan = unfiltered.filter.Planify {
         Directive.Intent {
             case Path(Seg("rest" :: "products" :: Nil)) => {
-                for {_ <- GET; _ <- Accepts.Json; Some(code) <- data.as.String named "code"; r <- request[Any]} yield
-                    Ok ~> ResponseString(write(Products.findByCode(code)))
+                for {_ <- GET; _ <- Accepts.Json; code <- parameterValues("code")} yield
+                    Ok ~> ResponseString(write(Products.findByCode(code.head))) // TODO will crash
             } orElse {
                 for {_ <- PUT; r <- request[Any]} yield {
                     val id = Products.insert(read[Product](Body string r))

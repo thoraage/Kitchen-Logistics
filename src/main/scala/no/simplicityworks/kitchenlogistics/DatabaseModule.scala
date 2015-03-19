@@ -13,7 +13,7 @@ import scala.slick.lifted.Tag
 trait DatabaseModule extends DatabaseProfileModule {
 
     implicit val JavaUtilDateMapper =
-        MappedColumnType .base[java.util.Date, java.sql.Timestamp] (
+        MappedColumnType.base[java.util.Date, java.sql.Timestamp] (
             d => new java.sql.Timestamp(d.getTime),
             d => new java.util.Date(d.getTime))
 
