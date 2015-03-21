@@ -31,15 +31,17 @@ trait KitLogRestStorage extends Storage {
         override def saveItem(item: Item): Item = ???
 
         override def findItems(): Seq[ItemSummary] = {
-            Seq(ItemSummary(8, Product(None, "", "", ""), 8))
-            val request = new HttpGet(s"$host/rest/items")
+            Parse.decodeOption[Stream[ItemSummary]](get("items")).get
+        }
+
+        def get(resource: String): String = {
+            val request = new HttpGet(s"$host/rest/$resource")
             request.setHeader("Accept", "application/json")
             val response = client.execute(request)
             if (response.getStatusLine.getStatusCode / 100 != 2) {
-                throw new RuntimeException(s"Invalid http status ${response.getStatusLine}")
+                throw new scala.RuntimeException(s"Invalid http status ${response.getStatusLine}")
             }
-            val string = Source.fromInputStream(response.getEntity.getContent).mkString
-            Parse.decodeOption[Stream[ItemSummary]](string).get
+            Source.fromInputStream(response.getEntity.getContent).mkString
         }
 
         override def findProductByCode(code: Long): Product = ???
