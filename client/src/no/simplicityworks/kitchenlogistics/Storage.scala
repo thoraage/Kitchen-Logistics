@@ -1,7 +1,5 @@
 package no.simplicityworks.kitchenlogistics
 
-import java.util.Date
-
 /**
  * @author Thor Åge Eldby (thoraageeldby@gmail.com)
  */
@@ -11,7 +9,7 @@ trait Storage {
   val database: Database
 
   trait Database {
-    def findProductById(id: Long): Product
+    def findProductByCode(id: Long): Product
     def findProductByCode(identifier: String): Option[Product]
     def saveProduct(product: Product): Product
     def saveItem(item: Item): Item
@@ -19,7 +17,7 @@ trait Storage {
   }
 
     case class Item(id: Option[Long], productId: Long) {
-      lazy val product = database.findProductById(productId)
+      lazy val product = database.findProductByCode(productId)
     }
 
 }

@@ -22,14 +22,6 @@ apkbuildExcludes in Android += "META-INF/NOTICE"
 
 libraryDependencies ++= Seq(
     "org.scaloid" %% "scaloid" % "3.6.1-10",
-//    "net.databinder" %% "dispatch-http" % "0.8.10" withSources() withJavadoc()
-//        excludeAll(ExclusionRule(organization = "org.apache.httpcomponents"), ExclusionRule(organization = "org.scala-lang"),
-//        ExclusionRule(organization = "org.scala-lang.modules"), ExclusionRule(name = "dispatch-futures_2.11"))
-//    "net.databinder" %% "dispatch-http-json" % "0.8.10" withSources() withJavadoc(),
-//    "org.json4s" %% "json4s-core" % "3.2.11" withSources() withJavadoc()
-//        excludeAll(ExclusionRule(organization = "org.scala-lang"), ExclusionRule(organization = "org.scala-library")),
-//    "org.json4s" %% "json4s-jackson" % "3.3.0-SNAPSHOT"
-//        excludeAll(ExclusionRule(organization = "org.scala-lang"), ExclusionRule(organization = "org.scala-library"))
     "io.argonaut" %% "argonaut" % "6.0.4"
 ).map(_.withSources())
 
