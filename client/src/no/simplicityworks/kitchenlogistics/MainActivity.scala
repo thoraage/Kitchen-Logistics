@@ -24,9 +24,10 @@ class MainActivity extends TypedActivity with KitLogRestStorage with ZXingScanne
         }
         code =>
           database.findProductByCode(code) match {
-            case Some(product) =>
+            // TODO case many =>
+            case List(product) =>
               createItem(product)
-            case None =>
+            case Nil =>
               createInputDialog(832462, R.string.productNameTitle, R.string.productNameMessage, {
                 name => createItem(database.saveProduct(Product(None, code, name, "2015-03-01T00:00:00.000Z")))
               })

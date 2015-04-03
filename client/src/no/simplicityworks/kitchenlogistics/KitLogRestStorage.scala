@@ -1,11 +1,12 @@
 package no.simplicityworks.kitchenlogistics
 
-import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
-import org.apache.http.client.methods.HttpGet
-import org.apache.http.impl.client.DefaultHttpClient
+import java.net.URLEncoder
 
 import argonaut.Argonaut._
 import argonaut._
+import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
+import org.apache.http.client.methods.HttpGet
+import org.apache.http.impl.client.DefaultHttpClient
 
 import scala.io.Source
 import scala.language.postfixOps
@@ -24,7 +25,9 @@ trait KitLogRestStorage extends Storage {
         implicit def itemSummaryCodecJson: CodecJson[ItemSummary] =
             casecodec3(ItemSummary.apply, ItemSummary.unapply)("count", "product", "lastItemId")
 
-        override def findProductByCode(identifier: String): Option[Product] = ???
+        override def findProductByCode(identifier: String): Seq[Product] = {
+            Parse.decodeOption[Stream[Product]](get("products", ("code" -> identifier) :: Nil)).get
+        }
 
         override def saveProduct(product: Product): Product = ???
 
@@ -34,8 +37,9 @@ trait KitLogRestStorage extends Storage {
             Parse.decodeOption[Stream[ItemSummary]](get("items")).get
         }
 
-        def get(resource: String): String = {
-            val request = new HttpGet(s"$host/rest/$resource")
+        def get(resource: String, queryParameters: List[(String, String)] = Nil): String = {
+            val query = queryParameters.map(p => s"${p._1}=${URLEncoder.encode(p._2)}").mkString("?", "&", "")
+            val request = new HttpGet(s"$host/rest/$resource$query")
             request.setHeader("Accept", "application/json")
             val response = client.execute(request)
             if (response.getStatusLine.getStatusCode / 100 != 2) {

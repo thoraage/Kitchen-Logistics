@@ -10,7 +10,7 @@ trait Storage {
 
   trait Database {
     def findProductByCode(id: Long): Product
-    def findProductByCode(identifier: String): Option[Product]
+    def findProductByCode(identifier: String): Seq[Product]
     def saveProduct(product: Product): Product
     def saveItem(item: Item): Item
     def findItems(): Seq[ItemSummary]
