@@ -1,7 +1,6 @@
 package no.simplicityworks.kitchenlogistics
 
 import android.os.Bundle
-import android.view.View
 import android.widget.{ArrayAdapter, Button}
 import org.scaloid.common._
 
@@ -11,22 +10,20 @@ class MainActivity extends SActivity with TypedActivity with KitLogRestStorage w
 
   def updateItemsList() {
     val itemNames = database.findItems().map(item => item.product.name + " - " + item.product.code)
-    find(TR.scannedItemList).setAdapter(new ArrayAdapter(this, R.layout.itemlistitem, itemNames))
+    this.findResource(TR.scannedItemList).setAdapter(new ArrayAdapter(this, R.layout.itemlistitem, itemNames))
   }
 
   def updateItemGroupSpinner() {
     val itemGroups = database.findItemGroups().map(_.name)
-    find(TR.selectItemGroupSpinner).setAdapter(new ArrayAdapter(this, R.layout.itemlistitem, itemGroups))
+    this.findResource(TR.selectItemGroupSpinner).setAdapter(new ArrayAdapter(this, R.layout.itemlistitem, itemGroups))
   }
-
-  def find[V <: View](tr: TypedResource[V]): V = find[V](tr.id)
 
   override def onCreate(bundle: Bundle) {
     super.onCreate(bundle)
     setContentView(R.layout.main)
     updateItemsList()
     updateItemGroupSpinner()
-    find(TR.registerProductButton).onClick {
+    this.findResource(TR.registerProductButton).onClick {
       _: Button => startScanner {
         def createItem(product: Product) {
           database.saveItem(Item(None, product.id.get))

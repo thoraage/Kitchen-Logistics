@@ -7,11 +7,8 @@ import scala.language.implicitConversions
 
 package object kitchenlogistics {
 
-  @deprecated
-  implicit def toOnClickListener(f: (View) => Unit): OnClickListener = new OnClickListener {
-    def onClick(v: View) {
-      f(v)
-    }
+  implicit class ExtendedTypedViewHolder(val typedViewHolder: TypedViewHolder) {
+    def findResource[V <: View](tr: TypedResource[V]): V = typedViewHolder.findViewById(tr.id).asInstanceOf[V]
   }
 
 }
