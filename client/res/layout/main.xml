@@ -23,8 +23,20 @@
                 a:layout_height="wrap_content"/>
     </LinearLayout>
 
+    <Spinner
+            a:layout_width="match_parent"
+            a:layout_height="wrap_content"
+            a:id="@+id/selectItemGroupSpinner" a:layout_gravity="center_horizontal"/>
+    <ListView
+            a:layout_width="match_parent"
+            a:layout_height="wrap_content"
+            a:id="@+id/listView"/>
     <ListView a:id="@+id/scannedItemList"
               a:layout_width="fill_parent"
               a:layout_height="fill_parent"/>
+    <GridView
+            a:layout_width="match_parent"
+            a:layout_height="wrap_content"
+            a:id="@+id/gridView"/>
 
 </LinearLayout>

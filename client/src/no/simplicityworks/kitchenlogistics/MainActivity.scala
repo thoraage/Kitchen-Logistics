@@ -2,22 +2,32 @@ package no.simplicityworks.kitchenlogistics
 
 import android.os.Bundle
 import android.view.View
-import android.widget.ArrayAdapter
-import collection.JavaConversions.seqAsJavaList
+import android.widget.{ArrayAdapter, Button}
+import org.scaloid.common._
 
-class MainActivity extends TypedActivity with KitLogRestStorage with ZXingScanner with Dialogs {
+import scala.collection.JavaConversions.seqAsJavaList
+
+class MainActivity extends SActivity with TypedActivity with KitLogRestStorage with ZXingScanner with Dialogs {
 
   def updateItemsList() {
     val itemNames = database.findItems().map(item => item.product.name + " - " + item.product.code)
-    findView(TR.scannedItemList).setAdapter(new ArrayAdapter(this, R.layout.itemlistitem, itemNames))
+    find(TR.scannedItemList).setAdapter(new ArrayAdapter(this, R.layout.itemlistitem, itemNames))
   }
+
+  def updateItemGroupSpinner() {
+    val itemGroups = database.findItemGroups().map(_.name)
+    find(TR.selectItemGroupSpinner).setAdapter(new ArrayAdapter(this, R.layout.itemlistitem, itemGroups))
+  }
+
+  def find[V <: View](tr: TypedResource[V]): V = find[V](tr.id)
 
   override def onCreate(bundle: Bundle) {
     super.onCreate(bundle)
     setContentView(R.layout.main)
     updateItemsList()
-    findView(TR.registerProductButton).setOnClickListener {
-      (_: View) => startScanner {
+    updateItemGroupSpinner()
+    find(TR.registerProductButton).onClick {
+      _: Button => startScanner {
         def createItem(product: Product) {
           database.saveItem(Item(None, product.id.get))
           updateItemsList()

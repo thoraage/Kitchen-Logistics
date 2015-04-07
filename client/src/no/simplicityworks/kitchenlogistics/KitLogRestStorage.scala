@@ -24,6 +24,8 @@ trait KitLogRestStorage extends Storage {
             casecodec4(Product.apply, Product.unapply)("id", "code", "name", "created")
         implicit def itemSummaryCodecJson: CodecJson[ItemSummary] =
             casecodec3(ItemSummary.apply, ItemSummary.unapply)("count", "product", "lastItemId")
+        implicit def itemGroupCodecJson: CodecJson[ItemGroup] =
+            casecodec4(ItemGroup.apply, ItemGroup.unapply)("id", "userId", "name", "created")
 
         override def findProductByCode(identifier: String): Seq[Product] = {
             Parse.decodeOption[Stream[Product]](get("products", ("code" -> identifier) :: Nil)).get
@@ -50,6 +52,9 @@ trait KitLogRestStorage extends Storage {
 
         override def findProductByCode(code: Long): Product = ???
 
+        override def findItemGroups(): Seq[ItemGroup] = {
+            Parse.decodeOption[Stream[ItemGroup]](get("itemGroups")).get
+        }
     }
 
 }

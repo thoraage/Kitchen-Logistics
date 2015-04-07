@@ -7,6 +7,7 @@ import scala.language.implicitConversions
 
 package object kitchenlogistics {
 
+  @deprecated
   implicit def toOnClickListener(f: (View) => Unit): OnClickListener = new OnClickListener {
     def onClick(v: View) {
       f(v)
