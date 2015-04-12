@@ -1,5 +1,7 @@
 package no.simplicityworks.kitchenlogistics
 
+import java.util.Date
+
 import android.os.Bundle
 import android.widget.{ArrayAdapter, Button}
 import org.scaloid.common._
@@ -26,7 +28,7 @@ class MainActivity extends SActivity with TypedActivity with KitLogRestStorage w
     this.findResource(TR.registerProductButton).onClick {
       _: Button => startScanner {
         def createItem(product: Product) {
-          database.saveItem(Item(None, product.id.get))
+          database.saveItem(Item(None, None, product.id.get, -1 /*TODO fix*/, new Date))
           updateItemsList()
         }
         code =>
@@ -36,7 +38,7 @@ class MainActivity extends SActivity with TypedActivity with KitLogRestStorage w
               createItem(product)
             case Nil =>
               createInputDialog(832462, R.string.productNameTitle, R.string.productNameMessage, {
-                name => createItem(database.saveProduct(Product(None, code, name, "2015-03-01T00:00:00.000Z")))
+                name => createItem(database.saveProduct(Product(None, code, name, new Date)))
               })
           }
       }

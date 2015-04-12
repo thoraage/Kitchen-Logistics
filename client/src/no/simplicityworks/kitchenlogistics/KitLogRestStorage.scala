@@ -1,6 +1,7 @@
 package no.simplicityworks.kitchenlogistics
 
 import java.net.URLEncoder
+import java.text.SimpleDateFormat
 
 import argonaut.Argonaut._
 import argonaut._
@@ -19,6 +20,13 @@ trait KitLogRestStorage extends Storage {
 //        val host = "http://10.20.11.167:8080"
         val client = new DefaultHttpClient
         client.getCredentialsProvider.setCredentials(new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT), new UsernamePasswordCredentials("thoredge", "pass"))
+
+        // Example: 2015-03-02T00:00:00.000Z
+        def format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+        implicit def DateEncodeJson: EncodeJson[java.util.Date] =
+            EncodeJson(d => jString(format.format(d)))
+        implicit def DateDecodeJson: DecodeJson[java.util.Date] =
+            optionDecoder(_.string flatMap (s => tryTo(format.parse(s))), "java.util.Date")
 
         implicit def productCodecJson: CodecJson[Product] =
             casecodec4(Product.apply, Product.unapply)("id", "code", "name", "created")
