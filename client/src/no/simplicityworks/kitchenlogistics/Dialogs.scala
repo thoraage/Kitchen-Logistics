@@ -1,7 +1,6 @@
 package no.simplicityworks.kitchenlogistics
 
 import android.app.Dialog
-import android.widget.Button
 import org.scaloid.common._
 
 trait Dialogs {
@@ -20,16 +19,14 @@ trait Dialogs {
           dialog.dismiss()
         }
         dialog.findResource(TR.inputDialogOk).onClick {
-          _: Button =>
-            val input = dialog.findView(TR.inputDialogField)
-            inputSuccessFunctionMap.get(dialogDiscriminatorId).foreach(_(input.getText.toString))
-            input.getText.clear()
-            removeDialog(dialog)
+          val input = dialog.findView(TR.inputDialogField)
+          inputSuccessFunctionMap.get(dialogDiscriminatorId).foreach(_(input.getText.toString))
+          input.getText.clear()
+          removeDialog(dialog)
         }
         dialog.findResource(TR.inputDialogCancel).onClick {
-          _: Button =>
-            dialog.findView(TR.inputDialogField).getText.clear()
-            removeDialog(dialog)
+          dialog.findView(TR.inputDialogField).getText.clear()
+          removeDialog(dialog)
         }
         dialog
     }
@@ -42,9 +39,7 @@ trait Dialogs {
         dialog.setContentView(R.layout.infodialog)
         dialog.setTitle(titleId)
         dialog.findView(TR.inputDialogMessage).setText(messageId)
-        dialog.findResource(TR.inputDialogOk).onClick {
-          _: Button => dialog.dismiss()
-        }
+        dialog.findResource(TR.inputDialogOk).onClick(dialog.dismiss())
         dialog
     }
   }

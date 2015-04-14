@@ -8,7 +8,7 @@ import org.scaloid.common._
 
 import scala.collection.JavaConversions.seqAsJavaList
 
-class MainActivity extends SActivity with TypedActivity with KitLogRestStorage with ZXingScanner with Dialogs {
+class MainActivity extends SActivity with TypedActivity with KitLogRestStorage with MockDialogScanner with Dialogs {
 
   def updateItemsList() {
     val itemNames = database.findItems().map(item => item.product.name + " - " + item.product.code)
@@ -26,21 +26,23 @@ class MainActivity extends SActivity with TypedActivity with KitLogRestStorage w
     updateItemsList()
     updateItemGroupSpinner()
     this.findResource(TR.registerProductButton).onClick {
-      _: Button => startScanner {
+      startScanner { code =>
         def createItem(product: Product) {
-          database.saveItem(Item(None, None, product.id.get, -1 /*TODO fix*/, new Date))
-          updateItemsList()
-        }
-        code =>
-          database.findProductByCode(code) match {
-            // TODO case many =>
-            case List(product) =>
-              createItem(product)
-            case Nil =>
-              createInputDialog(832462, R.string.productNameTitle, R.string.productNameMessage, {
-                name => createItem(database.saveProduct(Product(None, code, name, new Date)))
-              })
+          val itemGroup = Option(this.findResource(TR.selectItemGroupSpinner).getSelectedItem.asInstanceOf[ItemGroup])
+          itemGroup.flatMap(_.id).foreach { itemGroupId =>
+            database.saveItem(Item(None, None, product.id.get, itemGroupId, new Date))
+            updateItemsList()
           }
+        }
+        database.findProductByCode(code) match {
+          // TODO case many =>
+          case List(product) =>
+            createItem(product)
+          case Nil =>
+            createInputDialog(832462, R.string.productNameTitle, R.string.productNameMessage, {
+              name => createItem(database.saveProduct(Product(None, code, name, new Date)))
+            })
+        }
       }
     }
   }
