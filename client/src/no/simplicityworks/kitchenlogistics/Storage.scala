@@ -18,7 +18,7 @@ trait Storage {
   case class Product(id: Option[Int], code: String, name: String, created: Date)
   case class ItemSummary(count: Int, product: Product, lastItemId: Int)
   case class ItemGroup(id: Option[Int], userId: Option[Int], name: String, created: Date)
-  case class Item(id: Option[Int], userId: Option[Int], productId: Int, itemGroupId: Int, create: Date) {
+  case class Item(id: Option[Int], userId: Option[Int], productId: Int, itemGroupId: Int, created: Date) {
     lazy val product = database.findProductByCode(productId)
   }
 

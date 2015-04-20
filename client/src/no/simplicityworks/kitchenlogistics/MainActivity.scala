@@ -36,9 +36,9 @@ class MainActivity extends SActivity with TypedActivity with KitLogRestStorage w
         }
         database.findProductByCode(code) match {
           // TODO case many =>
-          case List(product) =>
+          case product #:: _ =>
             createItem(product)
-          case Nil =>
+          case Stream.Empty =>
             createInputDialog(832462, R.string.productNameTitle, R.string.productNameMessage, {
               name => createItem(database.saveProduct(Product(None, code, name, new Date)))
             })
