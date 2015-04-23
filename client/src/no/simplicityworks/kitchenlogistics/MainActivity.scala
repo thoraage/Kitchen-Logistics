@@ -16,7 +16,7 @@ class MainActivity extends SActivity with TypedActivity with KitLogRestStorage w
   }
 
   def updateItemGroupSpinner() {
-    val itemGroups = database.findItemGroups().map(_.name)
+    val itemGroups = database.findItemGroups()
     this.findResource(TR.selectItemGroupSpinner).setAdapter(new ArrayAdapter(this, R.layout.itemlistitem, itemGroups))
   }
 
