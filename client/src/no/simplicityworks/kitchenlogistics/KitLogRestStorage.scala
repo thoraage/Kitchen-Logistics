@@ -19,9 +19,11 @@ trait KitLogRestStorage extends Storage {
     val database = new Database {
         val host =
             "http://192.168.0.198:8080"
+//            "http://192.168.0.100:8080"
 //            "http://192.168.2.197:8080"
 //            "http://localhost:8080"
 //            "http://10.20.11.167:8080"
+//            "http://kitlog.herokuapp.com"
         val client = new DefaultHttpClient
         client.getCredentialsProvider.setCredentials(new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT), new UsernamePasswordCredentials("thoredge", "pass"))
 
