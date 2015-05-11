@@ -3,10 +3,13 @@ package no.simplicityworks.kitchenlogistics
 import java.util.Date
 
 import android.os.Bundle
-import android.support.v7.app.ActionBarActivity
+import android.support.v7.app.{ActionBar, ActionBarActivity}
+import android.support.v7.internal.widget.AdapterViewCompat
 import android.support.v7.widget.{LinearLayoutManager, RecyclerView}
-import android.view.{MenuItem, Menu, ViewGroup}
-import android.widget.{TextView, ArrayAdapter, Button}
+import android.util.Log
+import android.view.{View, MenuItem, Menu, ViewGroup}
+import android.widget.AdapterView.{OnItemClickListener, OnItemSelectedListener}
+import android.widget.{AdapterView, TextView, ArrayAdapter, Button}
 import org.scaloid.common._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -16,22 +19,13 @@ import scala.util.{Failure, Success}
 
 class MainActivity extends ActionBarActivity with SActivity with TypedActivity with KitLogRestStorage with MockDialogScanner with Dialogs {
 
-  def updateItemsList() {
-//    val itemNames = database.findItems().map(item => item.product.name + " - " + item.product.code)
-//    this.findResource(TR.scannedItemList).setAdapter(new ArrayAdapter(this, R.layout.itemlistitem, itemNames))
-  }
-
-  def updateItemGroupSpinner() {
-    val itemGroups = database.findItemGroups()
-    this.findResource(TR.selectItemGroupSpinner).setAdapter(new ArrayAdapter(this, R.layout.itemlistitem, itemGroups))
-  }
-
   override def onOptionsItemSelected(item: MenuItem): Boolean = {
     item.getItemId match {
       case R.id.actionBarSearch =>
         //search
         true
       case _ =>
+        Log.i("MainActivity", item.toString)
         super.onOptionsItemSelected(item)
     }
   }
@@ -42,10 +36,24 @@ class MainActivity extends ActionBarActivity with SActivity with TypedActivity w
     val view = this.findResource(TR.my_recycler_view)
     view.setHasFixedSize(true)
     view.setLayoutManager(new LinearLayoutManager(this))
-    view.setAdapter(new ItemAdapter)
+    view.setAdapter(ItemAdapter)
+    val actionBar = getSupportActionBar
+    actionBar.setDisplayHomeAsUpEnabled(true)
+    val leftDrawer = this.findResource(TR.left_drawer)
+    Future {
+      database.findItemGroups().toList
+    } onComplete {
+      case Success(itemGroups) =>
+        runOnUiThread {
+          leftDrawer.setAdapter(new ArrayAdapter(this, R.layout.itemlistitem, itemGroups))
+        }
+      case Failure(e) => handleFailure(e)
+    }
+    leftDrawer.onItemClick((_: AdapterView[_], _: View, position: Int, _: Long) => ItemAdapter.loadItems(Some(leftDrawer.getAdapter.getItem(position).asInstanceOf[ItemGroup])))
+//    leftDrawer.setOnItemClickListener(new OnItemClickListener {
+//      override def onItemClick(parent: AdapterView[_], view: View, position: Int, id: Long): Unit = Log.i("MainActivity", "nu da")
+//    })
 
-    updateItemsList()
-//    updateItemGroupSpinner()
 //    this.findResource(TR.registerProductButton).onClick {
 //      startScanner { code =>
 //        def createItem(product: Product) {
@@ -80,18 +88,26 @@ class MainActivity extends ActionBarActivity with SActivity with TypedActivity w
 
   def handleFailure(throwable: Throwable) = throw throwable;
 
-  class ItemAdapter extends RecyclerView.Adapter[ItemViewHolder] {
+  object ItemAdapter extends RecyclerView.Adapter[ItemViewHolder] {
     var itemSummaries: List[ItemSummary] = Nil
 
-
-    Future {
-      database.findItems().toList
-    } onComplete {
-      case Success(items) =>
-        itemSummaries = items
-        runOnUiThread(notifyDataSetChanged())
-      case Failure(e) => handleFailure(e)
+    def loadItems(itemGroup: Option[ItemGroup] = None) {
+      Future {
+        database.findItems().toList
+      } onComplete {
+        case Success(items) =>
+          itemSummaries = items
+          runOnUiThread {
+            notifyDataSetChanged()
+            val title = itemGroup.map(_.name).getOrElse("All")
+            Log.i("MainActivity", s"Ending up with title: $title")
+            setTitle(title)
+            MainActivity.this.findResource(TR.drawer_layout).closeDrawer(MainActivity.this.findResource(TR.left_drawer))
+          }
+        case Failure(e) => handleFailure(e)
+      }
     }
+    loadItems()
 
     override def getItemCount: Int = itemSummaries.size
 
