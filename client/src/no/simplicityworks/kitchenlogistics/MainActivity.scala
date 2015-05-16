@@ -1,19 +1,15 @@
 package no.simplicityworks.kitchenlogistics
 
-import java.util.Date
-
 import android.os.Bundle
-import android.support.v7.app.{ActionBar, ActionBarActivity}
-import android.support.v7.internal.widget.AdapterViewCompat
+import android.support.v7.app.ActionBarActivity
 import android.support.v7.widget.{LinearLayoutManager, RecyclerView}
 import android.util.Log
-import android.view.{View, MenuItem, Menu, ViewGroup}
-import android.widget.AdapterView.{OnItemClickListener, OnItemSelectedListener}
-import android.widget.{AdapterView, TextView, ArrayAdapter, Button}
+import android.view.{Menu, MenuItem, View, ViewGroup}
+import android.widget.{AdapterView, ArrayAdapter, TextView}
 import org.scaloid.common._
-import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.collection.JavaConversions.seqAsJavaList
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
@@ -86,14 +82,14 @@ class MainActivity extends ActionBarActivity with SActivity with TypedActivity w
 
   }
 
-  def handleFailure(throwable: Throwable) = throw throwable;
+  def handleFailure(throwable: Throwable) = throw throwable
 
   object ItemAdapter extends RecyclerView.Adapter[ItemViewHolder] {
     var itemSummaries: List[ItemSummary] = Nil
 
     def loadItems(itemGroup: Option[ItemGroup] = None) {
       Future {
-        database.findItems().toList
+        database.findItems(itemGroup).toList
       } onComplete {
         case Success(items) =>
           itemSummaries = items

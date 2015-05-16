@@ -18,7 +18,8 @@ trait KitLogRestStorage extends Storage {
 
     val database = new Database {
         val host =
-            "http://192.168.0.198:8080"
+            "http://192.168.1.206:8080"
+//            "http://192.168.0.198:8080"
 //            "http://192.168.0.100:8080"
 //            "http://192.168.2.197:8080"
 //            "http://localhost:8080"
@@ -69,8 +70,9 @@ trait KitLogRestStorage extends Storage {
             item.copy(id = put(s"$host/rest/items", item))
         }
 
-        override def findItems(): Seq[ItemSummary] = {
-            Parse.decodeOption[Stream[ItemSummary]](get("items")).get
+        override def findItems(itemGroup: Option[ItemGroup] = None): Seq[ItemSummary] = {
+            val queryItemGroup = itemGroup.flatMap(_.id).map("itemGroup" -> _.toString)
+            Parse.decodeOption[Stream[ItemSummary]](get("items", queryItemGroup.toList)).get
         }
 
         def get(resource: String, queryParameters: List[(String, String)] = Nil): String = {

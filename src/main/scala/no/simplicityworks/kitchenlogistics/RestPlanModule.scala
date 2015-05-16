@@ -87,9 +87,13 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
             }
 
             case Path(Seg("rest" :: "items" :: Nil)) & AuthenticatedUser(user) => {
-                for {_ <- GET; _ <- Accepts.Json; r <- request[Any]} yield {
+                for {_ <- GET; _ <- Accepts.Json; r <- request[Any]; itemGroup <- parameterValues("itemGroup")} yield {
                     val items = (database withSession { implicit session: Session =>
-                        (for {item <- TableQuery[Items] if item.userId === user.id; product <- item.product} yield (product, item))
+                        val default = LiteralColumn(1) === LiteralColumn(1)
+                        (for {
+                            item <- TableQuery[Items] if item.userId === user.id && (if (itemGroup.isEmpty) default else item.itemGroupId === itemGroup.head.toInt)
+                            product <- item.product
+                        } yield (product, item))
                             .groupBy(p => p._1)
                             .map { case (product, pair) => (product, pair.length, pair.map(_._2.id).max)}.list
                     }).map(p => ItemSummary(p._2, p._1, p._3.get))

@@ -11,7 +11,7 @@ trait Storage {
     def findProductByCode(identifier: String): Seq[Product]
     def saveProduct(product: Product): Product
     def saveItem(item: Item): Item
-    def findItems(): Seq[ItemSummary]
+    def findItems(itemGroup: Option[ItemGroup] = None): Seq[ItemSummary]
     def findItemGroups(): Seq[ItemGroup]
   }
 
