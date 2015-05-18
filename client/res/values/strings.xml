@@ -16,6 +16,8 @@
     <string name="noResultTitle">No Result Received</string>
     <string name="noResultMessage">Why?</string>
 
+    <string name="drawerMenuAll">All</string>
+
     <string name="inputDialogOk">Ok</string>
     <string name="inputDialogCancel">Cancel</string>
 </resources>
