@@ -1,5 +1,7 @@
 package no.simplicityworks.kitchenlogistics
 
+import java.util.Date
+
 import android.os.Bundle
 import android.support.v7.app.ActionBarActivity
 import android.support.v7.widget.{LinearLayoutManager, RecyclerView}
@@ -19,6 +21,30 @@ class MainActivity extends ActionBarActivity with SActivity with TypedActivity w
     item.getItemId match {
       case R.id.actionBarSearch =>
         //search
+        true
+      case R.id.actionBarNew =>
+        startScanner { code =>
+          def createItem(product: Product) {
+            val itemGroup = Option(this.findResource(TR.selectItemGroupSpinner).getSelectedItem.asInstanceOf[ItemGroup])
+            itemGroup.flatMap(_.id).foreach { itemGroupId =>
+              Future(database.saveItem(Item(None, None, product.id.get, itemGroupId, new Date))).onComplete {
+                case Success(_) =>
+                  runOnUiThread(ItemAdapter.loadItems(new DrawerMenuChoice(None))) // TODO what to show?
+                case Failure(t) => handleFailure(t)
+              }
+            }
+          }
+          Future(database.findProductByCode(code)).onComplete {
+            // TODO case many =>
+            case Success(product #:: _) =>
+              createItem(product)
+            case Success(Stream.Empty) =>
+              createInputDialog(832462, R.string.productNameTitle, R.string.productNameMessage, {
+                name => createItem(database.saveProduct(Product(None, code, name, new Date)))
+              })
+            case Failure(t) => handleFailure(t)
+          }
+        }
         true
       case _ =>
         Log.i("MainActivity", item.toString)
