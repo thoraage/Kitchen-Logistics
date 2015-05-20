@@ -48,8 +48,10 @@ trait Dialogs {
   var createDialogMap: Map[Int, () => Dialog] = Map()
 
   def createDialog(id: Int)(createF: () => Dialog) {
-    createDialogMap += (id -> createF)
-    showDialog(id)
+    runOnUiThread {
+      createDialogMap += (id -> createF)
+      showDialog(id)
+    }
   }
 
   override def onCreateDialog(id: Int) = {

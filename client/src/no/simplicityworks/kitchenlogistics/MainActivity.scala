@@ -12,7 +12,6 @@ import org.scaloid.common._
 
 import scala.collection.JavaConversions.seqAsJavaList
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
 class MainActivity extends ActionBarActivity with SActivity with TypedActivity with KitLogRestStorage with MockDialogScanner with Dialogs {
@@ -26,7 +25,7 @@ class MainActivity extends ActionBarActivity with SActivity with TypedActivity w
         startScanner { code =>
           def createItem(product: Product) {
             selectedItemGroup.flatMap(_.id).foreach { itemGroupId =>
-              Future(database.saveItem(Item(None, None, product.id.get, itemGroupId, new Date))).onComplete {
+              database.saveItem(Item(None, None, product.id.get, itemGroupId, new Date)) onComplete {
                 case Success(_) =>
                   runOnUiThread(onDrawerMenuSelection(new DrawerMenuChoice(selectedItemGroup)))
                 case Failure(t) => handleFailure(t)
