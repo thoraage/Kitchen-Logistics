@@ -7,10 +7,12 @@ import argonaut.Argonaut._
 import argonaut._
 import org.apache.http.HttpResponse
 import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
-import org.apache.http.client.methods.{HttpPut, HttpGet}
+import org.apache.http.client.methods.{HttpGet, HttpPut}
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.DefaultHttpClient
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.io.Source
 import scala.language.postfixOps
 
@@ -18,8 +20,8 @@ trait KitLogRestStorage extends Storage {
 
     val database = new Database {
         val host =
-            "http://192.168.1.206:8080"
-//            "http://192.168.0.198:8080"
+//            "http://192.168.1.206:8080"
+            "http://192.168.0.198:8080"
 //            "http://192.168.0.100:8080"
 //            "http://192.168.2.197:8080"
 //            "http://localhost:8080"
@@ -47,11 +49,11 @@ trait KitLogRestStorage extends Storage {
         implicit def itemCodecJson: CodecJson[Item] =
             casecodec5(Item.apply, Item.unapply)("id", "userId", "productId", "itemGroupId", "created")
 
-        override def findProductByCode(identifier: String): Seq[Product] = {
+        override def findProductByCode(identifier: String): Future[Seq[Product]] = Future {
             Parse.decodeOption[Stream[Product]](get("products", ("code" -> identifier) :: Nil)).get
         }
 
-        override def saveProduct(product: Product): Product = {
+        override def saveProduct(product: Product): Future[Product] = Future {
             product.copy(id = put(s"$host/rest/products", product))
         }
 
@@ -66,11 +68,11 @@ trait KitLogRestStorage extends Storage {
             Parse.decodeOption[Id](string).map(_.id)
         }
 
-        override def saveItem(item: Item): Item = {
+        override def saveItem(item: Item): Future[Item] = Future {
             item.copy(id = put(s"$host/rest/items", item))
         }
 
-        override def findItems(itemGroup: Option[ItemGroup] = None): Seq[ItemSummary] = {
+        override def findItems(itemGroup: Option[ItemGroup] = None): Future[Seq[ItemSummary]] = Future {
             val queryItemGroup = itemGroup.flatMap(_.id).map("itemGroup" -> _.toString)
             Parse.decodeOption[Stream[ItemSummary]](get("items", queryItemGroup.toList)).get
         }
@@ -84,9 +86,9 @@ trait KitLogRestStorage extends Storage {
             Source.fromInputStream(response.getEntity.getContent).mkString
         }
 
-        override def findProductByCode(code: Long): Product = ???
+        override def findProductByCode(code: Long): Future[Product] = Future(???)
 
-        override def findItemGroups(): Seq[ItemGroup] = {
+        override def findItemGroups(): Future[Seq[ItemGroup]] = Future {
             Parse.decodeOption[Stream[ItemGroup]](get("itemGroups")).get
         }
     }

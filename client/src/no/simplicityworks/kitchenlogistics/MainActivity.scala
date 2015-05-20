@@ -25,22 +25,24 @@ class MainActivity extends ActionBarActivity with SActivity with TypedActivity w
       case R.id.actionBarNew =>
         startScanner { code =>
           def createItem(product: Product) {
-            val itemGroup = Option(this.findResource(TR.selectItemGroupSpinner).getSelectedItem.asInstanceOf[ItemGroup])
-            itemGroup.flatMap(_.id).foreach { itemGroupId =>
+            selectedItemGroup.flatMap(_.id).foreach { itemGroupId =>
               Future(database.saveItem(Item(None, None, product.id.get, itemGroupId, new Date))).onComplete {
                 case Success(_) =>
-                  runOnUiThread(ItemAdapter.loadItems(new DrawerMenuChoice(None))) // TODO what to show?
+                  runOnUiThread(onDrawerMenuSelection(new DrawerMenuChoice(selectedItemGroup)))
                 case Failure(t) => handleFailure(t)
               }
             }
           }
-          Future(database.findProductByCode(code)).onComplete {
+          database.findProductByCode(code).onComplete {
             // TODO case many =>
             case Success(product #:: _) =>
               createItem(product)
             case Success(Stream.Empty) =>
-              createInputDialog(832462, R.string.productNameTitle, R.string.productNameMessage, {
-                name => createItem(database.saveProduct(Product(None, code, name, new Date)))
+              createInputDialog(832462, R.string.productNameTitle, R.string.productNameMessage, { name =>
+                database.saveProduct(Product(None, code, name, new Date)) onComplete {
+                  case Success(product) => createItem(product)
+                  case Failure(t) => handleFailure(t)
+                }
               })
             case Failure(t) => handleFailure(t)
           }
@@ -58,7 +60,7 @@ class MainActivity extends ActionBarActivity with SActivity with TypedActivity w
 
   override def onCreate(bundle: Bundle) {
     super.onCreate(bundle)
-    setContentView(R.layout.main2)
+    setContentView(R.layout.main)
     val view = this.findResource(TR.my_recycler_view)
     view.setHasFixedSize(true)
     view.setLayoutManager(new LinearLayoutManager(this))
@@ -66,9 +68,7 @@ class MainActivity extends ActionBarActivity with SActivity with TypedActivity w
     val actionBar = getSupportActionBar
     actionBar.setDisplayHomeAsUpEnabled(true)
     val leftDrawer = this.findResource(TR.left_drawer)
-    Future {
-      database.findItemGroups().toList
-    } onComplete {
+    database.findItemGroups().map(_.toList) onComplete {
       case Success(itemGroups) =>
         runOnUiThread {
           leftDrawer.setAdapter(new ArrayAdapter(this, R.layout.itemlistitem, new DrawerMenuChoice(None) :: itemGroups.map(itemGroup => new DrawerMenuChoice(Some(itemGroup)))))
@@ -76,7 +76,10 @@ class MainActivity extends ActionBarActivity with SActivity with TypedActivity w
       case Failure(e) => handleFailure(e)
     }
 
-    leftDrawer.onItemClick((_: AdapterView[_], _: View, position: Int, _: Long) => ItemAdapter.loadItems(leftDrawer.getAdapter.getItem(position).asInstanceOf[DrawerMenuChoice]))
+    leftDrawer.onItemClick { (_: AdapterView[_], _: View, position: Int, _: Long) =>
+      val choice = leftDrawer.getAdapter.getItem(position).asInstanceOf[DrawerMenuChoice]
+      onDrawerMenuSelection(choice)
+    }
 //    leftDrawer.setOnItemClickListener(new OnItemClickListener {
 //      override def onItemClick(parent: AdapterView[_], view: View, position: Int, id: Long): Unit = Log.i("MainActivity", "nu da")
 //    })
@@ -115,25 +118,27 @@ class MainActivity extends ActionBarActivity with SActivity with TypedActivity w
 
   def handleFailure(throwable: Throwable) = throw throwable
 
+  var selectedItemGroup: Option[ItemGroup] = None
+
+  def onDrawerMenuSelection(drawerMenuChoice: DrawerMenuChoice) {
+    selectedItemGroup = drawerMenuChoice.itemGroup
+    database.findItems(drawerMenuChoice.itemGroup).map(_.toList) onComplete {
+      case Success(items) =>
+        ItemAdapter.itemSummaries = items
+        runOnUiThread {
+          ItemAdapter.notifyDataSetChanged()
+          val title = drawerMenuChoice.toString
+          setTitle(title)
+          MainActivity.this.findResource(TR.drawer_layout).closeDrawer(MainActivity.this.findResource(TR.left_drawer))
+        }
+      case Failure(e) => handleFailure(e)
+    }
+  }
+
   object ItemAdapter extends RecyclerView.Adapter[ItemViewHolder] {
     var itemSummaries: List[ItemSummary] = Nil
 
-    def loadItems(drawerMenuChoice: DrawerMenuChoice) {
-      Future {
-        database.findItems(drawerMenuChoice.itemGroup).toList
-      } onComplete {
-        case Success(items) =>
-          itemSummaries = items
-          runOnUiThread {
-            notifyDataSetChanged()
-            val title = drawerMenuChoice.toString
-            setTitle(title)
-            MainActivity.this.findResource(TR.drawer_layout).closeDrawer(MainActivity.this.findResource(TR.left_drawer))
-          }
-        case Failure(e) => handleFailure(e)
-      }
-    }
-    loadItems(new DrawerMenuChoice(None))
+    onDrawerMenuSelection(new DrawerMenuChoice(None))
 
     override def getItemCount: Int = itemSummaries.size
 

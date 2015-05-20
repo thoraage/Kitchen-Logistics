@@ -2,17 +2,19 @@ package no.simplicityworks.kitchenlogistics
 
 import java.util.Date
 
+import scala.concurrent.Future
+
 trait Storage {
 
   val database: Database
 
   trait Database {
-    def findProductByCode(id: Long): Product
-    def findProductByCode(identifier: String): Seq[Product]
-    def saveProduct(product: Product): Product
-    def saveItem(item: Item): Item
-    def findItems(itemGroup: Option[ItemGroup] = None): Seq[ItemSummary]
-    def findItemGroups(): Seq[ItemGroup]
+    def findProductByCode(id: Long): Future[Product]
+    def findProductByCode(identifier: String): Future[Seq[Product]]
+    def saveProduct(product: Product): Future[Product]
+    def saveItem(item: Item): Future[Item]
+    def findItems(itemGroup: Option[ItemGroup] = None): Future[Seq[ItemSummary]]
+    def findItemGroups(): Future[Seq[ItemGroup]]
   }
 
   case class Product(id: Option[Int], code: String, name: String, created: Date)
