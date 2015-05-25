@@ -15,6 +15,7 @@ trait Storage {
     def saveItem(item: Item): Future[Item]
     def findItems(itemGroup: Option[ItemGroup] = None): Future[Seq[ItemSummary]]
     def findItemGroups(): Future[Seq[ItemGroup]]
+    def saveItemGroup(itemGroup: ItemGroup): Future[ItemGroup]
   }
 
   case class Product(id: Option[Int], code: String, name: String, created: Date)

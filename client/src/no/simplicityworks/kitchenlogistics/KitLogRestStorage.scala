@@ -78,7 +78,7 @@ trait KitLogRestStorage extends Storage {
         }
 
         def get(resource: String, queryParameters: List[(String, String)] = Nil): String = {
-            val query = queryParameters.map(p => s"${p._1}=${URLEncoder.encode(p._2)}").mkString("?", "&", "")
+            val query = queryParameters.map(p => s"${p._1}=${URLEncoder.encode(p._2, "UTF-8")}").mkString("?", "&", "")
             val request = new HttpGet(s"$host/rest/$resource$query")
             request.setHeader("Accept", "application/json")
             val response = client.execute(request)
@@ -90,6 +90,10 @@ trait KitLogRestStorage extends Storage {
 
         override def findItemGroups(): Future[Seq[ItemGroup]] = Future {
             Parse.decodeOption[Stream[ItemGroup]](get("itemGroups")).get
+        }
+
+        override def saveItemGroup(itemGroup: ItemGroup): Future[ItemGroup] = Future {
+            itemGroup.copy(id = put(s"$host/rest/itemGroups", itemGroup))
         }
     }
 

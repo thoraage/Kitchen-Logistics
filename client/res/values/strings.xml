@@ -10,6 +10,9 @@
     <string name="productNameTitle">Unknown Product</string>
     <string name="productNameMessage">Please enter name</string>
 
+    <string name="itemGroupNameTitle">Create New Item Group</string>
+    <string name="itemGroupNameMessage">Please enter name</string>
+
     <string name="scanNotInstalledTitle">Supporting Application Needed</string>
     <string name="scanNotInstalledMessage">In order to use this application you\'ll need to install ZXing barcode scanner from Android Market</string>
 
@@ -17,6 +20,7 @@
     <string name="noResultMessage">Why?</string>
 
     <string name="drawerMenuAll">All</string>
+    <string name="drawerMenuNewItemGroup">New Item Group</string>
 
     <string name="inputDialogOk">Ok</string>
     <string name="inputDialogCancel">Cancel</string>

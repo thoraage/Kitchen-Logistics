@@ -12,9 +12,12 @@ import org.scaloid.common._
 
 import scala.collection.JavaConversions.seqAsJavaList
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.{Failure, Success}
+import scala.concurrent.{Future, Promise}
+import scala.util.{Try, Failure, Success}
 
 class MainActivity extends ActionBarActivity with SActivity with TypedActivity with KitLogRestStorage with MockDialogScanner with Dialogs {
+
+  lazy val leftDrawer = this.findResource(TR.left_drawer)
 
   override def onOptionsItemSelected(item: MenuItem): Boolean = {
     item.getItemId match {
@@ -27,12 +30,12 @@ class MainActivity extends ActionBarActivity with SActivity with TypedActivity w
             selectedItemGroup.flatMap(_.id).foreach { itemGroupId =>
               database.saveItem(Item(None, None, product.id.get, itemGroupId, new Date)) onComplete {
                 case Success(_) =>
-                  runOnUiThread(onDrawerMenuSelection(new DrawerMenuChoice(selectedItemGroup)))
+                  runOnUiThread(new ItemGroupDrawerMenuChoice(selectedItemGroup).onSelect())
                 case Failure(t) => handleFailure(t)
               }
             }
           }
-          database.findProductByCode(code).onComplete {
+          database.findProductByCode(code) onComplete {
             // TODO case many =>
             case Success(product #:: _) =>
               createItem(product)
@@ -53,8 +56,66 @@ class MainActivity extends ActionBarActivity with SActivity with TypedActivity w
     }
   }
 
-  class DrawerMenuChoice(val itemGroup: Option[ItemGroup]) {
+  trait DrawerMenuChoice {
+    def onSelect(): Unit
+  }
+
+  object NewItemGroupDrawerMenuChoice extends DrawerMenuChoice {
+    override def toString = R.string.drawerMenuNewItemGroup.r2String
+    override def onSelect() {
+      createInputDialog(34002784, R.string.itemGroupNameTitle, R.string.itemGroupNameMessage, { name =>
+        database.saveItemGroup(ItemGroup(None, None, name, new Date)) onComplete {
+          case Success(itemGroup) =>
+            populateDrawerMenu() foreach { _ =>
+              println(itemGroupDrawerMenuChoices + ", " + itemGroup)
+              val choice = itemGroupDrawerMenuChoices.find(_.itemGroup.exists(_.id == itemGroup.id))
+              choice.foreach(_.onSelect())
+            }
+          case Failure(t) => handleFailure(t)
+        }
+      })
+    }
+  }
+
+  var selectedItemGroup: Option[ItemGroup] = None
+  var itemGroupDrawerMenuChoices: List[ItemGroupDrawerMenuChoice] = Nil
+
+  class ItemGroupDrawerMenuChoice(val itemGroup: Option[ItemGroup]) extends DrawerMenuChoice {
     override def toString = itemGroup.map(_.name).getOrElse(R.string.drawerMenuAll.r2String)
+    override def onSelect() {
+      selectedItemGroup = itemGroup
+      database.findItems(selectedItemGroup).map(_.toList) onComplete {
+        case Success(items) =>
+          ItemAdapter.itemSummaries = items
+          runOnUiThread {
+            ItemAdapter.notifyDataSetChanged()
+            setTitle(toString)
+          }
+        case Failure(e) => handleFailure(e)
+      }
+    }
+  }
+
+  def futureOnUiThread[T](f: => T): Future[T] = {
+    val promise = Promise[T]()
+    runOnUiThread {
+      promise.complete(Try(f))
+    }
+    promise.future
+  }
+
+  def populateDrawerMenu(): Future[Unit] = {
+    val future = database.findItemGroups().map(_.toList).flatMap { itemGroups =>
+      futureOnUiThread {
+        itemGroupDrawerMenuChoices = itemGroups.map(itemGroup => new ItemGroupDrawerMenuChoice(Some(itemGroup)))
+        val choices = (new ItemGroupDrawerMenuChoice(None) ::
+            itemGroupDrawerMenuChoices) :::
+            List(NewItemGroupDrawerMenuChoice)
+        leftDrawer.setAdapter(new ArrayAdapter(this, R.layout.itemlistitem, choices))
+      }
+    }
+    future.onFailure { case t: Throwable => handleFailure(t) }
+    future
   }
 
   override def onCreate(bundle: Bundle) {
@@ -66,18 +127,12 @@ class MainActivity extends ActionBarActivity with SActivity with TypedActivity w
     view.setAdapter(ItemAdapter)
     val actionBar = getSupportActionBar
     actionBar.setDisplayHomeAsUpEnabled(true)
-    val leftDrawer = this.findResource(TR.left_drawer)
-    database.findItemGroups().map(_.toList) onComplete {
-      case Success(itemGroups) =>
-        runOnUiThread {
-          leftDrawer.setAdapter(new ArrayAdapter(this, R.layout.itemlistitem, new DrawerMenuChoice(None) :: itemGroups.map(itemGroup => new DrawerMenuChoice(Some(itemGroup)))))
-        }
-      case Failure(e) => handleFailure(e)
-    }
+    populateDrawerMenu()
 
     leftDrawer.onItemClick { (_: AdapterView[_], _: View, position: Int, _: Long) =>
       val choice = leftDrawer.getAdapter.getItem(position).asInstanceOf[DrawerMenuChoice]
-      onDrawerMenuSelection(choice)
+      MainActivity.this.findResource(TR.drawer_layout).closeDrawer(MainActivity.this.findResource(TR.left_drawer))
+      choice.onSelect()
     }
 //    leftDrawer.setOnItemClickListener(new OnItemClickListener {
 //      override def onItemClick(parent: AdapterView[_], view: View, position: Int, id: Long): Unit = Log.i("MainActivity", "nu da")
@@ -117,27 +172,10 @@ class MainActivity extends ActionBarActivity with SActivity with TypedActivity w
 
   def handleFailure(throwable: Throwable) = throw throwable
 
-  var selectedItemGroup: Option[ItemGroup] = None
-
-  def onDrawerMenuSelection(drawerMenuChoice: DrawerMenuChoice) {
-    selectedItemGroup = drawerMenuChoice.itemGroup
-    database.findItems(drawerMenuChoice.itemGroup).map(_.toList) onComplete {
-      case Success(items) =>
-        ItemAdapter.itemSummaries = items
-        runOnUiThread {
-          ItemAdapter.notifyDataSetChanged()
-          val title = drawerMenuChoice.toString
-          setTitle(title)
-          MainActivity.this.findResource(TR.drawer_layout).closeDrawer(MainActivity.this.findResource(TR.left_drawer))
-        }
-      case Failure(e) => handleFailure(e)
-    }
-  }
-
   object ItemAdapter extends RecyclerView.Adapter[ItemViewHolder] {
     var itemSummaries: List[ItemSummary] = Nil
 
-    onDrawerMenuSelection(new DrawerMenuChoice(None))
+    new ItemGroupDrawerMenuChoice(None).onSelect()
 
     override def getItemCount: Int = itemSummaries.size
 
