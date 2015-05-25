@@ -25,7 +25,8 @@ trait DatabaseModule extends DatabaseProfileModule {
 
         def insert(product: Product): Int =
             database withSession { implicit session: Session =>
-                TableQuery[Products] += product
+                val query = TableQuery[Products]
+                query returning query.map(_.id) += product
             }
     }
 
@@ -47,9 +48,11 @@ trait DatabaseModule extends DatabaseProfileModule {
         }
 
         def insert(itemGroup: ItemGroup): Int = database withSession { implicit s: Session =>
-            TableQuery[ItemGroups] += itemGroup
+            val query = TableQuery[ItemGroups]
+            query returning query.map(_.id) += itemGroup
         }
     }
+
 
     class ItemGroups(tag: Tag) extends Table[ItemGroup](tag, "user_item_group") {
         def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
@@ -90,7 +93,8 @@ trait DatabaseModule extends DatabaseProfileModule {
         }
 
         def insert(item: Item): Int = database withSession { implicit session: Session =>
-            TableQuery[Items] += item
+            val query = TableQuery[Items]
+            query returning query.map(_.id) += item
         }
 
         def delete(id: Int): Int = database withSession { implicit session: Session =>
@@ -103,7 +107,8 @@ trait DatabaseModule extends DatabaseProfileModule {
         val passwordSalt = "kitlogsaltysalt"
 
         def insert(user: User): Int = database withSession { implicit session: Session =>
-            TableQuery[Users] += user
+            val query = TableQuery[Users]
+            query returning query.map(_.id) += user
         }
     }
 
