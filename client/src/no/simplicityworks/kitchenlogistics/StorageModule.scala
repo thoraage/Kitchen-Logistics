@@ -4,9 +4,9 @@ import java.util.Date
 
 import scala.concurrent.Future
 
-trait Storage {
+trait StorageModule {
 
-  val database: Database
+  val storage: Database
 
   trait Database {
     def findProductByCode(id: Long): Future[Product]
@@ -22,7 +22,7 @@ trait Storage {
   case class ItemSummary(count: Int, product: Product, lastItemId: Int)
   case class ItemGroup(id: Option[Int], userId: Option[Int], name: String, created: Date)
   case class Item(id: Option[Int], userId: Option[Int], productId: Int, itemGroupId: Int, created: Date) {
-    lazy val product = database.findProductByCode(productId)
+    lazy val product = storage.findProductByCode(productId)
   }
 
 }

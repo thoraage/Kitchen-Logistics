@@ -16,10 +16,11 @@ import scala.concurrent.Future
 import scala.io.Source
 import scala.language.postfixOps
 
-trait KitLogRestStorage extends Storage {
+trait KitLogRestStorageModule extends StorageModule {
 
-    val database = new Database {
+    val storage = new Database {
         val host =
+//            "http://192.168.42.47:8080"
 //            "http://192.168.1.206:8080"
             "http://192.168.0.198:8080"
 //            "http://192.168.0.100:8080"

@@ -15,7 +15,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Promise}
 import scala.util.{Try, Failure, Success}
 
-class MainActivity extends ActionBarActivity with SActivity with TypedActivity with KitLogRestStorage with MockDialogScanner with Dialogs {
+class MainActivity extends ActionBarActivity with SActivity with TypedActivity with KitLogRestStorageModule with MockDialogScannerModule with Dialogs {
 
   lazy val leftDrawer = this.findResource(TR.left_drawer)
 
@@ -25,23 +25,23 @@ class MainActivity extends ActionBarActivity with SActivity with TypedActivity w
         //search
         true
       case R.id.actionBarNew =>
-        startScanner { code =>
+        scanner.startScanner { code =>
           def createItem(product: Product) {
             selectedItemGroup.flatMap(_.id).foreach { itemGroupId =>
-              database.saveItem(Item(None, None, product.id.get, itemGroupId, new Date)) onComplete {
+              storage.saveItem(Item(None, None, product.id.get, itemGroupId, new Date)) onComplete {
                 case Success(_) =>
                   runOnUiThread(new ItemGroupDrawerMenuChoice(selectedItemGroup).onSelect())
                 case Failure(t) => handleFailure(t)
               }
             }
           }
-          database.findProductByCode(code) onComplete {
+          storage.findProductByCode(code) onComplete {
             // TODO case many =>
             case Success(product #:: _) =>
               createItem(product)
             case Success(Stream.Empty) =>
               createInputDialog(832462, R.string.productNameTitle, R.string.productNameMessage, { name =>
-                database.saveProduct(Product(None, code, name, new Date)) onComplete {
+                storage.saveProduct(Product(None, code, name, new Date)) onComplete {
                   case Success(product) => createItem(product)
                   case Failure(t) => handleFailure(t)
                 }
@@ -64,7 +64,7 @@ class MainActivity extends ActionBarActivity with SActivity with TypedActivity w
     override def toString = R.string.drawerMenuNewItemGroup.r2String
     override def onSelect() {
       createInputDialog(34002784, R.string.itemGroupNameTitle, R.string.itemGroupNameMessage, { name =>
-        database.saveItemGroup(ItemGroup(None, None, name, new Date)) onComplete {
+        storage.saveItemGroup(ItemGroup(None, None, name, new Date)) onComplete {
           case Success(itemGroup) =>
             populateDrawerMenu() foreach { _ =>
               println(itemGroupDrawerMenuChoices + ", " + itemGroup)
@@ -84,7 +84,7 @@ class MainActivity extends ActionBarActivity with SActivity with TypedActivity w
     override def toString = itemGroup.map(_.name).getOrElse(R.string.drawerMenuAll.r2String)
     override def onSelect() {
       selectedItemGroup = itemGroup
-      database.findItems(selectedItemGroup).map(_.toList) onComplete {
+      storage.findItems(selectedItemGroup).map(_.toList) onComplete {
         case Success(items) =>
           ItemAdapter.itemSummaries = items
           runOnUiThread {
@@ -105,7 +105,7 @@ class MainActivity extends ActionBarActivity with SActivity with TypedActivity w
   }
 
   def populateDrawerMenu(): Future[Unit] = {
-    val future = database.findItemGroups().map(_.toList).flatMap { itemGroups =>
+    val future = storage.findItemGroups().map(_.toList).flatMap { itemGroups =>
       futureOnUiThread {
         itemGroupDrawerMenuChoices = itemGroups.map(itemGroup => new ItemGroupDrawerMenuChoice(Some(itemGroup)))
         val choices = (new ItemGroupDrawerMenuChoice(None) ::
