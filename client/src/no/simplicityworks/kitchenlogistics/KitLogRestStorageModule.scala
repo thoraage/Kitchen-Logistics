@@ -18,7 +18,7 @@ import scala.language.postfixOps
 
 trait KitLogRestStorageModule extends StorageModule {
 
-    val storage = new Database {
+    val storage = new Storage {
         val host =
 //            "http://192.168.42.47:8080"
 //            "http://192.168.1.206:8080"
@@ -86,8 +86,6 @@ trait KitLogRestStorageModule extends StorageModule {
             assert2xxResponse(response)
             Source.fromInputStream(response.getEntity.getContent).mkString
         }
-
-        override def findProductByCode(code: Long): Future[Product] = Future(???)
 
         override def findItemGroups(): Future[Seq[ItemGroup]] = Future {
             Parse.decodeOption[Stream[ItemGroup]](get("itemGroups")).get

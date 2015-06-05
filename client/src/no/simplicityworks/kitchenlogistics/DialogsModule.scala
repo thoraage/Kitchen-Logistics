@@ -3,14 +3,29 @@ package no.simplicityworks.kitchenlogistics
 import android.app.Dialog
 import org.scaloid.common._
 
-trait Dialogs {
-  this: TypedActivity =>
+trait DialogsModule extends GuiContextModule {
 
-  def createInputDialog(dialogDiscriminatorId: Int, titleId: Int, messageId: Int, f: (String) => Unit) {
+    def dialogs = new Dialogs
+
+    class Dialogs {
+        def onCreateDialog(id: Int): Dialog = {
+            val dialog = createDialogMap.get(id) match {
+                case Some(createF) =>
+                    createF()
+                case None =>
+                    // TODO nothing?
+                    null
+            }
+            createDialogMap -= id
+            dialog
+        }
+
+
+        def createInputDialog(dialogDiscriminatorId: Int, titleId: Int, messageId: Int, f: (String) => Unit) {
     inputSuccessFunctionMap += (dialogDiscriminatorId -> f)
     createDialog(dialogDiscriminatorId) {
       () =>
-        val dialog = new Dialog(this) with TypedDialog
+        val dialog = new Dialog(guiContext) with TypedDialog
         dialog.setContentView(R.layout.inputdialog)
         dialog.setTitle(titleId)
         dialog.findView(TR.inputDialogMessage).setText(messageId)
@@ -35,7 +50,7 @@ trait Dialogs {
   def createInfoDialog(dialogDiscriminatorId: Int, titleId: Int, messageId: Int) {
     createDialog(dialogDiscriminatorId) {
       () =>
-        val dialog = new Dialog(this) with TypedDialog
+        val dialog = new Dialog(guiContext) with TypedDialog
         dialog.setContentView(R.layout.infodialog)
         dialog.setTitle(titleId)
         dialog.findView(TR.inputDialogMessage).setText(messageId)
@@ -50,20 +65,8 @@ trait Dialogs {
   def createDialog(id: Int)(createF: () => Dialog) {
     runOnUiThread {
       createDialogMap += (id -> createF)
-      showDialog(id)
+      guiContext.showDialog(id)
     }
   }
 
-  override def onCreateDialog(id: Int) = {
-    val dialog = createDialogMap.get(id) match {
-      case Some(createF) =>
-        createF()
-      case None =>
-        // TODO nothing?
-        null
-    }
-    createDialogMap -= id
-    dialog
-  }
-
-}
+}}

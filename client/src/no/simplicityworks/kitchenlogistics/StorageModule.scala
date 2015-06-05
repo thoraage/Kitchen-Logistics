@@ -6,10 +6,9 @@ import scala.concurrent.Future
 
 trait StorageModule {
 
-  val storage: Database
+  val storage: Storage
 
-  trait Database {
-    def findProductByCode(id: Long): Future[Product]
+  trait Storage {
     def findProductByCode(identifier: String): Future[Seq[Product]]
     def saveProduct(product: Product): Future[Product]
     def saveItem(item: Item): Future[Item]
@@ -21,8 +20,6 @@ trait StorageModule {
   case class Product(id: Option[Int], code: String, name: String, created: Date)
   case class ItemSummary(count: Int, product: Product, lastItemId: Int)
   case class ItemGroup(id: Option[Int], userId: Option[Int], name: String, created: Date)
-  case class Item(id: Option[Int], userId: Option[Int], productId: Int, itemGroupId: Int, created: Date) {
-    lazy val product = storage.findProductByCode(productId)
-  }
+  case class Item(id: Option[Int], userId: Option[Int], productId: Int, itemGroupId: Int, created: Date)
 
 }

@@ -1,0 +1,160 @@
+package no.simplicityworks.kitchenlogistics
+
+import java.util.Date
+
+import android.support.v7.widget.{LinearLayoutManager, RecyclerView}
+import android.view.{View, ViewGroup}
+import android.widget.{AdapterView, TextView, ArrayAdapter}
+
+import scala.concurrent.{Promise, Future}
+import scala.util.{Try, Failure, Success}
+import org.scaloid.common._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.collection.JavaConverters.seqAsJavaListConverter
+trait OperationsModule {
+
+    def operations: Operations
+
+}
+
+trait Operations {
+
+    def initiate()
+
+    def scanNewItem()
+
+    def populateDrawerMenu(): Future[Unit]
+
+}
+
+trait OperationsImplModule extends OperationsModule with ScannerModule with StorageModule with GuiContextModule with DialogsModule {
+
+    override lazy val operations = new Operations {
+
+        var selectedItemGroup: Option[ItemGroup] = None
+        var itemGroupDrawerMenuChoices: List[ItemGroupDrawerMenuChoice] = Nil
+        lazy val leftDrawer = guiContext.findResource(TR.left_drawer)
+
+        override def initiate() {
+            val view = guiContext.findResource(TR.my_recycler_view)
+            view.setHasFixedSize(true)
+            view.setLayoutManager(new LinearLayoutManager(guiContext))
+            view.setAdapter(ItemAdapter)
+            leftDrawer.onItemClick { (_: AdapterView[_], _: View, position: Int, _: Long) =>
+                val choice = leftDrawer.getAdapter.getItem(position).asInstanceOf[DrawerMenuChoice]
+                guiContext.findResource(TR.drawer_layout).closeDrawer(guiContext.findResource(TR.left_drawer))
+                choice.onSelect()
+            }
+        }
+
+        override def scanNewItem() {
+            scanner.startScanner { code =>
+                def createItem(product: Product) {
+                    selectedItemGroup.flatMap(_.id).foreach { itemGroupId =>
+                        storage.saveItem(Item(None, None, product.id.get, itemGroupId, new Date)) onComplete {
+                            case Success(_) =>
+                                guiContext.runOnUiThread(new ItemGroupDrawerMenuChoice(selectedItemGroup).onSelect())
+                            case Failure(t) => handleFailure(t)
+                        }
+                    }
+                }
+                storage.findProductByCode(code) onComplete {
+                    // TODO case many =>
+                    case Success(product #:: _) =>
+                        createItem(product)
+                    case Success(Stream.Empty) =>
+                        dialogs.createInputDialog(832462, R.string.productNameTitle, R.string.productNameMessage, { name =>
+                            storage.saveProduct(Product(None, code, name, new Date)) onComplete {
+                                case Success(product) => createItem(product)
+                                case Failure(t) => handleFailure(t)
+                            }
+                        })
+                    case Failure(t) => handleFailure(t)
+                }
+            }
+        }
+
+        def futureOnUiThread[T](f: => T): Future[T] = {
+            val promise = Promise[T]()
+            guiContext.runOnUiThread {
+                promise.complete(Try(f))
+            }
+            promise.future
+        }
+
+        override def populateDrawerMenu(): Future[Unit] = {
+            val future = storage.findItemGroups().map(_.toList).flatMap { itemGroups =>
+                futureOnUiThread {
+                    itemGroupDrawerMenuChoices = itemGroups.map(itemGroup => new ItemGroupDrawerMenuChoice(Some(itemGroup)))
+                    val choices = (new ItemGroupDrawerMenuChoice(None) ::
+                        itemGroupDrawerMenuChoices) :::
+                        List(NewItemGroupDrawerMenuChoice)
+                    leftDrawer.setAdapter(new ArrayAdapter(guiContext, R.layout.itemlistitem, choices.asJava))
+                }
+            }
+            future.onFailure { case t: Throwable => handleFailure(t) }
+            future
+        }
+
+        trait DrawerMenuChoice {
+            def onSelect(): Unit
+        }
+
+        object NewItemGroupDrawerMenuChoice extends DrawerMenuChoice {
+            override def toString = R.string.drawerMenuNewItemGroup.r2String
+
+            override def onSelect() {
+                dialogs.createInputDialog(34002784, R.string.itemGroupNameTitle, R.string.itemGroupNameMessage, { name =>
+                    storage.saveItemGroup(ItemGroup(None, None, name, new Date)) onComplete {
+                        case Success(itemGroup) =>
+                            populateDrawerMenu() foreach { _ =>
+                                println(itemGroupDrawerMenuChoices + ", " + itemGroup)
+                                val choice = itemGroupDrawerMenuChoices.find(_.itemGroup.exists(_.id == itemGroup.id))
+                                choice.foreach(_.onSelect())
+                            }
+                        case Failure(t) => handleFailure(t)
+                    }
+                })
+            }
+        }
+
+        class ItemGroupDrawerMenuChoice(val itemGroup: Option[ItemGroup]) extends DrawerMenuChoice {
+            override def toString = itemGroup.map(_.name).getOrElse(R.string.drawerMenuAll.r2String)
+
+            override def onSelect() {
+                selectedItemGroup = itemGroup
+                storage.findItems(selectedItemGroup).map(_.toList) onComplete {
+                    case Success(items) =>
+                        ItemAdapter.itemSummaries = items
+                        futureOnUiThread {
+                            ItemAdapter.notifyDataSetChanged()
+                            guiContext.setTitle(toString)
+                        }
+                    case Failure(e) => handleFailure(e)
+                }
+            }
+        }
+
+        def handleFailure(throwable: Throwable) = throw throwable
+
+        class ItemViewHolder(val v: TextView) extends RecyclerView.ViewHolder(v)
+
+        object ItemAdapter extends RecyclerView.Adapter[ItemViewHolder] {
+            var itemSummaries: List[ItemSummary] = Nil
+
+            new ItemGroupDrawerMenuChoice(None).onSelect()
+
+            override def getItemCount: Int = itemSummaries.size
+
+            override def onBindViewHolder(vh: ItemViewHolder, i: Int) {
+                vh.v.setText(itemSummaries(i).product.name)
+            }
+
+            override def onCreateViewHolder(viewGroup: ViewGroup, i: Int): ItemViewHolder = {
+                new ItemViewHolder(new TextView(guiContext))
+            }
+        }
+
+    }
+
+}
