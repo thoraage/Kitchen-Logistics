@@ -75,6 +75,9 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
     case class ItemSummary(count: Int, product: Product, lastItemId: Int)
 
     private val restPlan = unfiltered.filter.Planify {
+        val default = LiteralColumn(1) === LiteralColumn(1)
+        def isDefined(strings: Seq[String], restrict: Column[Boolean]) = if (strings.isEmpty) default else restrict
+
         Directive.Intent {
             case Path(Seg("rest" :: "products" :: Nil)) => {
                 for {_ <- GET; _ <- Accepts.Json; code <- parameterValues("code")} yield
@@ -87,12 +90,11 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
             }
 
             case Path(Seg("rest" :: "items" :: Nil)) & AuthenticatedUser(user) => {
-                for {_ <- GET; _ <- Accepts.Json; r <- request[Any]; itemGroup <- parameterValues("itemGroup")} yield {
+                for {_ <- GET; _ <- Accepts.Json; r <- request[Any]; itemGroups <- parameterValues("itemGroup"); codes <- parameterValues("code")} yield {
                     val items = (database withSession { implicit session: Session =>
-                        val default = LiteralColumn(1) === LiteralColumn(1)
                         (for {
-                            item <- TableQuery[Items] if item.userId === user.id && (if (itemGroup.isEmpty) default else item.itemGroupId === itemGroup.head.toInt)
-                            product <- item.product
+                            item <- TableQuery[Items] if item.userId === user.id && isDefined(itemGroups, item.itemGroupId inSet itemGroups.map(_.toInt))
+                            product <- item.product if isDefined(codes, product.code inSet codes)
                         } yield (product, item))
                             .groupBy(p => p._1)
                             .map { case (product, pair) => (product, pair.length, pair.map(_._2.id).max)}.list
@@ -104,6 +106,13 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
                     database withSession { implicit session: Session =>
                         val id = TableQuery[Items].insert(read[Item](Body string r).copy(userId = user.id))
                         Ok ~> ResponseString(write(Map("id" -> id)))
+                    }
+                }
+            } orElse {
+                for {_ <- DELETE; itemId <- parameterValues("itemId")} yield {
+                    database withSession { implicit session =>
+                        TableQuery[Items].filter(item => item.id.inSet(itemId.map(_.toInt)) && item.userId === user.id).delete
+                        NoContent
                     }
                 }
             }

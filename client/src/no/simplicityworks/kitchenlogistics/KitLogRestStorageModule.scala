@@ -7,7 +7,7 @@ import argonaut.Argonaut._
 import argonaut._
 import org.apache.http.HttpResponse
 import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
-import org.apache.http.client.methods.{HttpGet, HttpPut}
+import org.apache.http.client.methods.{HttpDelete, HttpGet, HttpPut}
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.DefaultHttpClient
 
@@ -73,7 +73,7 @@ trait KitLogRestStorageModule extends StorageModule {
             item.copy(id = put(s"$host/rest/items", item))
         }
 
-        override def findItems(itemGroup: Option[ItemGroup] = None): Future[Seq[ItemSummary]] = Future {
+        override def findItemsByGroup(itemGroup: Option[ItemGroup] = None): Future[Seq[ItemSummary]] = Future {
             val queryItemGroup = itemGroup.flatMap(_.id).map("itemGroup" -> _.toString)
             Parse.decodeOption[Stream[ItemSummary]](get("items", queryItemGroup.toList)).get
         }
@@ -93,6 +93,13 @@ trait KitLogRestStorageModule extends StorageModule {
 
         override def saveItemGroup(itemGroup: ItemGroup): Future[ItemGroup] = Future {
             itemGroup.copy(id = put(s"$host/rest/itemGroups", itemGroup))
+        }
+
+        override def removeItem(itemId: Int): Future[Unit] =
+            Future(client.execute(new HttpDelete(s"$host/rest/items/$itemId")))
+
+        override def findItemsByCode(code: String): Future[Seq[ItemSummary]] = Future {
+            Parse.decodeOption[Stream[ItemSummary]](get("items", List("code" -> code))).get
         }
     }
 

@@ -23,6 +23,8 @@ trait Operations {
 
     def scanNewItem()
 
+    def scanRemoveItem()
+
     def populateDrawerMenu(): Future[Unit]
 
 }
@@ -70,6 +72,21 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                             }
                         })
                     case Failure(t) => handleFailure(t)
+                }
+            }
+        }
+
+        override def scanRemoveItem() {
+            scanner.startScanner { code =>
+                storage.findItemsByCode(code).map(_.toList) onComplete {
+                    case Success(Nil) =>
+                        dialogs.createInfoDialog(123482, R.string.notFoundTitle, R.string.itemWithCodeNotFoundMessage)
+                    case Success(item :: Nil) =>
+                        storage.removeItem(item.lastItemId) onFailure PartialFunction(handleFailure)
+                    case Success(items) =>
+                        handleFailure(new NotImplementedError(""))
+                    case Failure(t) =>
+                        handleFailure(t)
                 }
             }
         }
@@ -123,7 +140,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
 
             override def onSelect() {
                 selectedItemGroup = itemGroup
-                storage.findItems(selectedItemGroup).map(_.toList) onComplete {
+                storage.findItemsByGroup(selectedItemGroup).map(_.toList) onComplete {
                     case Success(items) =>
                         ItemAdapter.itemSummaries = items
                         futureOnUiThread {

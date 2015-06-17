@@ -2,7 +2,6 @@ package no.simplicityworks.kitchenlogistics
 
 import android.os.Bundle
 import android.support.v7.app.ActionBarActivity
-import android.util.Log
 import android.view.{Menu, MenuItem}
 import org.scaloid.common._
 
@@ -21,8 +20,10 @@ class MainActivity extends ActionBarActivity with SActivity with TypedActivity {
             case R.id.actionBarNew =>
                 app.operations.scanNewItem()
                 true
+            case R.id.actionBarRemove =>
+                app.operations.scanRemoveItem()
+                true
             case _ =>
-                Log.i("MainActivity", item.toString)
                 super.onOptionsItemSelected(item)
         }
     }
