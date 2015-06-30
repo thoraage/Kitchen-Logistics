@@ -35,16 +35,16 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
 
         var selectedItemGroup: Option[ItemGroup] = None
         var itemGroupDrawerMenuChoices: List[ItemGroupDrawerMenuChoice] = Nil
-        lazy val leftDrawer = guiContext.findResource(TR.left_drawer)
+        lazy val leftDrawer = guiContext.findView(TR.left_drawer)
 
         override def initiate() {
-            val view = guiContext.findResource(TR.my_recycler_view)
+            val view = guiContext.findView(TR.my_recycler_view)
             view.setHasFixedSize(true)
             view.setLayoutManager(new LinearLayoutManager(guiContext))
             view.setAdapter(ItemAdapter)
             leftDrawer.onItemClick { (_: AdapterView[_], _: View, position: Int, _: Long) =>
                 val choice = leftDrawer.getAdapter.getItem(position).asInstanceOf[DrawerMenuChoice]
-                guiContext.findResource(TR.drawer_layout).closeDrawer(guiContext.findResource(TR.left_drawer))
+                guiContext.findView(TR.drawer_layout).closeDrawer(guiContext.findView(TR.left_drawer))
                 choice.onSelect()
             }
         }

@@ -1,6 +1,7 @@
 package no.simplicityworks.kitchenlogistics
 
 import android.app.Dialog
+import no.simplicityworks.kitchenlogistics.TypedResource.TypedDialog
 import org.scaloid.common._
 
 trait DialogsModule extends GuiContextModule {
@@ -28,21 +29,21 @@ trait DialogsModule extends GuiContextModule {
             inputSuccessFunctionMap += (dialogDiscriminatorId -> f)
             createDialog(dialogDiscriminatorId) {
                 () =>
-                    val dialog = new Dialog(guiContext) with TypedDialog
+                    val dialog = new Dialog(guiContext) with TypedFindView
                     dialog.setContentView(R.layout.inputdialog)
                     dialog.setTitle(titleId)
                     dialog.findView(TR.inputDialogMessage).setText(messageId)
-                    def removeDialog(dialog: Dialog with TypedDialog) {
+                    def removeDialog(dialog: Dialog with TypedFindView) {
                         inputSuccessFunctionMap -= dialogDiscriminatorId
                         dialog.dismiss()
                     }
-                    dialog.findResource(TR.inputDialogOk).onClick {
+                    dialog.findView(TR.inputDialogOk).onClick {
                         val input = dialog.findView(TR.inputDialogField)
                         inputSuccessFunctionMap.get(dialogDiscriminatorId).foreach(_(input.getText.toString))
                         input.getText.clear()
                         removeDialog(dialog)
                     }
-                    dialog.findResource(TR.inputDialogCancel).onClick {
+                    dialog.findView(TR.inputDialogCancel).onClick {
                         dialog.findView(TR.inputDialogField).getText.clear()
                         removeDialog(dialog)
                     }
@@ -53,11 +54,11 @@ trait DialogsModule extends GuiContextModule {
         def createInfoDialog(dialogDiscriminatorId: Int, titleId: Int, messageId: Int) {
             createDialog(dialogDiscriminatorId) {
                 () =>
-                    val dialog = new Dialog(guiContext) with TypedDialog
+                    val dialog = new Dialog(guiContext) with TypedFindView
                     dialog.setContentView(R.layout.infodialog)
                     dialog.setTitle(titleId)
                     dialog.findView(TR.inputDialogMessage).setText(messageId)
-                    dialog.findResource(TR.inputDialogOk).onClick(dialog.dismiss())
+                    dialog.findView(TR.inputDialogOk).onClick(dialog.dismiss())
                     dialog
             }
         }

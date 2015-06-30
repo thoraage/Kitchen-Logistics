@@ -5,7 +5,7 @@ import android.support.v7.app.ActionBarActivity
 import android.view.{Menu, MenuItem}
 import org.scaloid.common._
 
-class MainActivity extends ActionBarActivity with SActivity with TypedActivity {
+class MainActivity extends ActionBarActivity with SActivity with TypedFindView {
 
     var app: OperationsModule with StorageModule with ScannerModule with DialogsModule =
         new OperationsImplModule with KitLogRestStorageModule with MockDialogScannerModule with DialogsModule {

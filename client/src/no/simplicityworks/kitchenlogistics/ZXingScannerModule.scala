@@ -9,7 +9,7 @@ object ZXingScannerModule {
 }
 
 trait ZXingScannerModule extends ScannerModule with DialogsModule {
-    this: Activity with TypedActivity with StorageModule =>
+    this: Activity with TypedFindView with StorageModule =>
 
     override lazy val scanner = new Scanner {
 
