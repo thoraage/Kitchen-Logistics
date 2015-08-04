@@ -2,7 +2,10 @@ package no.simplicityworks.kitchenlogistics
 
 import java.util.Date
 
+import android.content.DialogInterface
+import android.content.DialogInterface.OnClickListener
 import android.support.v7.widget.{LinearLayoutManager, RecyclerView}
+import android.util.Log
 import android.view.{View, ViewGroup}
 import android.widget.{AdapterView, TextView, ArrayAdapter}
 
@@ -51,14 +54,36 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
 
         override def scanNewItem() {
             scanner.startScanner { code =>
-                def createItem(product: Product) {
-                    selectedItemGroup.flatMap(_.id).foreach { itemGroupId =>
-                        storage.saveItem(Item(None, None, product.id.get, itemGroupId, new Date)) onComplete {
-                            case Success(_) =>
-                                guiContext.runOnUiThread(new ItemGroupDrawerMenuChoice(selectedItemGroup).onSelect())
-                            case Failure(t) => handleFailure(t)
-                        }
+                def saveItem(product: Product, itemGroupId: Int) {
+                    storage.saveItem(Item(None, None, product.id.get, itemGroupId, new Date)) onComplete {
+                        case Success(_) =>
+                            guiContext.runOnUiThread(new ItemGroupDrawerMenuChoice(selectedItemGroup).onSelect())
+                        case Failure(t) => handleFailure(t)
                     }
+                }
+                def selectItemGroupExplicitly(product: Product) {
+                    storage.findItemGroups().map(_.toArray) onComplete {
+                        case Success(itemGroups) =>
+                            val builder = new AlertDialogBuilder(R.string.selectItemGroupTitle, null)
+                                .negativeButton(R.string.inputDialogCancel, (dialog, _) => {
+                                WidgetHelpers.toast(R.string.selectItemGroupCancelled)
+                                dialog.cancel()
+                            })
+                            builder.setItems(itemGroups.map(_.name.asInstanceOf[CharSequence]), new OnClickListener {
+                                override def onClick(dialog: DialogInterface, which: Int) {
+                                    itemGroups(which).id.foreach(saveItem(product, _))
+                                }
+                            })
+                            builder.show()
+                        case Failure(t) => handleFailure(t)
+                    }
+                }
+                def createItem(product: Product) {
+                    selectedItemGroup match {
+                        case Some(ItemGroup(Some(itemGroupId), _, _, _)) => saveItem(product, itemGroupId)
+                        case _ => selectItemGroupExplicitly(product)
+                    }
+                    selectedItemGroup.flatMap(_.id).foreach(saveItem(product, _))
                 }
                 storage.findProductByCode(code) onComplete {
                     // TODO case many =>
@@ -152,7 +177,10 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             }
         }
 
-        def handleFailure(throwable: Throwable) = throw throwable
+        def handleFailure(throwable: Throwable) {
+            Log.e(getClass.getSimpleName, "GUI error", throwable)
+            WidgetHelpers.toast(R.string.errorIntro + throwable.getMessage)
+        }
 
         class ItemViewHolder(val v: TextView) extends RecyclerView.ViewHolder(v)
 

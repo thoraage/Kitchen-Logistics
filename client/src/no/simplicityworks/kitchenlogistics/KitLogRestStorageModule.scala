@@ -20,6 +20,7 @@ trait KitLogRestStorageModule extends StorageModule {
 
     val storage = new Storage {
         val host =
+//            "http://192.168.168.120:8080"
 //            "http://192.168.42.47:8080"
 //            "http://192.168.1.206:8080"
             "http://192.168.0.198:8080"
@@ -28,6 +29,7 @@ trait KitLogRestStorageModule extends StorageModule {
 //            "http://localhost:8080"
 //            "http://10.20.11.167:8080"
 //            "http://kitlog.herokuapp.com"
+//            "http://172.30.16.69:8080"
         val client = new DefaultHttpClient
         client.getCredentialsProvider.setCredentials(new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT), new UsernamePasswordCredentials("thoredge", "pass"))
 

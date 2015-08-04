@@ -1,9 +1,9 @@
 package no.simplicityworks.kitchenlogistics
 
-import android.app.Activity
+import org.scaloid.common.SActivity
 
 trait GuiContextModule {
 
-    implicit def guiContext: Activity with TypedFindView
+    implicit def guiContext: SActivity with TypedFindView
     
 }

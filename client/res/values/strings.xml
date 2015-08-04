@@ -31,4 +31,9 @@
 
     <string name="notFoundTitle">Not Found</string>
     <string name="itemWithCodeNotFoundMessage">No item with this code found</string>
+
+    <string name="selectItemGroupTitle">Select Item Group</string>
+    <string name="selectItemGroupCancelled">Scanned item discarded</string>
+
+    <string name="errorIntro">Error: </string>
 </resources>
