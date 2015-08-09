@@ -64,14 +64,15 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                 def selectItemGroupExplicitly(product: Product) {
                     storage.findItemGroups().map(_.toArray) onComplete {
                         case Success(itemGroups) =>
-                            val builder = new AlertDialogBuilder(R.string.selectItemGroupTitle, null)
-                                .negativeButton(R.string.inputDialogCancel, (dialog, _) => {
+                            val builder = new AlertDialogBuilder(R.string.selectItemGroupTitle, null).negativeButton(R.string.inputDialogCancel, (dialog, _) => {
                                 WidgetHelpers.toast(R.string.selectItemGroupCancelled)
                                 dialog.cancel()
                             })
                             builder.setItems(itemGroups.map(_.name.asInstanceOf[CharSequence]), new OnClickListener {
                                 override def onClick(dialog: DialogInterface, which: Int) {
-                                    itemGroups(which).id.foreach(saveItem(product, _))
+                                    val itemGroup = itemGroups(which)
+                                    itemGroup.id.foreach(saveItem(product, _))
+                                    changeItemGroup(itemGroup)
                                 }
                             })
                             builder.show()
@@ -142,6 +143,11 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             def onSelect(): Unit
         }
 
+        def changeItemGroup(itemGroup: ItemGroup): Unit = {
+            val choice = itemGroupDrawerMenuChoices.find(_.itemGroup.exists(_.id == itemGroup.id))
+            choice.foreach(_.onSelect())
+        }
+
         object NewItemGroupDrawerMenuChoice extends DrawerMenuChoice {
             override def toString = R.string.drawerMenuNewItemGroup.r2String
 
@@ -150,9 +156,8 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                     storage.saveItemGroup(ItemGroup(None, None, name, new Date)) onComplete {
                         case Success(itemGroup) =>
                             populateDrawerMenu() foreach { _ =>
-                                println(itemGroupDrawerMenuChoices + ", " + itemGroup)
-                                val choice = itemGroupDrawerMenuChoices.find(_.itemGroup.exists(_.id == itemGroup.id))
-                                choice.foreach(_.onSelect())
+                                Log.i(getClass.getSimpleName, itemGroupDrawerMenuChoices + ", " + itemGroup)
+                                changeItemGroup(itemGroup)
                             }
                         case Failure(t) => handleFailure(t)
                     }
