@@ -12,6 +12,7 @@
 
     <string name="itemGroupNameTitle">Create New Item Group</string>
     <string name="itemGroupNameMessage">Please enter name</string>
+    <string name="itemGroupCreated">Item group created</string>
 
     <string name="scanNotInstalledTitle">Supporting Application Needed</string>
     <string name="scanNotInstalledMessage">In order to use this application you\'ll need to install ZXing barcode scanner from Android Market</string>
@@ -36,4 +37,6 @@
     <string name="selectItemGroupCancelled">Scanned item discarded</string>
 
     <string name="errorIntro">Error: </string>
+
+    <string name="fieldRequired">Non-empty input required</string>
 </resources>

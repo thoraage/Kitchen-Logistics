@@ -23,7 +23,7 @@ trait KitLogRestStorageModule extends StorageModule {
 //            "http://192.168.168.120:8080"
 //            "http://192.168.42.47:8080"
 //            "http://192.168.1.206:8080"
-            "http://192.168.0.198:8080"
+            "http://192.168.0.196:8080"
 //            "http://192.168.0.100:8080"
 //            "http://192.168.2.197:8080"
 //            "http://localhost:8080"

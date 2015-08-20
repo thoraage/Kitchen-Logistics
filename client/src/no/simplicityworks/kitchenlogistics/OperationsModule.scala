@@ -4,9 +4,10 @@ import java.util.Date
 
 import android.content.DialogInterface
 import android.content.DialogInterface.OnClickListener
+import android.support.v7.app.AlertDialog
 import android.support.v7.widget.{LinearLayoutManager, RecyclerView}
 import android.util.Log
-import android.view.{View, ViewGroup}
+import android.view.{LayoutInflater, View, ViewGroup}
 import android.widget.{AdapterView, TextView, ArrayAdapter}
 
 import scala.concurrent.{Promise, Future}
@@ -14,6 +15,8 @@ import scala.util.{Try, Failure, Success}
 import org.scaloid.common._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.JavaConverters.seqAsJavaListConverter
+import no.simplicityworks.kitchenlogistics.TypedResource.TypedView
+
 trait OperationsModule {
 
     def operations: Operations
@@ -152,16 +155,43 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             override def toString = R.string.drawerMenuNewItemGroup.r2String
 
             override def onSelect() {
-                dialogs.createInputDialog(34002784, R.string.itemGroupNameTitle, R.string.itemGroupNameMessage, { name =>
-                    storage.saveItemGroup(ItemGroup(None, None, name, new Date)) onComplete {
-                        case Success(itemGroup) =>
-                            populateDrawerMenu() foreach { _ =>
-                                Log.i(getClass.getSimpleName, itemGroupDrawerMenuChoices + ", " + itemGroup)
-                                changeItemGroup(itemGroup)
+                def show(text: String = "", feedback: String = "") {
+                    val builder = new AlertDialog.Builder(guiContext)
+                    builder.setTitle(R.string.itemGroupNameTitle)
+                    builder.setNegativeButton(R.string.inputDialogCancel, new OnClickListener {
+                        override def onClick(dialog: DialogInterface, which: Int): Unit = dialog.cancel()
+                    })
+                    val inflater = LayoutInflater.from(guiContext)
+                    val inputView = inflater.inflate(R.layout.inputfield, null, false)
+                    builder.setView(inputView)
+                    val dialogInputField = inputView.findView(TR.dialogInputField)
+                    val dialogInputFeedback = inputView.findView(TR.dialogInputFeedback)
+                    dialogInputField.setText(text)
+                    dialogInputFeedback.setText(feedback)
+                    builder.setPositiveButton(R.string.inputDialogOk, new OnClickListener {
+                        override def onClick(d: DialogInterface, which: Int) {
+                            val name = dialogInputField.getText.toString
+                            if (name.trim.length == 0) {
+                                runOnUiThread(show(name, R.string.fieldRequired.r2String))
+                            } else {
+                                storage.saveItemGroup(ItemGroup(None, None, name, new Date)) onComplete {
+                                    case Success(itemGroup) =>
+                                        populateDrawerMenu() foreach { _ =>
+                                            changeItemGroup(itemGroup)
+                                        }
+                                        WidgetHelpers.toast(R.string.itemGroupCreated)
+                                    case Failure(t) =>
+                                        handleFailure(t)
+                                }
                             }
-                        case Failure(t) => handleFailure(t)
-                    }
-                })
+                        }
+                    })
+                    builder.show()
+                }
+                show()
+
+//                dialogs.createInputDialog(34002784, R.string.itemGroupNameTitle, R.string.itemGroupNameMessage, { name =>
+//                })
             }
         }
 
