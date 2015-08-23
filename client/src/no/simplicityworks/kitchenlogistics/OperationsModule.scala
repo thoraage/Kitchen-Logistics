@@ -84,8 +84,11 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                 }
                 def createItem(product: Product) {
                     selectedItemGroup match {
-                        case Some(ItemGroup(Some(itemGroupId), _, _, _)) => saveItem(product, itemGroupId)
-                        case _ => selectItemGroupExplicitly(product)
+                        case Some(ItemGroup(Some(itemGroupId), _, _, _)) =>
+                            saveItem(product, itemGroupId)
+                            WidgetHelpers.toast(R.string.itemNewCreated)
+                        case _ =>
+                            selectItemGroupExplicitly(product)
                     }
                     selectedItemGroup.flatMap(_.id).foreach(saveItem(product, _))
                 }
@@ -94,12 +97,20 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                     case Success(product #:: _) =>
                         createItem(product)
                     case Success(Stream.Empty) =>
-                        dialogs.createInputDialog(832462, R.string.productNameTitle, R.string.productNameMessage, { name =>
-                            storage.saveProduct(Product(None, code, name, new Date)) onComplete {
-                                case Success(product) => createItem(product)
-                                case Failure(t) => handleFailure(t)
-                            }
-                        })
+                        runOnUiThread(
+                            createFieldDialog(R.string.productNameTitle, (name, feedback) => {
+                                if (name.trim.length == 0) {
+                                    feedback(R.string.fieldRequired.r2String)
+                                } else {
+                                    storage.saveProduct(Product(None, code, name, new Date)) onComplete {
+                                        case Success(product) =>
+                                            createItem(product)
+                                            WidgetHelpers.toast(R.string.productNewCreated)
+                                        case Failure(t) =>
+                                            handleFailure(t)
+                                    }
+                                }
+                            }))
                     case Failure(t) => handleFailure(t)
                 }
             }
@@ -155,7 +166,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             override def toString = R.string.drawerMenuNewItemGroup.r2String
 
             override def onSelect() {
-                createFieldDialog((name, feedback) => {
+                createFieldDialog(R.string.itemGroupNameTitle, (name, feedback) => {
                     if (name.trim.length == 0) {
                         feedback(R.string.fieldRequired.r2String)
                     } else {
@@ -173,10 +184,10 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             }
         }
 
-        def createFieldDialog(validate: (String, String => Unit) => Unit) {
+        def createFieldDialog(titleId: Int, validate: (String, String => Unit) => Unit) {
             def show(text: String = "", feedback: String = "") {
                 val builder = new Builder(guiContext)
-                builder.setTitle(R.string.itemGroupNameTitle)
+                builder.setTitle(titleId)
                 builder.setNegativeButton(R.string.inputDialogCancel, new OnClickListener {
                     override def onClick(dialog: DialogInterface, which: Int): Unit = dialog.cancel()
                 })

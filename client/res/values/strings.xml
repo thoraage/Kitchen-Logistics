@@ -7,8 +7,8 @@
     <string name="mockScanTitle">Mock Scan Code Input</string>
     <string name="mockScanMessage">Enter code</string>
 
-    <string name="productNameTitle">Unknown Product</string>
-    <string name="productNameMessage">Please enter name</string>
+    <string name="productNameTitle">Unknown Product - Please enter name</string>
+    <string name="productNewCreated">New product created</string>
 
     <string name="itemGroupNameTitle">Create New Item Group</string>
     <string name="itemGroupNameMessage">Please enter name</string>
@@ -32,6 +32,7 @@
 
     <string name="notFoundTitle">Not Found</string>
     <string name="itemWithCodeNotFoundMessage">No item with this code found</string>
+    <string name="itemNewCreated">Item stored</string>
 
     <string name="selectItemGroupTitle">Select Item Group</string>
     <string name="selectItemGroupCancelled">Scanned item discarded</string>
