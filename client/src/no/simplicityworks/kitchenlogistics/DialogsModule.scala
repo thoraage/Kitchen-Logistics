@@ -24,33 +24,6 @@ trait DialogsModule extends GuiContextModule {
             dialog
         }
 
-
-        def createInputDialog(dialogDiscriminatorId: Int, titleId: Int, messageId: Int, f: (String) => Unit) {
-            inputSuccessFunctionMap += (dialogDiscriminatorId -> f)
-            createDialog(dialogDiscriminatorId) {
-                () =>
-                    val dialog = new Dialog(guiContext) with TypedFindView
-                    dialog.setContentView(R.layout.inputdialog)
-                    dialog.setTitle(titleId)
-                    dialog.findView(TR.inputDialogMessage).setText(messageId)
-                    def removeDialog(dialog: Dialog with TypedFindView) {
-                        inputSuccessFunctionMap -= dialogDiscriminatorId
-                        dialog.dismiss()
-                    }
-                    dialog.findView(TR.inputDialogOk).onClick {
-                        val input = dialog.findView(TR.inputDialogField)
-                        inputSuccessFunctionMap.get(dialogDiscriminatorId).foreach(_(input.getText.toString))
-                        input.getText.clear()
-                        removeDialog(dialog)
-                    }
-                    dialog.findView(TR.inputDialogCancel).onClick {
-                        dialog.findView(TR.inputDialogField).getText.clear()
-                        removeDialog(dialog)
-                    }
-                    dialog
-            }
-        }
-
         def createInfoDialog(dialogDiscriminatorId: Int, titleId: Int, messageId: Int) {
             createDialog(dialogDiscriminatorId) {
                 () =>

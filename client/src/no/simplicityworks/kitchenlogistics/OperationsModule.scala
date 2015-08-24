@@ -4,10 +4,9 @@ import java.util.Date
 
 import android.content.DialogInterface
 import android.content.DialogInterface.OnClickListener
-import android.support.v7.app.AlertDialog.Builder
 import android.support.v7.widget.{LinearLayoutManager, RecyclerView}
 import android.util.Log
-import android.view.{LayoutInflater, View, ViewGroup}
+import android.view.{View, ViewGroup}
 import android.widget.{AdapterView, TextView, ArrayAdapter}
 
 import scala.concurrent.{Promise, Future}
@@ -15,7 +14,6 @@ import scala.util.{Try, Failure, Success}
 import org.scaloid.common._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.JavaConverters.seqAsJavaListConverter
-import no.simplicityworks.kitchenlogistics.TypedResource.TypedView
 
 trait OperationsModule {
 
@@ -98,7 +96,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                         createItem(product)
                     case Success(Stream.Empty) =>
                         runOnUiThread(
-                            createFieldDialog(R.string.productNameTitle, (name, feedback) => {
+                            new DialogWithField(R.string.productNameTitle, (name, feedback) => {
                                 if (name.trim.length == 0) {
                                     feedback(R.string.fieldRequired.r2String)
                                 } else {
@@ -166,7 +164,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             override def toString = R.string.drawerMenuNewItemGroup.r2String
 
             override def onSelect() {
-                createFieldDialog(R.string.itemGroupNameTitle, (name, feedback) => {
+                new DialogWithField(R.string.itemGroupNameTitle, (name, feedback) => {
                     if (name.trim.length == 0) {
                         feedback(R.string.fieldRequired.r2String)
                     } else {
@@ -182,31 +180,6 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                     }
                 })
             }
-        }
-
-        def createFieldDialog(titleId: Int, validate: (String, String => Unit) => Unit) {
-            def show(text: String = "", feedback: String = "") {
-                val builder = new Builder(guiContext)
-                builder.setTitle(titleId)
-                builder.setNegativeButton(R.string.inputDialogCancel, new OnClickListener {
-                    override def onClick(dialog: DialogInterface, which: Int): Unit = dialog.cancel()
-                })
-                val inflater = LayoutInflater.from(guiContext)
-                val inputView = inflater.inflate(R.layout.inputfield, null, false)
-                builder.setView(inputView)
-                val dialogInputField = inputView.findView(TR.dialogInputField)
-                val dialogInputFeedback = inputView.findView(TR.dialogInputFeedback)
-                dialogInputField.setText(text)
-                dialogInputFeedback.setText(feedback)
-                builder.setPositiveButton(R.string.inputDialogOk, new OnClickListener {
-                    override def onClick(d: DialogInterface, which: Int) {
-                        val name = dialogInputField.getText.toString
-                        validate(name, runOnUiThread(show(name, _)))
-                    }
-                })
-                builder.show()
-            }
-            show()
         }
 
         class ItemGroupDrawerMenuChoice(val itemGroup: Option[ItemGroup]) extends DrawerMenuChoice {
