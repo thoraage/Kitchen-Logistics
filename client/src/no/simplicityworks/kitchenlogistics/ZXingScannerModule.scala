@@ -21,7 +21,7 @@ trait ZXingScannerModule extends ScannerModule with DialogsModule {
             } catch {
                 case e: ActivityNotFoundException =>
                     ZXingScannerModule.onScanSuccess = None
-                    dialogs.createInfoDialog(935723, R.string.scanNotInstalledTitle, R.string.scanNotInstalledMessage)
+                    dialogs.withMessage(R.string.scanNotInstalledTitle, R.string.scanNotInstalledMessage)
             }
         }
 
@@ -31,7 +31,7 @@ trait ZXingScannerModule extends ScannerModule with DialogsModule {
                     val code = intent.getStringExtra("SCAN_RESULT")
                     ZXingScannerModule.onScanSuccess.foreach(_(code))
                 } else if (resultCode == Activity.RESULT_CANCELED) {
-                    dialogs.createInfoDialog(8768343, R.string.noResultTitle, R.string.noResultMessage)
+                    dialogs.withMessage(R.string.noResultTitle, R.string.noResultMessage)
                 }
                 ZXingScannerModule.onScanSuccess = None
             }

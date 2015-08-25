@@ -22,8 +22,9 @@
     <string name="drawerMenuAll">All</string>
     <string name="drawerMenuNewItemGroup">New Item Group</string>
 
-    <string name="inputDialogOk">Ok</string>
+    <string name="inputDialogOk">OK</string>
     <string name="inputDialogCancel">Cancel</string>
+    <string name="inputDialogClose">Close</string>
 
     <string name="actionBarSearchAlt">Search</string>
     <string name="actionBarNewAlt">New</string>

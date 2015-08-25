@@ -43,8 +43,4 @@ class MainActivity extends ActionBarActivity with SActivity with TypedFindView {
         super.onCreateOptionsMenu(menu)
     }
 
-    override def onCreateDialog(id: Int) = {
-        app.dialogs.onCreateDialog(id)
-    }
-
 }

@@ -96,7 +96,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                         createItem(product)
                     case Success(Stream.Empty) =>
                         runOnUiThread(
-                            new DialogWithField(R.string.productNameTitle, (name, feedback) => {
+                            dialogs.withField(R.string.productNameTitle, (name, feedback) => {
                                 if (name.trim.length == 0) {
                                     feedback(R.string.fieldRequired.r2String)
                                 } else {
@@ -118,7 +118,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             scanner.startScanner { code =>
                 storage.findItemsByCode(code).map(_.toList) onComplete {
                     case Success(Nil) =>
-                        dialogs.createInfoDialog(123482, R.string.notFoundTitle, R.string.itemWithCodeNotFoundMessage)
+                        dialogs.withMessage(R.string.notFoundTitle, R.string.itemWithCodeNotFoundMessage)
                     case Success(item :: Nil) =>
                         storage.removeItem(item.lastItemId) onFailure PartialFunction(handleFailure)
                     case Success(items) =>
@@ -164,7 +164,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             override def toString = R.string.drawerMenuNewItemGroup.r2String
 
             override def onSelect() {
-                new DialogWithField(R.string.itemGroupNameTitle, (name, feedback) => {
+                dialogs.withField(R.string.itemGroupNameTitle, (name, feedback) => {
                     if (name.trim.length == 0) {
                         feedback(R.string.fieldRequired.r2String)
                     } else {

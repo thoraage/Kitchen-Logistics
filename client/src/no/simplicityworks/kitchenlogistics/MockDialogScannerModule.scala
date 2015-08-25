@@ -5,7 +5,7 @@ trait MockDialogScannerModule extends ScannerModule with GuiContextModule with D
     override lazy val scanner = new Scanner {
 
         override def startScanner(f: (String) => Unit) {
-            new DialogWithField(R.string.mockScanTitle, (code, _) => f(code))
+            dialogs.withField(R.string.mockScanTitle, (code, _) => f(code))
         }
 
     }
