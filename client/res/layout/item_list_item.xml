@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
+              a:orientation="vertical"
+              a:layout_width="fill_parent"
+              a:layout_height="wrap_content"
+              a:padding="10dp">
+    <TextView xmlns:a="http://schemas.android.com/apk/res/android"
+              a:padding="10dp"
+              a:textSize="16sp"
+              a:layout_width="fill_parent"
+              a:layout_height="fill_parent"
+              a:id="@+id/item_name">
+    </TextView>
+</LinearLayout>

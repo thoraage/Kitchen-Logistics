@@ -6,14 +6,15 @@ import android.content.DialogInterface
 import android.content.DialogInterface.OnClickListener
 import android.support.v7.widget.{LinearLayoutManager, RecyclerView}
 import android.util.Log
-import android.view.{View, ViewGroup}
-import android.widget.{AdapterView, TextView, ArrayAdapter}
-
-import scala.concurrent.{Promise, Future}
-import scala.util.{Try, Failure, Success}
+import android.view.{LayoutInflater, View, ViewGroup}
+import android.widget.{AdapterView, ArrayAdapter}
+import no.simplicityworks.kitchenlogistics.TypedResource._
 import org.scaloid.common._
-import scala.concurrent.ExecutionContext.Implicits.global
+
 import scala.collection.JavaConverters.seqAsJavaListConverter
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{Future, Promise}
+import scala.util.{Failure, Success, Try}
 
 trait OperationsModule {
 
@@ -144,7 +145,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                     val choices = (new ItemGroupDrawerMenuChoice(None) ::
                         itemGroupDrawerMenuChoices) :::
                         List(NewItemGroupDrawerMenuChoice)
-                    leftDrawer.setAdapter(new ArrayAdapter(guiContext, R.layout.itemlistitem, choices.asJava))
+                    leftDrawer.setAdapter(new ArrayAdapter(guiContext, R.layout.itemgroup_list_itemgroup, choices.asJava))
                 }
             }
             future.onFailure { case t: Throwable => handleFailure(t) }
@@ -204,9 +205,10 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             WidgetHelpers.toast(R.string.errorIntro + throwable.getMessage)
         }
 
-        class ItemViewHolder(val v: TextView) extends RecyclerView.ViewHolder(v)
+        class ItemViewHolder(val view: View) extends RecyclerView.ViewHolder(view)
 
         object ItemAdapter extends RecyclerView.Adapter[ItemViewHolder] {
+            val inflater = LayoutInflater.from(guiContext)
             var itemSummaries: List[ItemSummary] = Nil
 
             new ItemGroupDrawerMenuChoice(None).onSelect()
@@ -214,11 +216,12 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             override def getItemCount: Int = itemSummaries.size
 
             override def onBindViewHolder(vh: ItemViewHolder, i: Int) {
-                vh.v.setText(itemSummaries(i).product.name)
+                val textView = vh.view.findView(TR.item_name)
+                textView.setText(itemSummaries(i).product.name)
             }
 
             override def onCreateViewHolder(viewGroup: ViewGroup, i: Int): ItemViewHolder = {
-                new ItemViewHolder(new TextView(guiContext))
+                new ItemViewHolder(inflater.inflate(R.layout.item_list_item, viewGroup, false))
             }
         }
 

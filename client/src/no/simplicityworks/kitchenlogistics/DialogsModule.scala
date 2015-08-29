@@ -37,7 +37,7 @@ trait DialogsModule extends GuiContextModule {
                     override def onClick(dialog: DialogInterface, which: Int): Unit = dialog.cancel()
                 })
                 val inflater = LayoutInflater.from(guiContext)
-                val inputView = inflater.inflate(R.layout.inputfield, null, false)
+                val inputView = inflater.inflate(R.layout.input_field, null, false)
                 builder.setView(inputView)
                 val dialogInputField = inputView.findView(TR.dialogInputField)
                 val dialogInputFeedback = inputView.findView(TR.dialogInputFeedback)
