@@ -40,4 +40,6 @@
     <string name="errorIntro">Error: </string>
 
     <string name="fieldRequired">Non-empty input required</string>
+
+    <string name="itemListCountItem">Count %d</string>
 </resources>

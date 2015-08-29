@@ -1,5 +1,6 @@
 package no.simplicityworks.kitchenlogistics
 
+import java.text.MessageFormat
 import java.util.Date
 
 import android.content.DialogInterface
@@ -216,8 +217,11 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             override def getItemCount: Int = itemSummaries.size
 
             override def onBindViewHolder(vh: ItemViewHolder, i: Int) {
-                val textView = vh.view.findView(TR.item_name)
-                textView.setText(itemSummaries(i).product.name)
+                val count = itemSummaries(i).count
+                Seq(
+                    (TR.item_name, itemSummaries(i).product.name),
+                    (TR.item_count, if (count == 1) "" else R.string.itemListCountItem.r2String.format(count))
+                ).foreach(p => vh.view.findView(p._1).setText(p._2))
             }
 
             override def onCreateViewHolder(viewGroup: ViewGroup, i: Int): ItemViewHolder = {
