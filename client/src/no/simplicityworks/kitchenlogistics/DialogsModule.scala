@@ -1,10 +1,9 @@
 package no.simplicityworks.kitchenlogistics
 
-import android.app.Dialog
+import android.app.AlertDialog.Builder
+import android.app.{AlertDialog, Dialog}
 import android.content.DialogInterface
 import android.content.DialogInterface.OnClickListener
-import android.support.v7.app.AlertDialog
-import android.support.v7.app.AlertDialog.Builder
 import android.view.LayoutInflater
 import no.simplicityworks.kitchenlogistics.TypedResource.TypedView
 import org.scaloid.common._

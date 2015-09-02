@@ -33,6 +33,7 @@ trait Operations {
 
     def populateDrawerMenu(): Future[Unit]
 
+    def createNewItemGroup()
 }
 
 trait OperationsImplModule extends OperationsModule with ScannerModule with StorageModule with GuiContextModule with DialogsModule {
@@ -143,9 +144,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             val future = storage.findItemGroups().map(_.toList).flatMap { itemGroups =>
                 futureOnUiThread {
                     itemGroupDrawerMenuChoices = itemGroups.map(itemGroup => new ItemGroupDrawerMenuChoice(Some(itemGroup)))
-                    val choices = (new ItemGroupDrawerMenuChoice(None) ::
-                        itemGroupDrawerMenuChoices) :::
-                        List(NewItemGroupDrawerMenuChoice)
+                    val choices = new ItemGroupDrawerMenuChoice(None) :: itemGroupDrawerMenuChoices
                     leftDrawer.setAdapter(new ArrayAdapter(guiContext, R.layout.itemgroup_list_itemgroup, choices.asJava))
                 }
             }
@@ -162,26 +161,22 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             choice.foreach(_.onSelect())
         }
 
-        object NewItemGroupDrawerMenuChoice extends DrawerMenuChoice {
-            override def toString = R.string.drawerMenuNewItemGroup.r2String
-
-            override def onSelect() {
-                dialogs.withField(R.string.itemGroupNameTitle, (name, feedback) => {
-                    if (name.trim.length == 0) {
-                        feedback(R.string.fieldRequired.r2String)
-                    } else {
-                        storage.saveItemGroup(ItemGroup(None, None, name, new Date)) onComplete {
-                            case Success(itemGroup) =>
-                                populateDrawerMenu() foreach { _ =>
-                                    changeItemGroup(itemGroup)
-                                }
-                                WidgetHelpers.toast(R.string.itemGroupCreated)
-                            case Failure(t) =>
-                                handleFailure(t)
-                        }
+        override def createNewItemGroup() {
+            dialogs.withField(R.string.itemGroupNameTitle, (name, feedback) => {
+                if (name.trim.length == 0) {
+                    feedback(R.string.fieldRequired.r2String)
+                } else {
+                    storage.saveItemGroup(ItemGroup(None, None, name, new Date)) onComplete {
+                        case Success(itemGroup) =>
+                            populateDrawerMenu() foreach { _ =>
+                                changeItemGroup(itemGroup)
+                            }
+                            WidgetHelpers.toast(R.string.itemGroupCreated)
+                        case Failure(t) =>
+                            handleFailure(t)
                     }
-                })
-            }
+                }
+            })
         }
 
         class ItemGroupDrawerMenuChoice(val itemGroup: Option[ItemGroup]) extends DrawerMenuChoice {

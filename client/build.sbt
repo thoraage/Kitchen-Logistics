@@ -23,10 +23,6 @@ libraryDependencies ++= Seq(
   aar("com.android.support" % "recyclerview-v7" % "22.1.1")
 ).map(_.withSources())
 
-libraryDependencies ++= Seq(
-  aar("com.android.support" % "appcompat-v7" % "22.1.1")
-)
-
 scalacOptions in Compile += "-feature"
 
 run <<= run in Android

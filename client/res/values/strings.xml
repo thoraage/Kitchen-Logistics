@@ -29,6 +29,7 @@
     <string name="actionBarSearchAlt">Search</string>
     <string name="actionBarNewAlt">New</string>
     <string name="actionBarRemoveAlt">Remove</string>
+    <string name="actionBarNewItemGroup">New Item Group</string>
 
     <string name="notFoundTitle">Not Found</string>
     <string name="itemWithCodeNotFoundMessage">No item with this code found</string>
