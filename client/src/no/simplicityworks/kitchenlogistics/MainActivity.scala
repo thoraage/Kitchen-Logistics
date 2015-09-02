@@ -37,7 +37,6 @@ class MainActivity extends SActivity with TypedFindView {
         app.operations.initiate()
         val actionBar = getActionBar
         actionBar.setDisplayHomeAsUpEnabled(true)
-//        actionBar.setHomeAsUpIndicator(R.drawable.ic_drawer)
         app.operations.populateDrawerMenu()
     }
 

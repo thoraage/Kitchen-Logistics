@@ -13,7 +13,7 @@
           <!--app:showAsAction="ifRoom"/>-->
     <item a:icon="@drawable/ic_action_overflow"
           a:showAsAction="always"
-          a:title="More">
+          a:title="@string/actionBarMoreAlt">
         <menu>
             <item a:id="@+id/actionBarNewItemGroup"
                   a:title="@string/actionBarNewItemGroup"/>
