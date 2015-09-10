@@ -1,19 +1,41 @@
-<android.support.v4.widget.DrawerLayout
-        xmlns:a="http://schemas.android.com/apk/res/android"
-        a:id="@+id/drawer_layout"
-        a:layout_width="match_parent"
-        a:layout_height="match_parent">
-    <android.support.v7.widget.RecyclerView
-            a:id="@+id/my_recycler_view"
-            a:scrollbars="vertical"
-            a:layout_width="match_parent"
-            a:layout_height="match_parent">
-    </android.support.v7.widget.RecyclerView>
-    <ListView a:id="@+id/left_drawer"
-              a:layout_width="240dp"
-              a:layout_height="match_parent"
-              a:layout_gravity="start"
-              a:choiceMode="singleChoice"
-              a:divider="@android:color/transparent"
-              a:dividerHeight="0dp"/>
-</android.support.v4.widget.DrawerLayout>
+<!--<android.support.design.widget.CoordinatorLayout-->
+        <!--xmlns:a="http://schemas.android.com/apk/res/android"-->
+        <!--xmlns:app="http://schemas.android.com/apk/res-auto"-->
+        <!--a:id="@+id/coordinatorLayout"-->
+        <!--a:layout_width="match_parent"-->
+        <!--a:layout_height="match_parent">-->
+    <!--<RelativeLayout-->
+            <!--a:layout_width="match_parent"-->
+            <!--a:layout_height="match_parent">-->
+        <android.support.v4.widget.DrawerLayout
+                xmlns:a="http://schemas.android.com/apk/res/android"
+                a:id="@+id/drawer_layout"
+                a:layout_width="match_parent"
+                a:layout_height="match_parent">
+            <android.support.v7.widget.RecyclerView
+                    a:id="@+id/my_recycler_view"
+                    a:scrollbars="vertical"
+                    a:layout_width="match_parent"
+                    a:layout_height="match_parent">
+            </android.support.v7.widget.RecyclerView>
+            <ListView a:id="@+id/left_drawer"
+                      a:layout_width="240dp"
+                      a:layout_height="match_parent"
+                      a:layout_gravity="start"
+                      a:choiceMode="singleChoice"
+                      a:divider="@android:color/transparent"
+                      a:dividerHeight="0dp"
+                      a:background="@android:color/background_light"/>
+        </android.support.v4.widget.DrawerLayout>
+    <!--</RelativeLayout>-->
+    <!--<android.support.design.widget.FloatingActionButton-->
+            <!--a:layout_width="wrap_content"-->
+            <!--a:layout_height="wrap_content"-->
+            <!--a:layout_marginBottom="16dp"-->
+            <!--a:layout_marginRight="16dp"-->
+            <!--a:src="@drawable/ic_action_new"-->
+            <!--app:fabSize="normal"-->
+            <!--app:layout_anchor="@id/coordinatorLayout"-->
+            <!--app:layout_anchorGravity="bottom|right|end"-->
+            <!--app:rippleColor="#F06292"/>-->
+<!--</android.support.design.widget.CoordinatorLayout>-->
