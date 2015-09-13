@@ -34,6 +34,11 @@ trait Operations {
     def populateDrawerMenu(): Future[Unit]
 
     def createNewItemGroup()
+
+    def renameItemGroupName()
+
+    def deleteItemGroupName()
+
 }
 
 trait OperationsImplModule extends OperationsModule with ScannerModule with StorageModule with GuiContextModule with DialogsModule {
@@ -140,11 +145,13 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             promise.future
         }
 
+        val allItems = new ItemGroupDrawerMenuChoice(None)
+
         override def populateDrawerMenu(): Future[Unit] = {
             val future = storage.findItemGroups().map(_.toList).flatMap { itemGroups =>
                 futureOnUiThread {
                     itemGroupDrawerMenuChoices = itemGroups.map(itemGroup => new ItemGroupDrawerMenuChoice(Some(itemGroup)))
-                    val choices = new ItemGroupDrawerMenuChoice(None) :: itemGroupDrawerMenuChoices
+                    val choices = allItems :: itemGroupDrawerMenuChoices
                     leftDrawer.setAdapter(new ArrayAdapter(guiContext, R.layout.itemgroup_list_itemgroup, choices.asJava))
                 }
             }
@@ -162,18 +169,61 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
         }
 
         override def createNewItemGroup() {
-            dialogs.withField(R.string.itemGroupNameTitle, (name, feedback) => {
+            dialogs.withField(R.string.createItemGroupNameTitle, (name, feedback) => {
                 if (name.trim.length == 0) {
                     feedback(R.string.fieldRequired.r2String)
                 } else {
                     storage.saveItemGroup(ItemGroup(None, None, name, new Date)) onComplete {
                         case Success(itemGroup) =>
-                            populateDrawerMenu() foreach { _ =>
-                                changeItemGroup(itemGroup)
+                            populateDrawerMenu() onSuccess {
+                                case _ =>
+                                    changeItemGroup(itemGroup)
+                                    WidgetHelpers.toast(R.string.createdItemGroup)
                             }
-                            WidgetHelpers.toast(R.string.itemGroupCreated)
                         case Failure(t) =>
                             handleFailure(t)
+                    }
+                }
+            })
+        }
+
+        override def renameItemGroupName() {
+            dialogs.withField(R.string.renameItemGroupNameTitle, (name, feedback) => {
+                if (name.trim.length == 0) {
+                    feedback(R.string.fieldRequired.r2String)
+                } else {
+                    selectedItemGroup.foreach { itemGroup =>
+                        storage.saveItemGroup(itemGroup.copy(name = name)) onComplete {
+                            case Success(_) =>
+                                populateDrawerMenu() onComplete {
+                                    case Success(_) =>
+                                        changeItemGroup(itemGroup)
+                                        WidgetHelpers.toast(R.string.renamedItemGroup)
+                                    case Failure(t) =>
+                                        handleFailure(t)
+                                }
+                            case Failure(t) =>
+                                handleFailure(t)
+                        }
+                    }
+                }
+            })
+        }
+
+        override def deleteItemGroupName() {
+            dialogs.confirm(R.string.confirmDeleteItemGroupNameTitle, {
+                selectedItemGroup.flatMap(_.id).foreach { itemGroupId =>
+                    storage.removeItemGroup(itemGroupId) onComplete {
+                        case Success(_) =>
+                            populateDrawerMenu() onComplete {
+                                case Success(_) =>
+                                    allItems.onSelect()
+                                    WidgetHelpers.toast(R.string.removedItemGroup)
+                                case Failure(t) =>
+                                    handleFailure(t)
+                            }
+                        case Failure(e) =>
+                            handleFailure(e)
                     }
                 }
             })

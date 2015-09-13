@@ -9,9 +9,13 @@
     <string name="productNameTitle">Unknown Product - Please enter name</string>
     <string name="productNewCreated">New product created</string>
 
-    <string name="itemGroupNameTitle">Create New Item Group</string>
+    <string name="createItemGroupNameTitle">Create New Item Group</string>
+    <string name="renameItemGroupNameTitle">Rename Item Group</string>
     <string name="itemGroupNameMessage">Please enter name</string>
-    <string name="itemGroupCreated">Item group created</string>
+    <string name="createdItemGroup">Item group created</string>
+    <string name="renamedItemGroup">Item group renamed</string>
+    <string name="removedItemGroup">Item group removed</string>
+    <string name="confirmDeleteItemGroupNameTitle">Are you sure you want to delete this item group?</string>
 
     <string name="scanNotInstalledTitle">Supporting Application Needed</string>
     <string name="scanNotInstalledMessage">In order to use this application you\'ll need to install ZXing barcode scanner from Android Market</string>
@@ -25,11 +29,15 @@
     <string name="inputDialogOk">OK</string>
     <string name="inputDialogCancel">Cancel</string>
     <string name="inputDialogClose">Close</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
 
     <string name="actionBarSearchAlt">Search</string>
     <string name="actionBarNewAlt">New</string>
     <string name="actionBarRemoveAlt">Remove</string>
     <string name="actionBarNewItemGroup">New Item Group</string>
+    <string name="actionBarRenameItemGroup">Rename Item Group</string>
+    <string name="actionBarDeleteItemGroup">Delete Item Group</string>
     <string name="actionBarMoreAlt">More</string>
 
     <string name="notFoundTitle">Not Found</string>

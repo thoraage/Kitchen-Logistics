@@ -25,6 +25,12 @@ class MainActivity extends SActivity with TypedFindView {
             case R.id.actionBarNewItemGroup =>
                 app.operations.createNewItemGroup()
                 true
+            case R.id.actionBarRenameItemGroup =>
+                app.operations.renameItemGroupName()
+                true
+            case R.id.actionBarDeleteItemGroup =>
+                app.operations.deleteItemGroupName()
+                true
             case _ =>
                 super.onOptionsItemSelected(item)
         }

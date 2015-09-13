@@ -16,6 +16,18 @@ trait DialogsModule extends GuiContextModule {
     def dialogs = new Dialogs
 
     class Dialogs {
+        def confirm(titleId: Int, then: => Unit) {
+            guiContext.runOnUiThread {
+                new AlertDialog.Builder(guiContext)
+                    .setTitle(titleId)
+                    .setNegativeButton(R.string.no, null)
+                    .setPositiveButton(R.string.yes, new OnClickListener {
+                        override def onClick(dialog: DialogInterface, which: Int) = then
+                    })
+                    .show()
+            }
+        }
+
 
         def withMessage(titleId: Int, messageId: Int) = {
             guiContext.runOnUiThread {

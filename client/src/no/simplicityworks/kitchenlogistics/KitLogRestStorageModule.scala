@@ -23,10 +23,10 @@ trait KitLogRestStorageModule extends StorageModule {
 //            "http://192.168.168.120:8080"
 //            "http://192.168.42.47:8080"
 //            "http://192.168.1.181:8080"
-            "http://192.168.0.195:8080"
+//            "http://192.168.0.195:8080"
 //            "http://192.168.0.100:8080"
 //            "http://localhost:8080"
-//            "http://10.20.11.167:8080"
+            "http://192.168.1.206:8080"
 //            "http://kitlog.herokuapp.com"
 //            "http://172.30.16.69:8080"
         val client = new DefaultHttpClient
@@ -66,8 +66,11 @@ trait KitLogRestStorageModule extends StorageModule {
             request.setHeader("Accept", "application/json")
             val response = client.execute(request)
             assert2xxResponse(response)
-            val string = Source.fromInputStream(response.getEntity.getContent).mkString
-            Parse.decodeOption[Id](string).map(_.id)
+            val returnEntity = Option(response.getEntity)
+            returnEntity.flatMap { returnEntity =>
+                val string = Source.fromInputStream(returnEntity.getContent).mkString
+                Parse.decodeOption[Id](string).map(_.id)
+            }
         }
 
         override def saveItem(item: Item): Future[Item] = Future {
@@ -93,20 +96,28 @@ trait KitLogRestStorageModule extends StorageModule {
         }
 
         override def saveItemGroup(itemGroup: ItemGroup): Future[ItemGroup] = Future {
-            itemGroup.copy(id = put(s"$host/rest/itemGroups", itemGroup))
+            itemGroup.id.map { id =>
+                put(s"$host/rest/itemGroups/$id", itemGroup)
+                itemGroup
+            }.getOrElse(itemGroup.copy(id = put(s"$host/rest/itemGroups", itemGroup)))
         }
 
         override def removeItem(itemId: Int): Future[Unit] =
-            Future(client.execute(new HttpDelete(s"$host/rest/items/$itemId")))
+            Future(assert2xxResponse(client.execute(new HttpDelete(s"$host/rest/items/$itemId"))))
 
         override def findItemsByCode(code: String): Future[Seq[ItemSummary]] = Future {
             Parse.decodeOption[Stream[ItemSummary]](get("items", List("code" -> code))).get
         }
+
+        override def removeItemGroup(itemGroupId: Int): Future[Unit] =
+            Future(assert2xxResponse(client.execute(new HttpDelete(s"$host/rest/itemGroups/$itemGroupId"))))
+
     }
 
-    def assert2xxResponse(response: HttpResponse): Unit = {
+    def assert2xxResponse(response: HttpResponse): HttpResponse = {
         if (response.getStatusLine.getStatusCode / 100 != 2) {
             throw new scala.RuntimeException(s"Invalid http status ${response.getStatusLine}")
         }
+        response
     }
 }

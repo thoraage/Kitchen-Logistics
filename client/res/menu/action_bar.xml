@@ -17,6 +17,10 @@
         <menu>
             <item a:id="@+id/actionBarNewItemGroup"
                   a:title="@string/actionBarNewItemGroup"/>
+            <item a:id="@+id/actionBarRenameItemGroup"
+                  a:title="@string/actionBarRenameItemGroup"/>
+            <item a:id="@+id/actionBarDeleteItemGroup"
+                  a:title="@string/actionBarDeleteItemGroup"/>
         </menu>
     </item>
 </menu>

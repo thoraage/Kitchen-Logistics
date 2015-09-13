@@ -134,6 +134,30 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
                     Ok ~> ResponseString(write(Map("id" -> id)))
                 }
             }
+
+            case Path(Seg("rest" :: "itemGroups" :: IntString(id) :: Nil)) & AuthenticatedUser(user) => {
+                for {_ <- PUT; r <- request[Any]} yield {
+                    val itemGroup = read[ItemGroup](Body string r).copy(id = Some(id))
+                    if (!ItemGroups.isOwner(itemGroup, user))
+                        Forbidden ~> ResponseString("Is not owner")
+                    else {
+                        ItemGroups.update(itemGroup)
+                        NoContent
+                    }
+                }
+            } orElse {
+                for {_ <- DELETE} yield {
+                    database withSession { implicit s =>
+                        val itemGroup = TableQuery[ItemGroups].filter(_.id === id).list.head
+                        if (!ItemGroups.isOwner(itemGroup, user))
+                            Forbidden ~> ResponseString("Is not owner")
+                        else {
+                            TableQuery[ItemGroups].filter(_.id === id).delete
+                            Ok ~> NoContent
+                        }
+                    }
+                }
+            }
         }
     }
 

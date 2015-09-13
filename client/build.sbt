@@ -19,12 +19,13 @@ apkbuildExcludes in Android += "META-INF/NOTICE"
 libraryDependencies ++= Seq(
   "org.scaloid" %% "scaloid" % "3.6.1-10",
   "io.argonaut" %% "argonaut" % "6.0.4",
-  aar("com.android.support" % "support-v4" % "22.2.1"),
-  aar("com.android.support" % "recyclerview-v7" % "22.2.1")
+//  aar("com.android.support" % "appcompat-v7" % "23.0.1"),
+  aar("com.android.support" % "support-v4" % "23.0.1"),
+  aar("com.android.support" % "recyclerview-v7" % "23.0.1")
 ).map(_.withSources())
 
 //libraryDependencies ++= Seq(
-//  aar("com.android.support" % "design" % "22.2.1")
+//  aar("com.android.support" % "design" % "23.0.1")
 //)
 
 scalacOptions in Compile += "-feature"
