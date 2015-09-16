@@ -16,19 +16,19 @@ class MainActivity extends SActivity with TypedFindView {
 //            case R.id.actionBarSearch =>
 //                //search
 //                true
-            case R.id.actionBarNew =>
+            case R.id.action_bar_scan_new =>
                 app.operations.scanNewItem()
                 true
-            case R.id.actionBarRemove =>
+            case R.id.action_bar_scan_remove =>
                 app.operations.scanRemoveItem()
                 true
-            case R.id.actionBarNewItemGroup =>
+            case R.id.action_bar_new_item_group =>
                 app.operations.createNewItemGroup()
                 true
-            case R.id.actionBarRenameItemGroup =>
+            case R.id.action_bar_rename_item_group =>
                 app.operations.renameItemGroupName()
                 true
-            case R.id.actionBarDeleteItemGroup =>
+            case R.id.action_bar_delete_item_group =>
                 app.operations.deleteItemGroupName()
                 true
             case _ =>
@@ -49,6 +49,7 @@ class MainActivity extends SActivity with TypedFindView {
     override def onCreateOptionsMenu(menu: Menu): Boolean = {
         val inflater = getMenuInflater
         inflater.inflate(R.menu.action_bar, menu)
+        app.operations.setMenu(menu)
         super.onCreateOptionsMenu(menu)
     }
 

@@ -1,13 +1,12 @@
 package no.simplicityworks.kitchenlogistics
 
-import java.text.MessageFormat
 import java.util.Date
 
 import android.content.DialogInterface
 import android.content.DialogInterface.OnClickListener
 import android.support.v7.widget.{LinearLayoutManager, RecyclerView}
 import android.util.Log
-import android.view.{LayoutInflater, View, ViewGroup}
+import android.view._
 import android.widget.{AdapterView, ArrayAdapter}
 import no.simplicityworks.kitchenlogistics.TypedResource._
 import org.scaloid.common._
@@ -24,6 +23,7 @@ trait OperationsModule {
 }
 
 trait Operations {
+    def setMenu(menu: Menu)
 
     def initiate()
 
@@ -48,6 +48,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
         var selectedItemGroup: Option[ItemGroup] = None
         var itemGroupDrawerMenuChoices: List[ItemGroupDrawerMenuChoice] = Nil
         lazy val leftDrawer = guiContext.findView(TR.left_drawer)
+        var menu: Option[Menu] = None
 
         override def initiate() {
             val view = guiContext.findView(TR.my_recycler_view)
@@ -234,6 +235,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
 
             override def onSelect() {
                 selectedItemGroup = itemGroup
+                updateMenu()
                 storage.findItemsByGroup(selectedItemGroup).map(_.toList) onComplete {
                     case Success(items) =>
                         ItemAdapter.itemSummaries = items
@@ -244,6 +246,13 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                     case Failure(e) => handleFailure(e)
                 }
             }
+        }
+
+        def updateMenu() {
+            for {
+                menu <- menu.toSeq
+                item <- Seq(R.id.action_bar_rename_item_group, R.id.action_bar_delete_item_group)
+            } menu.findItem(item).setVisible(selectedItemGroup.nonEmpty)
         }
 
         def handleFailure(throwable: Throwable) {
@@ -274,6 +283,10 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             }
         }
 
+        override def setMenu(menu: Menu) {
+            this.menu = Some(menu)
+            updateMenu()
+        }
     }
 
 }

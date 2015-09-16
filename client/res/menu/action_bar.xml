@@ -1,9 +1,9 @@
 <menu xmlns:a="http://schemas.android.com/apk/res/android">
-    <item a:id="@+id/actionBarNew"
+    <item a:id="@+id/action_bar_scan_new"
           a:icon="@drawable/ic_action_new"
           a:title="@string/actionBarNewAlt"
           a:showAsAction="always"/>
-    <item a:id="@+id/actionBarRemove"
+    <item a:id="@+id/action_bar_scan_remove"
           a:icon="@drawable/ic_action_discard"
           a:title="@string/actionBarRemoveAlt"
           a:showAsAction="always"/>
@@ -15,11 +15,11 @@
           a:showAsAction="always"
           a:title="@string/actionBarMoreAlt">
         <menu>
-            <item a:id="@+id/actionBarNewItemGroup"
+            <item a:id="@+id/action_bar_new_item_group"
                   a:title="@string/actionBarNewItemGroup"/>
-            <item a:id="@+id/actionBarRenameItemGroup"
+            <item a:id="@+id/action_bar_rename_item_group"
                   a:title="@string/actionBarRenameItemGroup"/>
-            <item a:id="@+id/actionBarDeleteItemGroup"
+            <item a:id="@+id/action_bar_delete_item_group"
                   a:title="@string/actionBarDeleteItemGroup"/>
         </menu>
     </item>
