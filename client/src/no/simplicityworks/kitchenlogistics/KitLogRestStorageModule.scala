@@ -23,10 +23,10 @@ trait KitLogRestStorageModule extends StorageModule {
 //            "http://192.168.168.120:8080"
 //            "http://192.168.42.47:8080"
 //            "http://192.168.1.181:8080"
-//            "http://192.168.0.195:8080"
+            "http://192.168.0.195:8080"
 //            "http://192.168.0.100:8080"
 //            "http://localhost:8080"
-            "http://192.168.1.198:8080"
+//            "http://192.168.1.198:8080"
 //            "http://kitlog.herokuapp.com"
 //            "http://172.30.16.69:8080"
         val client = new DefaultHttpClient

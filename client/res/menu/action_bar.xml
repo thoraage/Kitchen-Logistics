@@ -7,14 +7,13 @@
           a:icon="@drawable/ic_action_discard"
           a:title="@string/actionBarRemoveAlt"
           a:showAsAction="always"/>
-    <!--<item a:id="@+id/actionBarSearch"-->
-          <!--a:icon="@drawable/ic_action_search"-->
-          <!--a:title="@string/actionBarSearchAlt"-->
-          <!--app:showAsAction="ifRoom"/>-->
     <item a:icon="@drawable/ic_action_overflow"
           a:showAsAction="always"
           a:title="@string/actionBarMoreAlt">
         <menu>
+            <item a:id="@+id/actionBarSearch"
+                  a:icon="@drawable/ic_action_search"
+                  a:title="@string/actionBarSearchAlt"/>
             <item a:id="@+id/action_bar_new_item_group"
                   a:title="@string/actionBarNewItemGroup"/>
             <item a:id="@+id/action_bar_rename_item_group"

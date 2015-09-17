@@ -42,8 +42,8 @@ class MainActivity extends SActivity with TypedFindView {
         setContentView(R.layout.main)
         app.operations.initiate()
         val actionBar = getActionBar
-        actionBar.setDisplayHomeAsUpEnabled(true)
         app.operations.populateDrawerMenu()
+
     }
 
     override def onCreateOptionsMenu(menu: Menu): Boolean = {
