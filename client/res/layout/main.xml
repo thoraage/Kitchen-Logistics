@@ -13,7 +13,7 @@
                 a:layout_width="match_parent"
                 a:layout_height="match_parent">
             <android.support.v7.widget.RecyclerView
-                    a:id="@+id/my_recycler_view"
+                    a:id="@+id/recycler_view"
                     a:scrollbars="vertical"
                     a:layout_width="match_parent"
                     a:layout_height="match_parent">

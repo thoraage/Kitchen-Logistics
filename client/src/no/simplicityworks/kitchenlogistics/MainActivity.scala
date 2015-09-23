@@ -43,7 +43,6 @@ class MainActivity extends SActivity with TypedFindView {
         app.operations.initiate()
         val actionBar = getActionBar
         app.operations.populateDrawerMenu()
-
     }
 
     override def onCreateOptionsMenu(menu: Menu): Boolean = {

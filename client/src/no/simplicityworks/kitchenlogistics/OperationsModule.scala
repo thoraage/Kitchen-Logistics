@@ -51,7 +51,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
         var menu: Option[Menu] = None
 
         override def initiate() {
-            val view = guiContext.findView(TR.my_recycler_view)
+            val view = guiContext.findView(TR.recycler_view)
             view.setHasFixedSize(true)
             view.setLayoutManager(new LinearLayoutManager(guiContext))
             view.setAdapter(ItemAdapter)
@@ -259,8 +259,6 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             Log.e(getClass.getSimpleName, "GUI error", throwable)
             WidgetHelpers.toast(R.string.errorIntro + throwable.getMessage)
         }
-
-        class ItemViewHolder(val view: View) extends RecyclerView.ViewHolder(view)
 
         object ItemAdapter extends RecyclerView.Adapter[ItemViewHolder] {
             val inflater = LayoutInflater.from(guiContext)
