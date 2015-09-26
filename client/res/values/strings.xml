@@ -15,7 +15,7 @@
     <string name="createdItemGroup">Item group created</string>
     <string name="renamedItemGroup">Item group renamed</string>
     <string name="removedItemGroup">Item group removed</string>
-    <string name="confirmDeleteItemGroupNameTitle">Are you sure you want to delete this item group?</string>
+    <string name="confirmRemoveItemGroupNameTitle">Are you sure you want to remove this item group?</string>
 
     <string name="scanNotInstalledTitle">Supporting Application Needed</string>
     <string name="scanNotInstalledMessage">In order to use this application you\'ll need to install ZXing barcode scanner from Android Market</string>
@@ -37,12 +37,13 @@
     <string name="actionBarRemoveAlt">Remove</string>
     <string name="actionBarNewItemGroup">New Item Group</string>
     <string name="actionBarRenameItemGroup">Rename Item Group</string>
-    <string name="actionBarDeleteItemGroup">Delete Item Group</string>
+    <string name="actionBarRemoveItemGroup">Remove Item Group</string>
     <string name="actionBarMoreAlt">More</string>
 
     <string name="notFoundTitle">Not Found</string>
     <string name="itemWithCodeNotFoundMessage">No item with this code found</string>
     <string name="itemNewCreated">Item stored</string>
+    <string name="removedItem">Item removed</string>
 
     <string name="selectItemGroupTitle">Select Item Group</string>
     <string name="selectItemGroupCancelled">Scanned item discarded</string>
@@ -52,4 +53,6 @@
     <string name="fieldRequired">Non-empty input required</string>
 
     <string name="itemListCountItem">Count %d</string>
+    <string name="itemPopupRemove">Remove</string>
+    <string name="itemPopupRemoveAll">Remove all</string>
 </resources>

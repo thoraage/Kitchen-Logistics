@@ -3,11 +3,11 @@ package no.simplicityworks.kitchenlogistics
 import java.util.Date
 
 import android.content.DialogInterface
-import android.content.DialogInterface.OnClickListener
 import android.support.v7.widget.{LinearLayoutManager, RecyclerView}
 import android.util.Log
 import android.view._
-import android.widget.{AdapterView, ArrayAdapter}
+import android.widget.PopupMenu.OnMenuItemClickListener
+import android.widget.{AdapterView, ArrayAdapter, PopupMenu}
 import no.simplicityworks.kitchenlogistics.TypedResource._
 import org.scaloid.common._
 
@@ -37,7 +37,7 @@ trait Operations {
 
     def renameItemGroupName()
 
-    def deleteItemGroupName()
+    def removeItemGroupName()
 
 }
 
@@ -67,7 +67,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                 def saveItem(product: Product, itemGroupId: Int) {
                     storage.saveItem(Item(None, None, product.id.get, itemGroupId, new Date)) onComplete {
                         case Success(_) =>
-                            guiContext.runOnUiThread(new ItemGroupDrawerMenuChoice(selectedItemGroup).onSelect())
+                            guiContext.runOnUiThread(reloadItemList())
                         case Failure(t) => handleFailure(t)
                     }
                 }
@@ -78,7 +78,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                                 WidgetHelpers.toast(R.string.selectItemGroupCancelled)
                                 dialog.cancel()
                             })
-                            builder.setItems(itemGroups.map(_.name.asInstanceOf[CharSequence]), new OnClickListener {
+                            builder.setItems(itemGroups.map(_.name.asInstanceOf[CharSequence]), new DialogInterface.OnClickListener {
                                 override def onClick(dialog: DialogInterface, which: Int) {
                                     val itemGroup = itemGroups(which)
                                     itemGroup.id.foreach(saveItem(product, _))
@@ -211,8 +211,8 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             })
         }
 
-        override def deleteItemGroupName() {
-            dialogs.confirm(R.string.confirmDeleteItemGroupNameTitle, {
+        override def removeItemGroupName() {
+            dialogs.confirm(R.string.confirmRemoveItemGroupNameTitle, {
                 selectedItemGroup.flatMap(_.id).foreach { itemGroupId =>
                     storage.removeItemGroup(itemGroupId) onComplete {
                         case Success(_) =>
@@ -251,7 +251,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
         def updateMenu() {
             for {
                 menu <- menu.toSeq
-                item <- Seq(R.id.action_bar_rename_item_group, R.id.action_bar_delete_item_group)
+                item <- Seq(R.id.action_bar_rename_item_group, R.id.action_bar_remove_item_group)
             } menu.findItem(item).setVisible(selectedItemGroup.nonEmpty)
         }
 
@@ -277,7 +277,29 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             }
 
             override def onCreateViewHolder(viewGroup: ViewGroup, i: Int): ItemViewHolder = {
-                new ItemViewHolder(inflater.inflate(R.layout.item_list_item, viewGroup, false))
+                val view = inflater.inflate(R.layout.item_list_item, viewGroup, false)
+                view.onLongClick {
+                    val popup = new PopupMenu(guiContext, view)
+                    val inflater = popup.getMenuInflater
+                    inflater.inflate(R.menu.item_popup, popup.getMenu)
+                    popup.setOnMenuItemClickListener(new OnMenuItemClickListener {
+                        override def onMenuItemClick(item: MenuItem) = {
+                            item.getItemId match {
+                                case R.id.item_popup_remove =>
+                                    storage.removeItem(itemSummaries(i).lastItemId) onComplete {
+                                        case Success(_) =>
+                                            reloadItemList()
+                                            WidgetHelpers.toast(R.string.removedItem)
+                                        case Failure(f) => handleFailure(f)
+                                    }
+                                    true
+                            }
+                        }
+                    })
+                    popup.show()
+                    true
+                }
+                new ItemViewHolder(view)
             }
         }
 
@@ -285,6 +307,13 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             this.menu = Some(menu)
             updateMenu()
         }
+
+        class ItemViewHolder(val view: View) extends RecyclerView.ViewHolder(view)
+
+        def reloadItemList() {
+            new ItemGroupDrawerMenuChoice(selectedItemGroup).onSelect()
+        }
+
     }
 
 }

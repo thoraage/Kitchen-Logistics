@@ -1,0 +1,5 @@
+<menu xmlns:a="http://schemas.android.com/apk/res/android">
+    <item a:id="@+id/item_popup_remove"
+          a:icon="@drawable/ic_action_discard"
+          a:title="@string/itemPopupRemove"/>
+</menu>

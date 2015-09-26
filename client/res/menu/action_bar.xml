@@ -18,8 +18,8 @@
                   a:title="@string/actionBarNewItemGroup"/>
             <item a:id="@+id/action_bar_rename_item_group"
                   a:title="@string/actionBarRenameItemGroup"/>
-            <item a:id="@+id/action_bar_delete_item_group"
-                  a:title="@string/actionBarDeleteItemGroup"/>
+            <item a:id="@+id/action_bar_remove_item_group"
+                  a:title="@string/actionBarRemoveItemGroup"/>
         </menu>
     </item>
 </menu>
