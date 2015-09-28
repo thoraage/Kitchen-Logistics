@@ -117,13 +117,35 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
                 }
             }
 
-            case Path(Seg("rest" :: "items" :: IntString(itemId) :: Nil)) =>
+            case Path(Seg("rest" :: "items" :: IntString(itemId) :: Nil)) & AuthenticatedUser(user) => {
                 for {_ <- DELETE} yield {
                     database withSession { implicit session: Session =>
                         TableQuery[Items].filter(_.id === itemId).delete
                         Ok ~> NoContent
                     }
                 }
+            } orElse {
+                database withSession { implicit session: Session =>
+                    for {_ <- GET} yield {
+                        TableQuery[Items].filter(_.id === itemId).list.headOption match {
+                            case Some(item) =>
+                                Ok ~> ResponseString(write(item))
+                            case None =>
+                                NotFound
+                        }
+                    }
+                }
+            } orElse {
+                for {_ <- PUT; r <- request[Any]} yield {
+                    database withSession { implicit session: Session =>
+                        val updated = TableQuery[Items]
+                            .filter(_.id === itemId)
+                            .update(read[Item](Body string r).copy(id = Some(itemId)))
+                        if (updated == 0) NotFound
+                        else NoContent
+                    }
+                }
+            }
 
             case Path(Seg("rest" :: "itemGroups" :: Nil)) & AuthenticatedUser(user) => {
                 for {_ <- GET; _ <- Accepts.Json; r <- request[Any]} yield

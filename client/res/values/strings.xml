@@ -53,6 +53,8 @@
     <string name="fieldRequired">Non-empty input required</string>
 
     <string name="itemListCountItem">Count %d</string>
+    <string name="itemPopupMove">Move to group...</string>
     <string name="itemPopupRemove">Remove</string>
-    <string name="itemPopupRemoveAll">Remove all</string>
+    <string name="itemMoveCancelled">Item move cancelled</string>
+    <string name="itemMovedToItemGroup">One item {0} moved to item group {1}</string>
 </resources>

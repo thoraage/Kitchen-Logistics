@@ -1,5 +1,6 @@
 package no.simplicityworks.kitchenlogistics
 
+import java.text.MessageFormat
 import java.util.Date
 
 import android.content.DialogInterface
@@ -71,31 +72,16 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                         case Failure(t) => handleFailure(t)
                     }
                 }
-                def selectItemGroupExplicitly(product: Product) {
-                    storage.findItemGroups().map(_.toArray) onComplete {
-                        case Success(itemGroups) =>
-                            val builder = new AlertDialogBuilder(R.string.selectItemGroupTitle, null).negativeButton(R.string.inputDialogCancel, (dialog, _) => {
-                                WidgetHelpers.toast(R.string.selectItemGroupCancelled)
-                                dialog.cancel()
-                            })
-                            builder.setItems(itemGroups.map(_.name.asInstanceOf[CharSequence]), new DialogInterface.OnClickListener {
-                                override def onClick(dialog: DialogInterface, which: Int) {
-                                    val itemGroup = itemGroups(which)
-                                    itemGroup.id.foreach(saveItem(product, _))
-                                    changeItemGroup(itemGroup)
-                                }
-                            })
-                            builder.show()
-                        case Failure(t) => handleFailure(t)
-                    }
-                }
                 def createItem(product: Product) {
                     selectedItemGroup match {
                         case Some(ItemGroup(Some(itemGroupId), _, _, _)) =>
                             saveItem(product, itemGroupId)
                             WidgetHelpers.toast(R.string.itemNewCreated)
                         case _ =>
-                            selectItemGroupExplicitly(product)
+                            selectItemGroupExplicitly(R.string.selectItemGroupCancelled, itemGroup => {
+                                itemGroup.id.foreach(saveItem(product, _))
+                                changeItemGroup(itemGroup)
+                            })
                     }
                     selectedItemGroup.flatMap(_.id).foreach(saveItem(product, _))
                 }
@@ -276,7 +262,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                 ).foreach(p => vh.view.findView(p._1).setText(p._2))
             }
 
-            override def onCreateViewHolder(viewGroup: ViewGroup, i: Int): ItemViewHolder = {
+            override def onCreateViewHolder(viewGroup: ViewGroup, itemIdx: Int): ItemViewHolder = {
                 val view = inflater.inflate(R.layout.item_list_item, viewGroup, false)
                 view.onLongClick {
                     val popup = new PopupMenu(guiContext, view)
@@ -284,15 +270,27 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                     inflater.inflate(R.menu.item_popup, popup.getMenu)
                     popup.setOnMenuItemClickListener(new OnMenuItemClickListener {
                         override def onMenuItemClick(item: MenuItem) = {
+                            val itemSummary = itemSummaries(itemIdx)
                             item.getItemId match {
                                 case R.id.item_popup_remove =>
-                                    storage.removeItem(itemSummaries(i).lastItemId) onComplete {
+                                    storage.removeItem(itemSummary.lastItemId) onComplete {
                                         case Success(_) =>
                                             reloadItemList()
                                             WidgetHelpers.toast(R.string.removedItem)
                                         case Failure(f) => handleFailure(f)
                                     }
                                     true
+                                case R.id.item_popup_move =>
+                                    selectItemGroupExplicitly(R.string.itemMoveCancelled, { itemGroup =>
+                                        storage.getItem(itemSummary.lastItemId).map(_.copy(itemGroupId = itemGroup.id.get)).flatMap(storage.saveItem) onComplete {
+                                            case Success(_) =>
+                                                reloadItemList()
+                                                WidgetHelpers.toast(new MessageFormat(R.string.itemMovedToItemGroup.r2String).format(Array(itemSummary.product.name, itemGroup.name)))
+                                            case Failure(f) => handleFailure(f)
+                                        }
+                                    })
+                                    true
+                                case _ => false
                             }
                         }
                     })
@@ -312,6 +310,23 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
 
         def reloadItemList() {
             new ItemGroupDrawerMenuChoice(selectedItemGroup).onSelect()
+        }
+
+        def selectItemGroupExplicitly(cancelMessageId: CharSequence, doWithItemGroup: (ItemGroup) => Unit) {
+            storage.findItemGroups().map(_.toArray) onComplete {
+                case Success(itemGroups) =>
+                    val builder = new AlertDialogBuilder(R.string.selectItemGroupTitle, null).negativeButton(R.string.inputDialogCancel, (dialog, _) => {
+                        WidgetHelpers.toast(cancelMessageId)
+                        dialog.cancel()
+                    })
+                    builder.setItems(itemGroups.map(_.name.asInstanceOf[CharSequence]), new DialogInterface.OnClickListener {
+                        override def onClick(dialog: DialogInterface, which: Int) {
+                            doWithItemGroup(itemGroups(which))
+                        }
+                    })
+                    builder.show()
+                case Failure(t) => handleFailure(t)
+            }
         }
 
     }

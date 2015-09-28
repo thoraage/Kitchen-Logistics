@@ -74,7 +74,10 @@ trait KitLogRestStorageModule extends StorageModule {
         }
 
         override def saveItem(item: Item): Future[Item] = Future {
-            item.copy(id = put(s"$host/rest/items", item))
+            item.id.map { id =>
+                put(s"$host/rest/items/$id", item)
+                item
+            }.getOrElse(item.copy(id = put(s"$host/rest/items", item)))
         }
 
         override def findItemsByGroup(itemGroup: Option[ItemGroup] = None): Future[Seq[ItemSummary]] = Future {
@@ -112,6 +115,9 @@ trait KitLogRestStorageModule extends StorageModule {
         override def removeItemGroup(itemGroupId: Int): Future[Unit] =
             Future(assert2xxResponse(client.execute(new HttpDelete(s"$host/rest/itemGroups/$itemGroupId"))))
 
+        override def getItem(itemId: Int): Future[Item] = {
+            Future(Parse.decodeOption[Item](get(s"items/$itemId")).getOrElse(sys.error("Unexpected Item representation received")))
+        }
     }
 
     def assert2xxResponse(response: HttpResponse): HttpResponse = {
