@@ -16,14 +16,14 @@ import scala.concurrent.Future
 import scala.io.Source
 import scala.language.postfixOps
 
-trait KitLogRestStorageModule extends StorageModule {
+trait KitLogRestStorageModule extends StorageModule with StorageConfigurationModule {
 
-    val storage = new Storage {
-        val host =
+    lazy val storage = new Storage {
+        val host = storageConfiguration.hostAddress
 //            "http://192.168.168.120:8080"
 //            "http://192.168.42.47:8080"
 //            "http://192.168.1.181:8080"
-            "http://192.168.0.195:8080"
+//            "http://192.168.0.195:8080"
 //            "http://192.168.0.100:8080"
 //            "http://localhost:8080"
 //            "http://192.168.1.198:8080"
@@ -126,4 +126,5 @@ trait KitLogRestStorageModule extends StorageModule {
         }
         response
     }
+
 }

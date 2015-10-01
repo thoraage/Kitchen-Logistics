@@ -6,7 +6,7 @@ name := "kitlog"
 
 version := "1.0"
 
-scalaVersion := "2.11.6"
+scalaVersion := "2.11.7"
 
 libraryDependencies ++= Seq(
     "net.databinder"            %% "unfiltered-directives" % "0.8.4",
@@ -23,5 +23,6 @@ libraryDependencies ++= Seq(
     "org.flywaydb"              %  "flyway-core"     % "3.1" % "compile",
     "org.slf4j"                 %  "slf4j-api"       % "1.7.10",
     "ch.qos.logback"            %  "logback-classic" % "1.1.2",
+    "org.apache.httpcomponents" % "httpclient" % "4.3.3" % "test",
     "org.scalatest"             %% "scalatest"       % "2.2.5" % "test"
 ).map(_.withSources())

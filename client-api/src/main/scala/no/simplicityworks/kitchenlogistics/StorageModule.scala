@@ -6,7 +6,7 @@ import scala.concurrent.Future
 
 trait StorageModule {
 
-    val storage: Storage
+    def storage: Storage
 
     trait Storage {
         def getItem(itemId: Int): Future[Item]
@@ -38,4 +38,12 @@ trait StorageModule {
 
     case class Item(id: Option[Int], userId: Option[Int], productId: Int, itemGroupId: Int, created: Date)
 
+}
+
+trait StorageConfigurationModule {
+    def storageConfiguration: StorageConfiguration
+}
+
+trait StorageConfiguration {
+    def hostAddress: String
 }
