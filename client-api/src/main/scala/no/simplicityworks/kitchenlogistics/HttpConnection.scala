@@ -1,10 +1,11 @@
 package no.simplicityworks.kitchenlogistics
 
-import java.io.{StringReader, StringWriter}
+import java.io.InputStream
 import java.net.{HttpURLConnection, URL}
 
-import org.apache.commons.codec.binary.Base64
-import org.apache.commons.io.IOUtils
+import com.migcomponents.migbase64.Base64
+
+import scala.io.Source
 
 case class HttpConnection(url: String, headers: Map[String, String] = Map()) {
     def accept(contentType: ContentType) =
@@ -14,7 +15,7 @@ case class HttpConnection(url: String, headers: Map[String, String] = Map()) {
         this.copy(headers = headers + ("Content-Type" -> contentType.contentType))
 
     def basicAuth(username: String, password: String, encoding: String = "UTF-8") =
-        this.copy(headers = headers + ("Authorization" -> ("Basic " + Base64.encodeBase64String(s"$username:$password".getBytes(encoding)))))
+        this.copy(headers = headers + ("Authorization" -> ("Basic " + Base64.encodeToString(s"$username:$password".getBytes(encoding), false))))
 
     def get(path: String, encoding: String = "UTF-8"): String = {
         val connection = new URL(s"$url$path").openConnection().asInstanceOf[HttpURLConnection]
@@ -25,15 +26,12 @@ case class HttpConnection(url: String, headers: Map[String, String] = Map()) {
         connection.setInstanceFollowRedirects(false)
         val status = connection.getResponseCode
         if (status != 200) {
-            import scala.collection.JavaConverters._
             val cookie = Option(connection.getHeaderField("Set-Cookie"))
             cookie
                 .map(cookie => copy(headers = headers + ("Cookie" -> cookie.replaceAll(";.*", ""))).get(path, encoding))
                 .getOrElse(sys.error(s"Expected code 200, got $status: ${connection.getContent.asInstanceOf[String]}"))
         } else {
-            val writer = new StringWriter
-            IOUtils.copy(connection.getInputStream, writer, encoding)
-            writer.toString
+            readString(connection.getInputStream, encoding)
         }
     }
 
@@ -44,20 +42,19 @@ case class HttpConnection(url: String, headers: Map[String, String] = Map()) {
         connection.setDoInput(true)
         connection.setDoOutput(true)
         connection.setInstanceFollowRedirects(false)
-        IOUtils.copy(new StringReader(content), connection.getOutputStream, encoding)
+        connection.getOutputStream.write(content.getBytes(encoding))
         val status = connection.getResponseCode
         if (status != 200) {
-            import scala.collection.JavaConverters._
             val cookie = Option(connection.getHeaderField("Set-Cookie"))
             cookie
                 .map(cookie => copy(headers = headers + ("Cookie" -> cookie.replaceAll(";.*", ""))).put(url, content, encoding))
                 .getOrElse(sys.error(s"Expected code 200, got $status: ${connection.getContent.asInstanceOf[String]}"))
         } else {
-            val writer = new StringWriter
-            IOUtils.copy(connection.getInputStream, writer, encoding)
-            writer.toString
+            readString(connection.getInputStream, encoding)
         }
     }
+
+    def readString(stream: InputStream, encoding: String) = Source.fromInputStream(stream).mkString
 
 }
 
