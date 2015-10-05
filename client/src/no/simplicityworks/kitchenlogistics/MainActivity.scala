@@ -9,6 +9,10 @@ class MainActivity extends SActivity with TypedFindView {
     var app: OperationsModule with StorageModule with ScannerModule with DialogsModule =
         new OperationsImplModule with KitLogRestStorageModule with MockDialogScannerModule with DialogsModule {
             override def guiContext = MainActivity.this
+
+            override def storageConfiguration = new StorageConfiguration {
+                override def hostAddress = "http://192.168.0.195:8080"
+            }
         }
 
     override def onOptionsItemSelected(item: MenuItem): Boolean = {
