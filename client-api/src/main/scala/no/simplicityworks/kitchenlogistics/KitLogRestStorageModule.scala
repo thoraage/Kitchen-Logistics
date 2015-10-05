@@ -5,16 +5,10 @@ import java.text.SimpleDateFormat
 
 import argonaut.Argonaut._
 import argonaut._
-import org.apache.http.HttpResponse
-import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
-import org.apache.http.client.methods.{HttpDelete, HttpGet, HttpPut}
-import org.apache.http.entity.StringEntity
-import org.apache.http.impl.client.DefaultHttpClient
+import no.simplicityworks.kitchenlogistics.ContentType.json
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.io.Source
-import scala.language.postfixOps
 
 trait KitLogRestStorageModule extends StorageModule with StorageConfigurationModule {
 
@@ -29,8 +23,7 @@ trait KitLogRestStorageModule extends StorageModule with StorageConfigurationMod
 //            "http://192.168.1.198:8080"
 //            "http://kitlog.herokuapp.com"
 //            "http://172.30.16.69:8080"
-        val client = new DefaultHttpClient
-        client.getCredentialsProvider.setCredentials(new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT), new UsernamePasswordCredentials("thoredge", "pass"))
+        private val connection = HttpConnection(host).basicAuth("thoredge", "pass")
 
         // Example: 2015-03-02T00:00:00.000Z
         def format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
@@ -60,17 +53,19 @@ trait KitLogRestStorageModule extends StorageModule with StorageConfigurationMod
         }
 
         def put[T](url: String, obj: T)(implicit code: CodecJson[T]): Option[Int] = {
-            val entity = new StringEntity(obj.asJson.toString())
-            val request = new HttpPut(url)
-            request.setEntity(entity)
-            request.setHeader("Accept", "application/json")
-            val response = client.execute(request)
-            assert2xxResponse(response)
-            val returnEntity = Option(response.getEntity)
-            returnEntity.flatMap { returnEntity =>
-                val string = Source.fromInputStream(returnEntity.getContent).mkString
-                Parse.decodeOption[Id](string).map(_.id)
-            }
+            val string = connection.accept(json).contentType(json).put(url, obj.asJson.toString())
+            Parse.decodeOption[Id](string).map(_.id)
+//            val entity = new StringEntity(obj.asJson.toString())
+//            val request = new HttpPut(url)
+//            request.setEntity(entity)
+//            request.setHeader("Accept", "application/json")
+//            val response = client.execute(request)
+//            assert2xxResponse(response)
+//            val returnEntity = Option(response.getEntity)
+//            returnEntity.flatMap { returnEntity =>
+//                val string = Source.fromInputStream(returnEntity.getContent).mkString
+//                Parse.decodeOption[Id](string).map(_.id)
+//            }
         }
 
         override def saveItem(item: Item): Future[Item] = Future {
@@ -87,11 +82,7 @@ trait KitLogRestStorageModule extends StorageModule with StorageConfigurationMod
 
         def get(resource: String, queryParameters: List[(String, String)] = Nil): String = {
             val query = queryParameters.map(p => s"${p._1}=${URLEncoder.encode(p._2, "UTF-8")}").mkString("?", "&", "")
-            val request = new HttpGet(s"$host/rest/$resource$query")
-            request.setHeader("Accept", "application/json")
-            val response = client.execute(request)
-            assert2xxResponse(response)
-            Source.fromInputStream(response.getEntity.getContent).mkString
+            connection.accept(json).get(s"/rest/$resource$query")
         }
 
         override def findItemGroups(): Future[Seq[ItemGroup]] = Future {
@@ -106,25 +97,25 @@ trait KitLogRestStorageModule extends StorageModule with StorageConfigurationMod
         }
 
         override def removeItem(itemId: Int): Future[Unit] =
-            Future(assert2xxResponse(client.execute(new HttpDelete(s"$host/rest/items/$itemId"))))
+            Future(())//assert2xxResponse(client.execute(new HttpDelete(s"$host/rest/items/$itemId"))))
 
         override def findItemsByCode(code: String): Future[Seq[ItemSummary]] = Future {
             Parse.decodeOption[Stream[ItemSummary]](get("items", List("code" -> code))).get
         }
 
         override def removeItemGroup(itemGroupId: Int): Future[Unit] =
-            Future(assert2xxResponse(client.execute(new HttpDelete(s"$host/rest/itemGroups/$itemGroupId"))))
+            Future(())//assert2xxResponse(client.execute(new HttpDelete(s"$host/rest/itemGroups/$itemGroupId"))))
 
         override def getItem(itemId: Int): Future[Item] = {
             Future(Parse.decodeOption[Item](get(s"items/$itemId")).getOrElse(sys.error("Unexpected Item representation received")))
         }
     }
 
-    def assert2xxResponse(response: HttpResponse): HttpResponse = {
-        if (response.getStatusLine.getStatusCode / 100 != 2) {
-            throw new scala.RuntimeException(s"Invalid http status ${response.getStatusLine}")
-        }
-        response
+    def assert2xxResponse[T](response: Object) {
+//        if (response.getStatusLine.getStatusCode / 100 != 2) {
+//            throw new scala.RuntimeException(s"Invalid http status ${response.getStatusLine}")
+//        }
+//        response
     }
 
 }
