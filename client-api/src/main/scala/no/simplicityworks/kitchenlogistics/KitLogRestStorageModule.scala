@@ -97,14 +97,14 @@ trait KitLogRestStorageModule extends StorageModule with StorageConfigurationMod
         }
 
         override def removeItem(itemId: Int): Future[Unit] =
-            Future(())//assert2xxResponse(client.execute(new HttpDelete(s"$host/rest/items/$itemId"))))
+            Future(connection.delete(s"/rest/items/$itemId"))
 
         override def findItemsByCode(code: String): Future[Seq[ItemSummary]] = Future {
             Parse.decodeOption[Stream[ItemSummary]](get("items", List("code" -> code))).get
         }
 
         override def removeItemGroup(itemGroupId: Int): Future[Unit] =
-            Future(())//assert2xxResponse(client.execute(new HttpDelete(s"$host/rest/itemGroups/$itemGroupId"))))
+            Future(connection.delete(s"/rest/itemGroups/$itemGroupId"))
 
         override def getItem(itemId: Int): Future[Item] = {
             Future(Parse.decodeOption[Item](get(s"items/$itemId")).getOrElse(sys.error("Unexpected Item representation received")))

@@ -25,37 +25,60 @@ case class HttpConnection(url: String, headers: Map[String, String] = Map()) {
         connection.setDoOutput(false)
         connection.setInstanceFollowRedirects(false)
         val status = connection.getResponseCode
-        if (status != 200) {
+        val content = readString(connection.getInputStream, encoding)
+        if (status != HttpStatus.OK) {
             val cookie = Option(connection.getHeaderField("Set-Cookie"))
             cookie
                 .map(cookie => copy(headers = headers + ("Cookie" -> cookie.replaceAll(";.*", ""))).get(path, encoding))
-                .getOrElse(sys.error(s"Expected code 200, got $status: ${connection.getContent.asInstanceOf[String]}"))
+                .getOrElse(sys.error(s"Expected code 200, got $status: $content"))
         } else {
-            readString(connection.getInputStream, encoding)
+            content
         }
     }
 
-    def put(url: String, content: String, encoding: String = "UTF-8"): String = {
+    def put(url: String, outContent: String, encoding: String = "UTF-8"): String = {
         val connection = new URL(s"$url").openConnection().asInstanceOf[HttpURLConnection]
         connection.setRequestMethod("PUT")
         headers.foreach(header => connection.setRequestProperty(header._1, header._2))
         connection.setDoInput(true)
         connection.setDoOutput(true)
         connection.setInstanceFollowRedirects(false)
-        connection.getOutputStream.write(content.getBytes(encoding))
+        connection.getOutputStream.write(outContent.getBytes(encoding))
         val status = connection.getResponseCode
-        if (status != 200) {
+        val inContent = readString(connection.getInputStream, encoding)
+        if (status != HttpStatus.OK && status != HttpStatus.EMPTY) {
             val cookie = Option(connection.getHeaderField("Set-Cookie"))
             cookie
-                .map(cookie => copy(headers = headers + ("Cookie" -> cookie.replaceAll(";.*", ""))).put(url, content, encoding))
-                .getOrElse(sys.error(s"Expected code 200, got $status: ${connection.getContent.asInstanceOf[String]}"))
+                .map(cookie => copy(headers = headers + ("Cookie" -> cookie.replaceAll(";.*", ""))).put(url, outContent, encoding))
+                .getOrElse(sys.error(s"Expected code 200, got $status: $inContent"))
         } else {
-            readString(connection.getInputStream, encoding)
+            inContent
+        }
+    }
+
+    def delete(path: String, encoding: String = "UTF-8") {
+        val connection = new URL(s"$url$path").openConnection().asInstanceOf[HttpURLConnection]
+        connection.setRequestMethod("DELETE")
+        headers.foreach(header => connection.setRequestProperty(header._1, header._2))
+        connection.setDoInput(true)
+        connection.setDoOutput(false)
+        connection.setInstanceFollowRedirects(false)
+        val status = connection.getResponseCode
+        val content = readString(connection.getInputStream, encoding)
+        if (status != HttpStatus.EMPTY) {
+            val cookie = Option(connection.getHeaderField("Set-Cookie"))
+            cookie.foreach(cookie => copy(headers = headers + ("Cookie" -> cookie.replaceAll(";.*", ""))).delete(path, encoding))
+            if (cookie.isEmpty) sys.error(s"Expected code 200, got $status: $content")
         }
     }
 
     def readString(stream: InputStream, encoding: String) = Source.fromInputStream(stream).mkString
 
+}
+
+object HttpStatus {
+    val OK = 200
+    val EMPTY = 204
 }
 
 object ContentType {

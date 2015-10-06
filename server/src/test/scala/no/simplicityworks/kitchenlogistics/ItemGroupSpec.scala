@@ -24,13 +24,13 @@ class ItemGroupSpec extends FeatureSpec with GivenWhenThen with BeforeAndAfterAl
         http.stop()
     }
 
-    private val client = new KitLogRestStorageModule {
+    val client = new KitLogRestStorageModule {
         override lazy val storageConfiguration = new StorageConfiguration {
             override lazy val hostAddress = s"http://127.0.0.1:$port"
         }
     }
 
-    def getAll: Seq[StorageModule#ItemGroup] = Await.result(client.storage.findItemGroups(), Inf)
+    def getAll = Await.result(client.storage.findItemGroups(), Inf)
 
     feature("Item group get all") {
         scenario("Ok") {
@@ -41,17 +41,26 @@ class ItemGroupSpec extends FeatureSpec with GivenWhenThen with BeforeAndAfterAl
     feature("Item group create") {
         scenario("Ok") {
             assert(getAll.seq.size === 1)
-            Await.result(client.storage.saveItemGroup(new client.ItemGroup(None, Some(1), "Mine", new Date)), Inf)
+            val itemGroup = Await.result(client.storage.saveItemGroup(new client.ItemGroup(None, None, "Mine", new Date)), Inf)
+            assert(itemGroup.id !== None)
             assert(getAll.seq.size === 2)
         }
     }
 
     feature("Item group rename") {
-        scenario("Sunshine story") {
-            Given("Existing item group")
-//            req.PUT.setBody("""{name: 'hei'}""").OK(println)
+        scenario("Ok") {
+            val itemGroup = getAll.head
+            Await.result(client.storage.saveItemGroup(itemGroup.copy(name = "New name")), Inf)
+            assert(getAll.filter(_.id == itemGroup.id).head.name === "New name")
         }
+    }
 
+    feature("Item group delete") {
+        scenario("Ok") {
+            val itemGroup = Await.result(client.storage.saveItemGroup(new client.ItemGroup(None, None, "Already dead", new Date)), Inf)
+            Await.result(client.storage.removeItemGroup(itemGroup.id.get), Inf)
+            assert(getAll.filter(_.id == itemGroup.id) === Nil)
+        }
     }
 
 }
