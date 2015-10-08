@@ -2,33 +2,12 @@ package no.simplicityworks.kitchenlogistics
 
 import java.util.Date
 
-import org.eclipse.jetty.util.resource.Resource
 import org.scalatest._
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration.Inf
-import scala.util.Properties
 
-class ItemGroupSpec extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll {
-
-    private val port = 58008
-    Properties.setProp("PORT", port.toString)
-
-    val stack = new RestPlanModule with InMemoryDatabaseModule
-    val http = unfiltered.jetty.Http(port)
-    http.current.setBaseResource(Resource.newResource(getClass.getResource("/public").toExternalForm, false))
-    stack.plans.foldLeft(http)((http, plan) => http.plan(plan))
-    http.start()
-
-    override def afterAll() {
-        http.stop()
-    }
-
-    val client = new KitLogRestStorageModule {
-        override lazy val storageConfiguration = new StorageConfiguration {
-            override lazy val hostAddress = s"http://127.0.0.1:$port"
-        }
-    }
+class ItemGroupSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
 
     def getAll = Await.result(client.storage.findItemGroups(), Inf)
 
