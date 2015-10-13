@@ -104,15 +104,8 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
             } orElse {
                 for {_ <- PUT; r <- request[Any]} yield {
                     database withSession { implicit session: Session =>
-                        val id = TableQuery[Items].insert(read[Item](Body string r).copy(userId = user.id))
+                        val id = Items.insert(read[Item](Body string r).copy(userId = user.id))
                         Ok ~> ResponseString(write(Map("id" -> id)))
-                    }
-                }
-            } orElse {
-                for {_ <- DELETE; itemId <- parameterValues("itemId")} yield {
-                    database withSession { implicit session =>
-                        TableQuery[Items].filter(item => item.id.inSet(itemId.map(_.toInt)) && item.userId === user.id).delete
-                        NoContent
                     }
                 }
             }
@@ -120,7 +113,7 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
             case Path(Seg("rest" :: "items" :: IntString(itemId) :: Nil)) & AuthenticatedUser(user) => {
                 for {_ <- DELETE} yield {
                     database withSession { implicit session: Session =>
-                        TableQuery[Items].filter(_.id === itemId).delete
+                        Items.delete(itemId)
                         Ok ~> NoContent
                     }
                 }

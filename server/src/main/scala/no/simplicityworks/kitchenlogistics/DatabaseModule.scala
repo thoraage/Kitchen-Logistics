@@ -77,6 +77,17 @@ trait DatabaseModule extends DatabaseProfileModule {
 
     }
 
+    object Items {
+        def insert(item: Item): Int = database withSession { implicit session: Session =>
+            val query = TableQuery[Items]
+            query returning query.map(_.id) += item
+        }
+
+        def delete(id: Int): Int = database withSession { implicit session: Session =>
+            TableQuery[Items].filter(_.id === id).delete
+        }
+    }
+
     class Items(tag: Tag) extends Table[Item](tag, "user_item") {
         def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
 
@@ -99,16 +110,6 @@ trait DatabaseModule extends DatabaseProfileModule {
         def all = database withSession { implicit session: Session =>
             TableQuery[Items].list
         }
-
-        def insert(item: Item): Int = database withSession { implicit session: Session =>
-            val query = TableQuery[Items]
-            query returning query.map(_.id) += item
-        }
-
-        def delete(id: Int): Int = database withSession { implicit session: Session =>
-            TableQuery[Items].filter(_.id === id).delete
-        }
-
     }
 
     object Users {
@@ -152,7 +153,6 @@ trait DatabaseModule extends DatabaseProfileModule {
         database withSession { implicit session: Session =>
             val md5 = MessageDigest.getInstance("MD5")
             val ddls = Seq(TableQuery[Products].ddl, TableQuery[Users].ddl, TableQuery[ItemGroups].ddl, TableQuery[Items].ddl)
-            ddls.map(_.createStatements.toList).foreach(println)
             ddls.foreach(_.create)
             TableQuery[Products].insertAll(
                 Product(None, "5423", "Nexus S"),

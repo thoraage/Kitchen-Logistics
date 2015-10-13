@@ -111,11 +111,4 @@ trait KitLogRestStorageModule extends StorageModule with StorageConfigurationMod
         }
     }
 
-    def assert2xxResponse[T](response: Object) {
-//        if (response.getStatusLine.getStatusCode / 100 != 2) {
-//            throw new scala.RuntimeException(s"Invalid http status ${response.getStatusLine}")
-//        }
-//        response
-    }
-
 }
