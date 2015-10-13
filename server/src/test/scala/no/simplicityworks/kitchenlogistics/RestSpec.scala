@@ -13,11 +13,11 @@ class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
     def await[T](future: Future[T]): T = Await.result(future, Inf)
 
     val product =
-        await(client.storage.saveProduct(new client.Product(None, "fdjks", "ting", new Date)))
+        await(client.storage.saveProduct(client.Product(None, "fdjks", "ting", new Date)))
     def createItemGroup =
-        await(client.storage.saveItemGroup(new client.ItemGroup(None, None, s"test${Random.nextInt()}", new Date)))
+        await(client.storage.saveItemGroup(client.ItemGroup(None, None, s"test${Random.nextInt()}", new Date)))
     def createItem(itemGroup: client.ItemGroup) =
-        await(client.storage.saveItem(new client.Item(None, None, product.id.get, itemGroup.id.get, new Date)))
+        await(client.storage.saveItem(client.Item(None, None, product.id.get, itemGroup.id.get, new Date)))
     def allGroups = await(client.storage.findItemGroups())
     def itemsOf(itemGroup: client.ItemGroup) =
         await(client.storage.findItemsByGroup(Some(itemGroup)))
@@ -31,7 +31,7 @@ class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
     feature("Item group create") {
         scenario("Ok") {
             assert(allGroups.seq.size === 1)
-            val itemGroup = await(client.storage.saveItemGroup(new client.ItemGroup(None, None, "Mine", new Date)))
+            val itemGroup = await(client.storage.saveItemGroup(client.ItemGroup(None, None, "Mine", new Date)))
             assert(itemGroup.id !== None)
             assert(allGroups.seq.size === 2)
         }
@@ -47,7 +47,7 @@ class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
 
     feature("Item group delete") {
         scenario("Ok") {
-            val itemGroup = await(client.storage.saveItemGroup(new client.ItemGroup(None, None, "Already dead", new Date)))
+            val itemGroup = await(client.storage.saveItemGroup(client.ItemGroup(None, None, "Already dead", new Date)))
             await(client.storage.removeItemGroup(itemGroup.id.get))
             assert(allGroups.filter(_.id == itemGroup.id) === Nil)
         }
@@ -80,6 +80,15 @@ class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
             client.storage.findItemsByGroup(Some(itemGroup))
             await(client.storage.removeItem(item.id.get))
             assert(0 === itemsOf(itemGroup).size)
+        }
+    }
+
+    feature("Find product") {
+        scenario("Ok") {
+            val code = s"mycode${Random.nextInt()}"
+            assert(0 === await(client.storage.findProductByCode(code)).size)
+            await(client.storage.saveProduct(client.Product(None, code, "MyName", new Date)))
+            assert(1 === await(client.storage.findProductByCode(code)).size)
         }
     }
 
