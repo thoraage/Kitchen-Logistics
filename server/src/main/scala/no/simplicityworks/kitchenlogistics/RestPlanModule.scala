@@ -133,7 +133,7 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
                     database withSession { implicit session: Session =>
                         val updated = TableQuery[Items]
                             .filter(_.id === itemId)
-                            .update(read[Item](Body string r).copy(id = Some(itemId)))
+                            .update(read[Item](Body string r).copy(id = Some(itemId), userId = user.id))
                         if (updated == 0) NotFound
                         else NoContent
                     }

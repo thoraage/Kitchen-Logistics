@@ -65,6 +65,19 @@ class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
         }
     }
 
+    feature("Item update") {
+        scenario("Ok") {
+            val itemGroupA = createItemGroup
+            val itemGroupB = createItemGroup
+            val item = createItem(itemGroupA)
+            assert(1 === itemsOf(itemGroupA).size)
+            assert(0 === itemsOf(itemGroupB).size)
+            await(client.storage.saveItem(item.copy(itemGroupId = itemGroupB.id.get)))
+            assert(0 === itemsOf(itemGroupA).size)
+            assert(1 === itemsOf(itemGroupB).size)
+        }
+    }
+
     feature("Item create") {
         scenario("Ok") {
             val itemGroup = createItemGroup
