@@ -1,6 +1,6 @@
 package no.simplicityworks.kitchenlogistics
 
-import java.io.InputStream
+import java.io.{IOException, InputStream}
 import java.net.{HttpURLConnection, URL}
 
 import com.migcomponents.migbase64.Base64
@@ -44,15 +44,26 @@ case class HttpConnection(url: String, headers: Map[String, String] = Map()) {
         connection.setDoOutput(true)
         connection.setInstanceFollowRedirects(false)
         connection.getOutputStream.write(outContent.getBytes(encoding))
-        val status = connection.getResponseCode
-        val inContent = readString(connection.getInputStream, encoding)
-        if (status != HttpStatus.OK && status != HttpStatus.EMPTY) {
-            val cookie = Option(connection.getHeaderField("Set-Cookie"))
-            cookie
-                .map(cookie => copy(headers = headers + ("Cookie" -> cookie.replaceAll(";.*", ""))).put(url, outContent, encoding))
-                .getOrElse(sys.error(s"Expected code 200, got $status: $inContent"))
-        } else {
-            inContent
+        try {
+            val status = connection.getResponseCode
+            val inContent = readString(connection.getInputStream, encoding)
+            if (status != HttpStatus.OK && status != HttpStatus.EMPTY) {
+                val cookie = Option(connection.getHeaderField("Set-Cookie"))
+                cookie
+                    .map(cookie => copy(headers = headers + ("Cookie" -> cookie.replaceAll(";.*", ""))).put(url, outContent, encoding))
+                    .getOrElse(throw StatusCodeException(s"Expected code 200, got $status: $inContent", status))
+            } else {
+                inContent
+            }
+        } catch {
+            case e: IOException =>
+                val statusRegex = """.*response code: (\d+).*""".r
+                e.getMessage match {
+                    case statusRegex(IntString(status)) =>
+                        throw StatusCodeException(s"Expected code 20x, got $status", status)
+                    case _ =>
+                        throw e
+                }
         }
     }
 
@@ -68,7 +79,7 @@ case class HttpConnection(url: String, headers: Map[String, String] = Map()) {
         if (status != HttpStatus.EMPTY) {
             val cookie = Option(connection.getHeaderField("Set-Cookie"))
             cookie.foreach(cookie => copy(headers = headers + ("Cookie" -> cookie.replaceAll(";.*", ""))).delete(path, encoding))
-            if (cookie.isEmpty) sys.error(s"Expected code 200, got $status: $content")
+            if (cookie.isEmpty) StatusCodeException(s"Expected code 200, got $status: $content", status)
         }
     }
 

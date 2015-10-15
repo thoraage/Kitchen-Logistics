@@ -1,5 +1,7 @@
 package no.simplicityworks.kitchenlogistics
 
+import java.util.Date
+
 import org.eclipse.jetty.util.resource.Resource
 import org.scalatest.{Suite, BeforeAndAfterAll}
 
@@ -20,10 +22,17 @@ trait KitLogSpecBase extends BeforeAndAfterAll { this: Suite =>
         http.stop()
     }
 
-    val client = new KitLogRestStorageModule {
+    def createClient(username: String) = new KitLogRestStorageModule {
         override lazy val storageConfiguration = new StorageConfiguration {
             override lazy val hostAddress = s"http://127.0.0.1:$port"
+            override lazy val userPass = (username, "pass")
         }
     }
+
+    val client = createClient("thoredge")
+    stack.database withSession { implicit session =>
+        stack.Users.insert(new User(None, "notthoredge", "", "pass".getBytes, new Date))
+    }
+    val otherClient = createClient("notthoredge")
 
 }

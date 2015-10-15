@@ -24,16 +24,16 @@ class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
 
     feature("Item group get all") {
         scenario("Ok") {
-            assert(allGroups.seq.size === 1)
+            assert(allGroups.seq.size === stack.ItemGroups.getAll.size)
         }
     }
 
     feature("Item group create") {
         scenario("Ok") {
-            assert(allGroups.seq.size === 1)
+            val initialCount = allGroups.size
             val itemGroup = await(client.storage.saveItemGroup(client.ItemGroup(None, None, "Mine", new Date)))
             assert(itemGroup.id !== None)
-            assert(allGroups.seq.size === 2)
+            assert(allGroups.seq.size === initialCount + 1)
         }
     }
 
@@ -66,15 +66,27 @@ class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
     }
 
     feature("Item update") {
+        val itemGroupA = createItemGroup
+        val itemGroupB = createItemGroup
+        val item = createItem(itemGroupA)
+        assert(1 === itemsOf(itemGroupA).size)
+        assert(0 === itemsOf(itemGroupB).size)
         scenario("Ok") {
-            val itemGroupA = createItemGroup
-            val itemGroupB = createItemGroup
-            val item = createItem(itemGroupA)
-            assert(1 === itemsOf(itemGroupA).size)
-            assert(0 === itemsOf(itemGroupB).size)
             await(client.storage.saveItem(item.copy(itemGroupId = itemGroupB.id.get)))
             assert(0 === itemsOf(itemGroupA).size)
             assert(1 === itemsOf(itemGroupB).size)
+        }
+        scenario("Not allowed") {
+            val itemGroupC = createItemGroup
+            val newItem = otherClient.Item(item.id, item.userId, item.productId, itemGroupC.id.get, item.created)
+            try {
+                await(otherClient.storage.saveItem(newItem))
+                fail()
+            } catch {
+                case StatusCodeException(_, status, _) =>
+                    assert(status === 401)
+            }
+            assert(0 === itemsOf(itemGroupC).size)
         }
     }
 

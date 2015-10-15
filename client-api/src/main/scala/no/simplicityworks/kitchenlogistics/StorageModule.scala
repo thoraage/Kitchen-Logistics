@@ -46,4 +46,5 @@ trait StorageConfigurationModule {
 
 trait StorageConfiguration {
     def hostAddress: String
+    def userPass: (String, String)
 }

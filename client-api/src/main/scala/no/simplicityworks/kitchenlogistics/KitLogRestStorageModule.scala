@@ -14,7 +14,7 @@ trait KitLogRestStorageModule extends StorageModule with StorageConfigurationMod
 
     lazy val storage = new Storage {
         val host = storageConfiguration.hostAddress
-//            "http://192.168.168.120:8080"
+        //            "http://192.168.168.120:8080"
 //            "http://192.168.42.47:8080"
 //            "http://192.168.1.181:8080"
 //            "http://192.168.0.195:8080"
@@ -23,7 +23,9 @@ trait KitLogRestStorageModule extends StorageModule with StorageConfigurationMod
 //            "http://192.168.1.198:8080"
 //            "http://kitlog.herokuapp.com"
 //            "http://172.30.16.69:8080"
-        private val connection = HttpConnection(host).basicAuth("thoredge", "pass")
+
+        private val userPass = storageConfiguration.userPass
+        private val connection = HttpConnection(host).basicAuth(userPass._1, userPass._2)
 
         // Example: 2015-03-02T00:00:00.000Z
         def format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")

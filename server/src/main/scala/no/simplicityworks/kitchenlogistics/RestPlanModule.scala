@@ -176,11 +176,4 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
         }
     }
 
-    object IntString {
-        def unapply(v: String) = try Some(v.toInt)
-        catch {
-            case _: NumberFormatException => None
-        }
-    }
-
 }
