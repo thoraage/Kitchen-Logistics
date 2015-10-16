@@ -22,6 +22,16 @@ class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
     def itemsOf(itemGroup: client.ItemGroup) =
         await(client.storage.findItemsByGroup(Some(itemGroup)))
 
+    def assertForbidden(f: => Any) {
+        try {
+            val result = f
+            fail(s"Received: $result")
+        } catch {
+            case StatusCodeException(_, status, _) =>
+                assert(status === 401)
+        }
+    }
+
     feature("Item group get all") {
         scenario("Ok") {
             assert(allGroups.seq.size === stack.ItemGroups.getAll.size)
@@ -51,6 +61,10 @@ class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
             await(client.storage.removeItemGroup(itemGroup.id.get))
             assert(allGroups.filter(_.id == itemGroup.id) === Nil)
         }
+        scenario("Forbidden") {
+            val itemGroup = createItemGroup
+            assertForbidden(await(otherClient.storage.removeItemGroup(itemGroup.id.get)))
+        }
     }
 
     feature("Item get") {
@@ -65,6 +79,8 @@ class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
         }
     }
 
+    // TODO scenario unauthorized
+
     feature("Item update") {
         val itemGroupA = createItemGroup
         val itemGroupB = createItemGroup
@@ -76,16 +92,10 @@ class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
             assert(0 === itemsOf(itemGroupA).size)
             assert(1 === itemsOf(itemGroupB).size)
         }
-        scenario("Not allowed") {
+        scenario("Forbidden") {
             val itemGroupC = createItemGroup
             val newItem = otherClient.Item(item.id, item.userId, item.productId, itemGroupC.id.get, item.created)
-            try {
-                await(otherClient.storage.saveItem(newItem))
-                fail()
-            } catch {
-                case StatusCodeException(_, status, _) =>
-                    assert(status === 401)
-            }
+            assertForbidden(await(otherClient.storage.saveItem(newItem)))
             assert(0 === itemsOf(itemGroupC).size)
         }
     }

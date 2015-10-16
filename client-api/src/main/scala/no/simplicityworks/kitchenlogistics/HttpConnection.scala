@@ -44,7 +44,7 @@ case class HttpConnection(url: String, headers: Map[String, String] = Map()) {
         connection.setDoOutput(true)
         connection.setInstanceFollowRedirects(false)
         connection.getOutputStream.write(outContent.getBytes(encoding))
-        try {
+        catchStatusCodeExceptions {
             val status = connection.getResponseCode
             val inContent = readString(connection.getInputStream, encoding)
             if (status != HttpStatus.OK && status != HttpStatus.EMPTY) {
@@ -55,15 +55,6 @@ case class HttpConnection(url: String, headers: Map[String, String] = Map()) {
             } else {
                 inContent
             }
-        } catch {
-            case e: IOException =>
-                val statusRegex = """.*response code: (\d+).*""".r
-                e.getMessage match {
-                    case statusRegex(IntString(status)) =>
-                        throw StatusCodeException(s"Expected code 20x, got $status", status)
-                    case _ =>
-                        throw e
-                }
         }
     }
 
@@ -74,16 +65,32 @@ case class HttpConnection(url: String, headers: Map[String, String] = Map()) {
         connection.setDoInput(true)
         connection.setDoOutput(false)
         connection.setInstanceFollowRedirects(false)
-        val status = connection.getResponseCode
-        val content = readString(connection.getInputStream, encoding)
-        if (status != HttpStatus.EMPTY) {
-            val cookie = Option(connection.getHeaderField("Set-Cookie"))
-            cookie.foreach(cookie => copy(headers = headers + ("Cookie" -> cookie.replaceAll(";.*", ""))).delete(path, encoding))
-            if (cookie.isEmpty) StatusCodeException(s"Expected code 200, got $status: $content", status)
+        catchStatusCodeExceptions {
+            val status = connection.getResponseCode
+            val content = readString(connection.getInputStream, encoding)
+            if (status != HttpStatus.EMPTY) {
+                val cookie = Option(connection.getHeaderField("Set-Cookie"))
+                cookie.foreach(cookie => copy(headers = headers + ("Cookie" -> cookie.replaceAll(";.*", ""))).delete(path, encoding))
+                if (cookie.isEmpty) StatusCodeException(s"Expected code 200, got $status: $content", status)
+            }
         }
     }
 
     def readString(stream: InputStream, encoding: String) = Source.fromInputStream(stream).mkString
+
+    def catchStatusCodeExceptions[T](f: => T): T =
+        try {
+            f
+        } catch {
+            case e: IOException =>
+                val statusRegex = """.*response code: (\d+).*""".r
+                e.getMessage match {
+                    case statusRegex(IntString(status)) =>
+                        throw StatusCodeException(s"Expected code 20x, got $status", status)
+                    case _ =>
+                        throw e
+                }
+        }
 
 }
 
