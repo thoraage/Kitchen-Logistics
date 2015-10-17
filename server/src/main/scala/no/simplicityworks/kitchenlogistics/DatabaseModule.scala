@@ -51,8 +51,8 @@ trait DatabaseModule extends DatabaseProfileModule {
             TableQuery[ItemGroups].filter(group => group.id === itemGroup.id && group.userId === user.id).length.run > 0
         }
 
-        def getAll = database withSession { implicit s =>
-            TableQuery[ItemGroups].list
+        def getForUser(user: User) = database withSession { implicit s =>
+            TableQuery[ItemGroups].filter(_.userId === user.id).list
         }
 
         def insert(itemGroup: ItemGroup): Int = database withSession { implicit s =>
@@ -114,9 +114,16 @@ trait DatabaseModule extends DatabaseProfileModule {
 
     object Users {
         val passwordSalt = "kitlogsaltysalt"
+        val md5 = MessageDigest.getInstance("MD5")
+        val query = TableQuery[Users]
+
+        def apply(username: String): Option[User] = database withSession { implicit session =>
+            query.filter(_.username === username).list.headOption
+        }
+
+        def saltPassword(s: String) = md5.digest((Users.passwordSalt + "pass").getBytes("UTF-8"))
 
         def insert(user: User): Int = database withSession { implicit session: Session =>
-            val query = TableQuery[Users]
             query returning query.map(_.id) += user
         }
     }
@@ -151,14 +158,13 @@ trait DatabaseModule extends DatabaseProfileModule {
     }
     if (databaseProfile.generation == DatabaseGeneration.slickDdl) {
         database withSession { implicit session: Session =>
-            val md5 = MessageDigest.getInstance("MD5")
             val ddls = Seq(TableQuery[Products].ddl, TableQuery[Users].ddl, TableQuery[ItemGroups].ddl, TableQuery[Items].ddl)
             ddls.foreach(_.create)
             TableQuery[Products].insertAll(
                 Product(None, "5423", "Nexus S"),
                 Product(None, "43123", "Motorola XOOM™ with Wi-Fi"),
                 Product(None, "43728432", "ROLA XOOM™"))
-            val userId = TableQuery[Users].insert(User(None, "thoredge", "thoraageeldby@gmail.com", md5.digest((Users.passwordSalt + "pass").getBytes("UTF-8"))))
+            val userId = Users.insert(new User(None, "thoredge", "thoraageeldby@gmail.com", Users.saltPassword("pass"), new Date))
             TableQuery[ItemGroups].insert(ItemGroup(None, Some(userId), "Kjøleskap"))
         }
     }

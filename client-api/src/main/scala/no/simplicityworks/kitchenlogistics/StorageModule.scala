@@ -25,7 +25,7 @@ trait StorageModule {
 
         def findItemsByGroup(itemGroup: Option[ItemGroup] = None): Future[Seq[ItemSummary]]
 
-        def findItemGroups(): Future[Seq[ItemGroup]]
+        def getItemGroups: Future[Seq[ItemGroup]]
 
         def saveItemGroup(itemGroup: ItemGroup): Future[ItemGroup]
     }

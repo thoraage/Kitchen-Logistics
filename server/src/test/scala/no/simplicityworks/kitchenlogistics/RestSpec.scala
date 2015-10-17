@@ -18,7 +18,7 @@ class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
         await(client.storage.saveItemGroup(client.ItemGroup(None, None, s"test${Random.nextInt()}", new Date)))
     def createItem(itemGroup: client.ItemGroup) =
         await(client.storage.saveItem(client.Item(None, None, product.id.get, itemGroup.id.get, new Date)))
-    def allGroups = await(client.storage.findItemGroups())
+    def allGroups = await(client.storage.getItemGroups)
     def itemsOf(itemGroup: client.ItemGroup) =
         await(client.storage.findItemsByGroup(Some(itemGroup)))
 
@@ -28,13 +28,18 @@ class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
             fail(s"Received: $result")
         } catch {
             case StatusCodeException(_, status, _) =>
-                assert(status === 401)
+                assert(status === 403)
         }
     }
 
     feature("Item group get all") {
         scenario("Ok") {
-            assert(allGroups.seq.size === stack.ItemGroups.getAll.size)
+            assert(allGroups.seq.size === stack.ItemGroups.getForUser(stack.Users("thoredge").get).size)
+        }
+        scenario("Item group is not seen by other user") {
+            val itemGroup = createItemGroup
+            val itemGroups = await(otherClient.storage.getItemGroups)
+            assert(!itemGroups.exists(_.id == itemGroup.id))
         }
     }
 

@@ -31,7 +31,7 @@ trait KitLogSpecBase extends BeforeAndAfterAll { this: Suite =>
 
     val client = createClient("thoredge")
     stack.database withSession { implicit session =>
-        stack.Users.insert(new User(None, "notthoredge", "", "pass".getBytes, new Date))
+        stack.Users.insert(new User(None, "notthoredge", "", stack.Users.saltPassword("pass"), new Date))
     }
     val otherClient = createClient("notthoredge")
 

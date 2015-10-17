@@ -142,7 +142,7 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
 
             case Path(Seg("rest" :: "itemGroups" :: Nil)) & AuthenticatedUser(user) => {
                 for {_ <- GET; _ <- Accepts.Json; r <- request[Any]} yield
-                    Ok ~> ResponseString(write(ItemGroups.getAll))
+                    Ok ~> ResponseString(write(ItemGroups.getForUser(user)))
             } orElse {
                 for {_ <- PUT; r <- request[Any]} yield {
                     val id = ItemGroups.insert(read[ItemGroup](Body string r).copy(userId = user.id))

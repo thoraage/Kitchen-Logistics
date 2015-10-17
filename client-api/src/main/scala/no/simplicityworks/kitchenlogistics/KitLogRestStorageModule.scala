@@ -87,7 +87,7 @@ trait KitLogRestStorageModule extends StorageModule with StorageConfigurationMod
             connection.accept(json).get(s"/rest/$resource$query")
         }
 
-        override def findItemGroups(): Future[Seq[ItemGroup]] = Future {
+        override def getItemGroups: Future[Seq[ItemGroup]] = Future {
             Parse.decodeOption[Stream[ItemGroup]](get("itemGroups")).get
         }
 
