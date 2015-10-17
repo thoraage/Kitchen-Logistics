@@ -43,20 +43,21 @@ trait DatabaseModule extends DatabaseProfileModule {
     }
 
     object ItemGroups {
+        val query = TableQuery[ItemGroups]
+
         def update(itemGroup: ItemGroup): Unit = database withSession { implicit s =>
-            TableQuery[ItemGroups].filter(group => group.id === itemGroup.id).update(itemGroup).run
+            query.filter(group => group.id === itemGroup.id).update(itemGroup).run
         }
 
         def isOwner(itemGroup: ItemGroup, user: User): Boolean = database withSession { implicit s =>
-            TableQuery[ItemGroups].filter(group => group.id === itemGroup.id && group.userId === user.id).length.run > 0
+            query.filter(group => group.id === itemGroup.id && group.userId === user.id).length.run > 0
         }
 
         def getForUser(user: User) = database withSession { implicit s =>
-            TableQuery[ItemGroups].filter(_.userId === user.id).list
+            query.filter(_.userId === user.id).list
         }
 
         def insert(itemGroup: ItemGroup): Int = database withSession { implicit s =>
-            val query = TableQuery[ItemGroups]
             query returning query.map(_.id) += itemGroup
         }
     }

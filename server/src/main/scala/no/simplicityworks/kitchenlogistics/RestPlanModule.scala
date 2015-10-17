@@ -45,6 +45,11 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
     }
 
     private val authenticationPlan = Planify {
+        case Path(Seg("rest" :: "itemGroups" :: IntString(itemGroupId) :: Nil)) & AuthenticatedUser(user) =>
+            database withSession { implicit session =>
+                if (ItemGroups.query.filter(_.id === itemGroupId).list.forall(_.userId == user.id)) Pass
+                else Forbidden
+            }
         case Path(Seg("rest" :: "items" :: IntString(itemId) :: Nil)) & AuthenticatedUser(user) =>
             database withSession { implicit session =>
                 if (Items.query.filter(_.id === itemId).list.forall(_.userId == user.id)) Pass
@@ -155,26 +160,17 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
                 }
             }
 
-            case Path(Seg("rest" :: "itemGroups" :: IntString(id) :: Nil)) & AuthenticatedUser(user) => {
+            case Path(Seg("rest" :: "itemGroups" :: IntString(itemGroupId) :: Nil)) & AuthenticatedUser(user) => {
                 for {_ <- PUT; r <- request[Any]} yield {
-                    val itemGroup = read[ItemGroup](Body string r).copy(id = Some(id))
-                    if (!ItemGroups.isOwner(itemGroup, user))
-                        Forbidden ~> ResponseString("Is not owner")
-                    else {
-                        ItemGroups.update(itemGroup)
-                        NoContent
-                    }
+                    val itemGroup = read[ItemGroup](Body string r).copy(id = Some(itemGroupId))
+                    ItemGroups.update(itemGroup)
+                    NoContent
                 }
             } orElse {
                 for {_ <- DELETE} yield {
                     database withSession { implicit s =>
-                        val itemGroup = TableQuery[ItemGroups].filter(_.id === id).list.head
-                        if (!ItemGroups.isOwner(itemGroup, user))
-                            Forbidden ~> ResponseString("Is not owner")
-                        else {
-                            TableQuery[ItemGroups].filter(_.id === id).delete
-                            Ok ~> NoContent
-                        }
+                        TableQuery[ItemGroups].filter(_.id === itemGroupId).delete
+                        Ok ~> NoContent
                     }
                 }
             }

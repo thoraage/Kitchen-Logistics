@@ -9,9 +9,10 @@ import scala.concurrent.duration.Duration.Inf
 import scala.util.Random
 
 class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
-
     def await[T](future: Future[T]): T = Await.result(future, Inf)
 
+
+    val user = stack.Users("thoredge").get
     val product =
         await(client.storage.saveProduct(client.Product(None, "fdjks", "ting", new Date)))
     def createItemGroup =
@@ -19,6 +20,7 @@ class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
     def createItem(itemGroup: client.ItemGroup) =
         await(client.storage.saveItem(client.Item(None, None, product.id.get, itemGroup.id.get, new Date)))
     def allGroups = await(client.storage.getItemGroups)
+
     def itemsOf(itemGroup: client.ItemGroup) =
         await(client.storage.findItemsByGroup(Some(itemGroup)))
 
@@ -31,10 +33,8 @@ class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
                 assert(status === 403)
         }
     }
-
     feature("Item group get all") {
         scenario("Ok") {
-            val user = stack.Users("thoredge").get
             val itemGroups = stack.ItemGroups.getForUser(user)
             assert(allGroups.seq.size === itemGroups.size)
             assert(itemGroups.forall(_.userId === user.id))
@@ -60,6 +60,14 @@ class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
             val itemGroup = allGroups.head
             await(client.storage.saveItemGroup(itemGroup.copy(name = "New name")))
             assert(allGroups.filter(_.id == itemGroup.id).head.name === "New name")
+        }
+        scenario("Other user forbidden") {
+            val itemGroup = createItemGroup
+            val newName = "New name"
+            assertForbidden {
+                await(otherClient.storage.saveItemGroup(otherClient.ItemGroup(itemGroup.id, itemGroup.userId, newName, new Date())))
+            }
+            assert(await(client.storage.getItemGroups).filter(_.id == itemGroup.id).forall(_.name != newName))
         }
     }
 
