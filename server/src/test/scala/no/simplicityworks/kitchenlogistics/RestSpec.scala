@@ -34,7 +34,10 @@ class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
 
     feature("Item group get all") {
         scenario("Ok") {
-            assert(allGroups.seq.size === stack.ItemGroups.getForUser(stack.Users("thoredge").get).size)
+            val user = stack.Users("thoredge").get
+            val itemGroups = stack.ItemGroups.getForUser(user)
+            assert(allGroups.seq.size === itemGroups.size)
+            assert(itemGroups.forall(_.userId === user.id))
         }
         scenario("Item group is not seen by other user") {
             val itemGroup = createItemGroup

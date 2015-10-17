@@ -78,13 +78,14 @@ trait DatabaseModule extends DatabaseProfileModule {
     }
 
     object Items {
+        val query = TableQuery[Items]
+
         def insert(item: Item): Int = database withSession { implicit session: Session =>
-            val query = TableQuery[Items]
             query returning query.map(_.id) += item
         }
 
         def delete(id: Int): Int = database withSession { implicit session: Session =>
-            TableQuery[Items].filter(_.id === id).delete
+            query.filter(_.id === id).delete
         }
     }
 

@@ -45,6 +45,11 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule {
     }
 
     private val authenticationPlan = Planify {
+        case Path(Seg("rest" :: "items" :: IntString(itemId) :: Nil)) & AuthenticatedUser(user) =>
+            database withSession { implicit session =>
+                if (Items.query.filter(_.id === itemId).list.forall(_.userId == user.id)) Pass
+                else Forbidden
+            }
         case Path(Seg("rest" :: _)) & AuthenticatedUsername(username) =>
             Pass
         case Path(path) & BasicAuth(name, pass) =>
