@@ -33,6 +33,7 @@ class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
                 assert(status === 403)
         }
     }
+
     feature("Item group get all") {
         scenario("Ok") {
             val itemGroups = stack.ItemGroups.getForUser(user)
@@ -77,21 +78,27 @@ class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
             await(client.storage.removeItemGroup(itemGroup.id.get))
             assert(allGroups.filter(_.id == itemGroup.id) === Nil)
         }
-        scenario("Forbidden") {
+        scenario("Other user forbidden") {
             val itemGroup = createItemGroup
             assertForbidden(await(otherClient.storage.removeItemGroup(itemGroup.id.get)))
         }
     }
 
     feature("Item get") {
+        val itemGroup = createItemGroup
+        val otherItemGroup = createItemGroup
         scenario("Ok") {
-            val itemGroup = createItemGroup
-            val otherItemGroup = createItemGroup
             createItem(itemGroup)
             createItem(itemGroup)
-            val result = itemsOf(itemGroup)
-            assert(result.size === 1 && result.head.count === 2)
+            val results = itemsOf(itemGroup)
+            assert(results.size === 1 && results.head.count === 2)
             assert(itemsOf(otherItemGroup).size === 0)
+        }
+        scenario("Item is not seen by other user") {
+            val item1 = createItem(itemGroup)
+            val item2 = createItem(itemGroup)
+            val results = await(otherClient.storage.findItemsByGroup(None))
+            assert(!results.exists(item => item.lastItemId == item1.id.get || item.lastItemId == item2.id.get))
         }
     }
 
@@ -108,7 +115,7 @@ class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
             assert(0 === itemsOf(itemGroupA).size)
             assert(1 === itemsOf(itemGroupB).size)
         }
-        scenario("Forbidden") {
+        scenario("Other user forbidden") {
             val itemGroupC = createItemGroup
             val newItem = otherClient.Item(item.id, item.userId, item.productId, itemGroupC.id.get, item.created)
             assertForbidden(await(otherClient.storage.saveItem(newItem)))
@@ -125,12 +132,17 @@ class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
     }
 
     feature("Item delete") {
+        val itemGroup = createItemGroup
         scenario("Ok") {
-            val itemGroup = createItemGroup
             val item = createItem(itemGroup)
             client.storage.findItemsByGroup(Some(itemGroup))
             await(client.storage.removeItem(item.id.get))
             assert(0 === itemsOf(itemGroup).size)
+        }
+        scenario("Other user forbidden") {
+            val item = createItem(itemGroup)
+            assertForbidden(await(otherClient.storage.removeItem(item.id.get)))
+            assert(1 == itemsOf(itemGroup).size)
         }
     }
 
