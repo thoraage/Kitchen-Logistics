@@ -13,19 +13,9 @@ import scala.concurrent.Future
 trait KitLogRestStorageModule extends StorageModule with StorageConfigurationModule {
 
     lazy val storage = new Storage {
-        val host = storageConfiguration.hostAddress
-        //            "http://192.168.168.120:8080"
-//            "http://192.168.42.47:8080"
-//            "http://192.168.1.181:8080"
-//            "http://192.168.0.195:8080"
-//            "http://192.168.0.100:8080"
-//            "http://localhost:8080"
-//            "http://192.168.1.198:8080"
-//            "http://kitlog.herokuapp.com"
-//            "http://172.30.16.69:8080"
-
+        private val host = storageConfiguration.hostAddress
         private val userPass = storageConfiguration.userPass
-        private val connection = HttpConnection(host).basicAuth(userPass._1, userPass._2)
+        private val http = HttpConnection(host).basicAuth(userPass._1, userPass._2)
 
         // Example: 2015-03-02T00:00:00.000Z
         def format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
@@ -47,69 +37,58 @@ trait KitLogRestStorageModule extends StorageModule with StorageConfigurationMod
             casecodec5(Item.apply, Item.unapply)("id", "userId", "productId", "itemGroupId", "created")
 
         override def findProductByCode(identifier: String): Future[Seq[Product]] = Future {
-            Parse.decodeOption[Stream[Product]](get("products", ("code" -> identifier) :: Nil)).get
+            Parse.decodeOption[Stream[Product]](get("/rest/products", ("code" -> identifier) :: Nil)).get
         }
 
         override def saveProduct(product: Product): Future[Product] = Future {
-            product.copy(id = put(s"$host/rest/products", product))
+            product.copy(id = put(s"/rest/products", product))
         }
 
-        def put[T](url: String, obj: T)(implicit code: CodecJson[T]): Option[Int] = {
-            val string = connection.accept(json).contentType(json).put(url, obj.asJson.toString())
+        def put[T](path: String, obj: T)(implicit code: CodecJson[T]): Option[Int] = {
+            val string = http.accept(json).contentType(json).put(path, obj.asJson.toString())
             Parse.decodeOption[Id](string).map(_.id)
-//            val entity = new StringEntity(obj.asJson.toString())
-//            val request = new HttpPut(url)
-//            request.setEntity(entity)
-//            request.setHeader("Accept", "application/json")
-//            val response = client.execute(request)
-//            assert2xxResponse(response)
-//            val returnEntity = Option(response.getEntity)
-//            returnEntity.flatMap { returnEntity =>
-//                val string = Source.fromInputStream(returnEntity.getContent).mkString
-//                Parse.decodeOption[Id](string).map(_.id)
-//            }
         }
 
         override def saveItem(item: Item): Future[Item] = Future {
             item.id.map { id =>
-                put(s"$host/rest/items/$id", item)
+                put(s"/rest/items/$id", item)
                 item
-            }.getOrElse(item.copy(id = put(s"$host/rest/items", item)))
+            }.getOrElse(item.copy(id = put(s"/rest/items", item)))
         }
 
         override def findItemsByGroup(itemGroup: Option[ItemGroup] = None): Future[Seq[ItemSummary]] = Future {
             val queryItemGroup = itemGroup.flatMap(_.id).map("itemGroup" -> _.toString)
-            Parse.decodeOption[Stream[ItemSummary]](get("items", queryItemGroup.toList)).get
+            Parse.decodeOption[Stream[ItemSummary]](get("/rest/items", queryItemGroup.toList)).get
         }
 
-        def get(resource: String, queryParameters: List[(String, String)] = Nil): String = {
+        def get(path: String, queryParameters: List[(String, String)] = Nil): String = {
             val query = queryParameters.map(p => s"${p._1}=${URLEncoder.encode(p._2, "UTF-8")}").mkString("?", "&", "")
-            connection.accept(json).get(s"/rest/$resource$query")
+            http.accept(json).get(s"$path$query")
         }
 
         override def getItemGroups: Future[Seq[ItemGroup]] = Future {
-            Parse.decodeOption[Stream[ItemGroup]](get("itemGroups")).get
+            Parse.decodeOption[Stream[ItemGroup]](get("/rest/itemGroups")).get
         }
 
         override def saveItemGroup(itemGroup: ItemGroup): Future[ItemGroup] = Future {
             itemGroup.id.map { id =>
-                put(s"$host/rest/itemGroups/$id", itemGroup)
+                put(s"/rest/itemGroups/$id", itemGroup)
                 itemGroup
-            }.getOrElse(itemGroup.copy(id = put(s"$host/rest/itemGroups", itemGroup)))
+            }.getOrElse(itemGroup.copy(id = put(s"/rest/itemGroups", itemGroup)))
         }
 
         override def removeItem(itemId: Int): Future[Unit] =
-            Future(connection.delete(s"/rest/items/$itemId"))
+            Future(http.delete(s"/rest/items/$itemId"))
 
         override def findItemsByCode(code: String): Future[Seq[ItemSummary]] = Future {
-            Parse.decodeOption[Stream[ItemSummary]](get("items", List("code" -> code))).get
+            Parse.decodeOption[Stream[ItemSummary]](get("/rest/items", List("code" -> code))).get
         }
 
         override def removeItemGroup(itemGroupId: Int): Future[Unit] =
-            Future(connection.delete(s"/rest/itemGroups/$itemGroupId"))
+            Future(http.delete(s"/rest/itemGroups/$itemGroupId"))
 
         override def getItem(itemId: Int): Future[Item] = {
-            Future(Parse.decodeOption[Item](get(s"items/$itemId")).getOrElse(sys.error("Unexpected Item representation received")))
+            Future(Parse.decodeOption[Item](get(s"/rest/items/$itemId")).getOrElse(sys.error("Unexpected Item representation received")))
         }
     }
 

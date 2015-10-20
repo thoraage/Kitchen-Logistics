@@ -7,7 +7,7 @@ import com.migcomponents.migbase64.Base64
 
 import scala.io.Source
 
-case class HttpConnection(url: String, headers: Map[String, String] = Map()) {
+case class HttpConnection(baseUrl: String, headers: Map[String, String] = Map()) {
     def accept(contentType: ContentType) =
         this.copy(headers = headers + ("Accept" -> contentType.contentType))
 
@@ -18,7 +18,7 @@ case class HttpConnection(url: String, headers: Map[String, String] = Map()) {
         this.copy(headers = headers + ("Authorization" -> ("Basic " + Base64.encodeToString(s"$username:$password".getBytes(encoding), false))))
 
     def get(path: String, encoding: String = "UTF-8"): String = {
-        val connection = new URL(s"$url$path").openConnection().asInstanceOf[HttpURLConnection]
+        val connection = new URL(s"$baseUrl$path").openConnection().asInstanceOf[HttpURLConnection]
         connection.setRequestMethod("GET")
         headers.foreach(header => connection.setRequestProperty(header._1, header._2))
         connection.setDoInput(true)
@@ -36,8 +36,8 @@ case class HttpConnection(url: String, headers: Map[String, String] = Map()) {
         }
     }
 
-    def put(url: String, outContent: String, encoding: String = "UTF-8"): String = {
-        val connection = new URL(s"$url").openConnection().asInstanceOf[HttpURLConnection]
+    def put(path: String, outContent: String, encoding: String = "UTF-8"): String = {
+        val connection = new URL(s"$baseUrl$path").openConnection().asInstanceOf[HttpURLConnection]
         connection.setRequestMethod("PUT")
         headers.foreach(header => connection.setRequestProperty(header._1, header._2))
         connection.setDoInput(true)
@@ -50,7 +50,7 @@ case class HttpConnection(url: String, headers: Map[String, String] = Map()) {
             if (status != HttpStatus.OK && status != HttpStatus.EMPTY) {
                 val cookie = Option(connection.getHeaderField("Set-Cookie"))
                 cookie
-                    .map(cookie => copy(headers = headers + ("Cookie" -> cookie.replaceAll(";.*", ""))).put(url, outContent, encoding))
+                    .map(cookie => copy(headers = headers + ("Cookie" -> cookie.replaceAll(";.*", ""))).put(path, outContent, encoding))
                     .getOrElse(throw StatusCodeException(s"Expected code 200, got $status: $inContent", status))
             } else {
                 inContent
@@ -59,7 +59,7 @@ case class HttpConnection(url: String, headers: Map[String, String] = Map()) {
     }
 
     def delete(path: String, encoding: String = "UTF-8") {
-        val connection = new URL(s"$url$path").openConnection().asInstanceOf[HttpURLConnection]
+        val connection = new URL(s"$baseUrl$path").openConnection().asInstanceOf[HttpURLConnection]
         connection.setRequestMethod("DELETE")
         headers.foreach(header => connection.setRequestProperty(header._1, header._2))
         connection.setDoInput(true)
