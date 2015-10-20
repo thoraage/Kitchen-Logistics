@@ -135,7 +135,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
         val allItems = new ItemGroupDrawerMenuChoice(None)
 
         override def populateDrawerMenu(): Future[Unit] = {
-            val future = storage.findItemGroups().map(_.toList).flatMap { itemGroups =>
+            val future = storage.getItemGroups.map(_.toList).flatMap { itemGroups =>
                 futureOnUiThread {
                     itemGroupDrawerMenuChoices = itemGroups.map(itemGroup => new ItemGroupDrawerMenuChoice(Some(itemGroup)))
                     val choices = allItems :: itemGroupDrawerMenuChoices
@@ -313,7 +313,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
         }
 
         def selectItemGroupExplicitly(cancelMessageId: CharSequence, doWithItemGroup: (ItemGroup) => Unit) {
-            storage.findItemGroups().map(_.toArray) onComplete {
+            storage.getItemGroups.map(_.toArray) onComplete {
                 case Success(itemGroups) =>
                     val builder = new AlertDialogBuilder(R.string.selectItemGroupTitle, null).negativeButton(R.string.inputDialogCancel, (dialog, _) => {
                         WidgetHelpers.toast(cancelMessageId)

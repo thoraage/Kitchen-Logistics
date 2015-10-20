@@ -11,7 +11,8 @@ class MainActivity extends SActivity with TypedFindView {
             override def guiContext = MainActivity.this
 
             override def storageConfiguration = new StorageConfiguration {
-                override def hostAddress = "http://192.168.0.195:8080"
+                override lazy val hostAddress = "http://192.168.0.195:8080"
+                override lazy val userPass = ("thoredge", "pass")
             }
         }
 
@@ -32,7 +33,7 @@ class MainActivity extends SActivity with TypedFindView {
             case R.id.action_bar_rename_item_group =>
                 app.operations.renameItemGroupName()
                 true
-            case R.id.`action_bar_remove_item_group` =>
+            case R.id.action_bar_remove_item_group =>
                 app.operations.removeItemGroupName()
                 true
             case _ =>
