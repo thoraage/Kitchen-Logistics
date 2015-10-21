@@ -7,7 +7,7 @@ import com.migcomponents.migbase64.Base64
 
 import scala.io.Source
 
-case class HttpConnection(baseUrl: String, headers: Map[String, String] = Map()) {
+case class HttpConnection(baseUrl: String, headers: Map[String, String] = Map(), authenticationHeaders: Map[String, String] = Map()) {
     def accept(contentType: ContentType) =
         this.copy(headers = headers + ("Accept" -> contentType.contentType))
 
@@ -15,36 +15,26 @@ case class HttpConnection(baseUrl: String, headers: Map[String, String] = Map())
         this.copy(headers = headers + ("Content-Type" -> contentType.contentType))
 
     def basicAuth(username: String, password: String, encoding: String = "UTF-8") =
-        this.copy(headers = headers + ("Authorization" -> ("Basic " + Base64.encodeToString(s"$username:$password".getBytes(encoding), false))))
+        this.copy(authenticationHeaders = authenticationHeaders + ("Authorization" -> ("Basic " + Base64.encodeToString(s"$username:$password".getBytes(encoding), false))))
 
     def get(path: String, encoding: String = "UTF-8"): String = {
-        val connection = new URL(s"$baseUrl$path").openConnection().asInstanceOf[HttpURLConnection]
-        connection.setRequestMethod("GET")
-        headers.foreach(header => connection.setRequestProperty(header._1, header._2))
-        connection.setDoInput(true)
-        connection.setDoOutput(false)
-        connection.setInstanceFollowRedirects(false)
-        val status = connection.getResponseCode
-        val content = readString(connection.getInputStream, encoding)
-        if (status != HttpStatus.OK) {
-            val cookie = Option(connection.getHeaderField("Set-Cookie"))
-            cookie
-                .map(cookie => copy(headers = headers + ("Cookie" -> cookie.replaceAll(";.*", ""))).get(path, encoding))
-                .getOrElse(sys.error(s"Expected code 200, got $status: $content"))
-        } else {
-            content
+        withConnection(path, "GET", doInput = true, doOutput = false) { connection =>
+            val status = connection.getResponseCode
+            val content = readString(connection.getInputStream, encoding)
+            if (status != HttpStatus.OK) {
+                val cookie = Option(connection.getHeaderField("Set-Cookie"))
+                cookie
+                    .map(cookie => copy(headers = headers + ("Cookie" -> cookie.replaceAll(";.*", ""))).get(path, encoding))
+                    .getOrElse(sys.error(s"Expected code 200, got $status: $content"))
+            } else {
+                content
+            }
         }
     }
 
     def put(path: String, outContent: String, encoding: String = "UTF-8"): String = {
-        val connection = new URL(s"$baseUrl$path").openConnection().asInstanceOf[HttpURLConnection]
-        connection.setRequestMethod("PUT")
-        headers.foreach(header => connection.setRequestProperty(header._1, header._2))
-        connection.setDoInput(true)
-        connection.setDoOutput(true)
-        connection.setInstanceFollowRedirects(false)
-        connection.getOutputStream.write(outContent.getBytes(encoding))
-        catchStatusCodeExceptions {
+        withConnection(path, "PUT", doInput = true, doOutput = true) { connection =>
+            connection.getOutputStream.write(outContent.getBytes(encoding))
             val status = connection.getResponseCode
             val inContent = readString(connection.getInputStream, encoding)
             if (status != HttpStatus.OK && status != HttpStatus.EMPTY) {
@@ -59,13 +49,7 @@ case class HttpConnection(baseUrl: String, headers: Map[String, String] = Map())
     }
 
     def delete(path: String, encoding: String = "UTF-8") {
-        val connection = new URL(s"$baseUrl$path").openConnection().asInstanceOf[HttpURLConnection]
-        connection.setRequestMethod("DELETE")
-        headers.foreach(header => connection.setRequestProperty(header._1, header._2))
-        connection.setDoInput(true)
-        connection.setDoOutput(false)
-        connection.setInstanceFollowRedirects(false)
-        catchStatusCodeExceptions {
+        withConnection(path, "DELETE", doInput = true, doOutput = false) { connection =>
             val status = connection.getResponseCode
             val content = readString(connection.getInputStream, encoding)
             if (status != HttpStatus.EMPTY) {
@@ -76,9 +60,22 @@ case class HttpConnection(baseUrl: String, headers: Map[String, String] = Map())
         }
     }
 
-    def readString(stream: InputStream, encoding: String) = Source.fromInputStream(stream).mkString
+    protected def withConnection[T](path: String, method: String, doInput: Boolean, doOutput: Boolean, authenticating: Boolean = false)(f: HttpURLConnection => T): T  = {
+        val connection = new URL(s"$baseUrl$path").openConnection().asInstanceOf[HttpURLConnection]
+        connection.setRequestMethod(method)
+        headers.foreach(header => connection.setRequestProperty(header._1, header._2))
+        connection.setDoInput(doInput)
+        connection.setDoOutput(doOutput)
+        connection.setInstanceFollowRedirects(false)
+        try catchStatusCodeExceptions(f(connection)) catch {
+            case StatusCodeException(_, 401, _) if !authenticating =>
+                copy(headers = headers ++ authenticationHeaders).withConnection(path, method, doInput, doOutput, authenticating = true)(f)
+        }
+    }
 
-    def catchStatusCodeExceptions[T](f: => T): T =
+    protected def readString(stream: InputStream, encoding: String) = Source.fromInputStream(stream).mkString
+
+    protected def catchStatusCodeExceptions[T](f: => T): T =
         try {
             f
         } catch {
