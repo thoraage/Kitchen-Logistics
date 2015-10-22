@@ -7,15 +7,26 @@ import com.migcomponents.migbase64.Base64
 
 import scala.io.Source
 
-case class HttpConnection(baseUrl: String, headers: Map[String, String] = Map(), authenticationHeaders: Map[String, String] = Map()) {
+trait Authenticator {
+    def headers: Map[String, String]
+}
+
+object NoAuthenticator extends Authenticator {
+    override lazy val headers = Map[String, String]()
+}
+
+case class BasicAuthenticator(username: String, password: String, encoding: String = "UTF-8") extends Authenticator {
+    override lazy val headers = Map("Authorization" -> ("Basic " + Base64.encodeToString(s"$username:$password".getBytes(encoding), false)))
+}
+
+case class HttpConnection(baseUrl: String, authenticator: Authenticator = NoAuthenticator, headers: Map[String, String] = Map()) {
     def accept(contentType: ContentType) =
         this.copy(headers = headers + ("Accept" -> contentType.contentType))
 
     def contentType(contentType: ContentType) =
         this.copy(headers = headers + ("Content-Type" -> contentType.contentType))
 
-    def basicAuth(username: String, password: String, encoding: String = "UTF-8") =
-        this.copy(authenticationHeaders = authenticationHeaders + ("Authorization" -> ("Basic " + Base64.encodeToString(s"$username:$password".getBytes(encoding), false))))
+    def authenticator(authenticator: Authenticator) = this.copy(authenticator = authenticator)
 
     def get(path: String, encoding: String = "UTF-8"): String = {
         withConnection(path, "GET", doInput = true, doOutput = false) { connection =>
@@ -68,8 +79,8 @@ case class HttpConnection(baseUrl: String, headers: Map[String, String] = Map(),
         connection.setDoOutput(doOutput)
         connection.setInstanceFollowRedirects(false)
         try catchStatusCodeExceptions(f(connection)) catch {
-            case StatusCodeException(_, 401, _) if !authenticating =>
-                copy(headers = headers ++ authenticationHeaders).withConnection(path, method, doInput, doOutput, authenticating = true)(f)
+            case StatusCodeException(_, 401, _) if !authenticating && authenticator != NoAuthenticator =>
+                copy(headers = headers ++ authenticator.headers).withConnection(path, method, doInput, doOutput, authenticating = true)(f)
         }
     }
 
