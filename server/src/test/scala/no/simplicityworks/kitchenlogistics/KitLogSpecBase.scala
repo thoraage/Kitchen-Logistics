@@ -25,7 +25,7 @@ trait KitLogSpecBase extends BeforeAndAfterAll { this: Suite =>
     def createClient(username: String) = new KitLogRestStorageModule {
         override lazy val storageConfiguration = new StorageConfiguration {
             override lazy val hostAddress = s"http://127.0.0.1:$port"
-            override lazy val userPass = (username, "pass")
+            override lazy val authenticator = BasicAuthenticator(username, "pass")
         }
     }
 

@@ -14,8 +14,7 @@ trait KitLogRestStorageModule extends StorageModule with StorageConfigurationMod
 
     lazy val storage = new Storage {
         private val host = storageConfiguration.hostAddress
-        private val userPass = storageConfiguration.userPass
-        private val http = HttpConnection(host).authenticator(BasicAuthenticator(userPass._1, userPass._2))
+        private val http = HttpConnection(host).authenticator(storageConfiguration.authenticator)
 
         // Example: 2015-03-02T00:00:00.000Z
         def format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
