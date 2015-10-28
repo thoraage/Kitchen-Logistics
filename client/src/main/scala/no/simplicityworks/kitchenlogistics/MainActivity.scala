@@ -12,7 +12,7 @@ class MainActivity extends SActivity with TypedFindView {
 
             override def storageConfiguration = new StorageConfiguration {
                 override lazy val hostAddress = "http://192.168.0.195:8080"
-                override lazy val userPass = ("thoredge", "pass")
+                override lazy val authenticator = BasicAuthenticator("thoredge", "pass")
             }
         }
 

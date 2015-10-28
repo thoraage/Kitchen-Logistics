@@ -78,7 +78,7 @@ case class HttpConnection(baseUrl: String, authenticator: Authenticator = NoAuth
         connection.setDoInput(doInput)
         connection.setDoOutput(doOutput)
         connection.setInstanceFollowRedirects(false)
-        try catchStatusCodeExceptions(f(connection)) catch {
+        try catchStatusCodeExceptions(connection, f(connection)) catch {
             case StatusCodeException(_, 401, _) if !authenticating && authenticator != NoAuthenticator =>
                 copy(headers = headers ++ authenticator.headers).withConnection(path, method, doInput, doOutput, authenticating = true)(f)
         }
@@ -86,18 +86,13 @@ case class HttpConnection(baseUrl: String, authenticator: Authenticator = NoAuth
 
     protected def readString(stream: InputStream, encoding: String) = Source.fromInputStream(stream).mkString
 
-    protected def catchStatusCodeExceptions[T](f: => T): T =
+    protected def catchStatusCodeExceptions[T](connection: HttpURLConnection, f: => T): T =
         try {
             f
         } catch {
             case e: IOException =>
-                val statusRegex = """.*response code: (\d+).*""".r
-                e.getMessage match {
-                    case statusRegex(IntString(status)) =>
-                        throw StatusCodeException(s"Expected code 20x, got $status", status)
-                    case _ =>
-                        throw e
-                }
+                val status = connection.getResponseCode
+                throw StatusCodeException(s"Expected code 20x, got $status", status)
         }
 
 }

@@ -24,6 +24,10 @@ libraryDependencies ++= Seq(
 ).map(_.withSources())
 
 //libraryDependencies ++= Seq(
+//  aar("com.google.android.gms" % "play-services" % "8.1.0")
+//)
+
+//libraryDependencies ++= Seq(
 //  aar("com.android.support" % "design" % "23.0.1")
 //)
 
