@@ -12,8 +12,9 @@ proguardOptions in Android ++= Seq("-dontobfuscate", "-dontoptimize", "-keepattr
   , "-dontwarn scala.collection.**", "-dontwarn javax.inject.**", "-dontwarn org.w3c.dom.bootstrap.**", "-dontwarn scala.xml.**"
 )
 
-apkbuildExcludes in Android += "META-INF/LICENSE"
-apkbuildExcludes in Android += "META-INF/NOTICE"
+packagingOptions in Android := PackagingOptions(excludes = Seq(
+    "META-INF/LICENSE",
+    "META-INF/NOTICE"))
 
 libraryDependencies ++= Seq(
   "org.scaloid" %% "scaloid" % "3.6.1-10",
