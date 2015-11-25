@@ -9,15 +9,17 @@ import scala.io.Source
 import scala.util.{Success, Failure, Try}
 
 trait Authenticator {
-    def headers: Map[String, String]
+    def headers(wwwAuthenticate: Option[String]): Map[String, String]
 }
 
 object NoAuthenticator extends Authenticator {
-    override lazy val headers = Map[String, String]()
+    override def headers(wwwAuthenticate: Option[String]) =
+        Map[String, String]()
 }
 
 case class BasicAuthenticator(username: String, password: String, encoding: String = "UTF-8") extends Authenticator {
-    override lazy val headers = Map("Authorization" -> ("Basic " + Base64.encodeToString(s"$username:$password".getBytes(encoding), false)))
+    override def headers(wwwAuthenticate: Option[String]) =
+        Map("Authorization" -> ("Basic " + Base64.encodeToString(s"$username:$password".getBytes(encoding), false)))
 }
 
 case class HttpConnection(baseUrl: String, authenticator: Authenticator = NoAuthenticator, headers: Map[String, String] = Map(), var cookies: MutableMap[String, String] = MutableMap()) {
@@ -71,7 +73,8 @@ case class HttpConnection(baseUrl: String, authenticator: Authenticator = NoAuth
         cookie.foreach(cookie => cookies += ("Cookie" -> cookie.replaceAll(";.*", "")))
         attempt.recover {
             case StatusCodeException(_, HttpStatus.UNAUTHORIZED, _) if !authenticating && authenticator != NoAuthenticator =>
-                copy(headers = headers ++ authenticator.headers).withConnection(path, method, doInput, doOutput, authenticating = true)(doWith)
+                val wwwAuthenticate = Option(connection.getHeaderField(Headers.WWW_AUTHENTICATE))
+                copy(headers = headers ++ authenticator.headers(wwwAuthenticate)).withConnection(path, method, doInput, doOutput, authenticating = true)(doWith)
             case StatusCodeException(_, HttpStatus.MOVED_TEMPORARILY, _) =>
                 withConnection(path, method, doInput, doOutput, authenticating = false)(doWith)
             case exception =>
@@ -81,6 +84,10 @@ case class HttpConnection(baseUrl: String, authenticator: Authenticator = NoAuth
 
     protected def readString(stream: InputStream, encoding: String) = Source.fromInputStream(stream).mkString
 
+}
+
+object Headers {
+    val WWW_AUTHENTICATE = "WWW-Authenticate"
 }
 
 object HttpStatus {
