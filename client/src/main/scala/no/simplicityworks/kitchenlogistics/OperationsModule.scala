@@ -254,23 +254,19 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
 
             override def getItemCount: Int = itemSummaries.size
 
-            override def onBindViewHolder(vh: ItemViewHolder, i: Int) {
-                val count = itemSummaries(i).count
+            override def onBindViewHolder(vh: ItemViewHolder, idx: Int) {
+                val itemSummary = itemSummaries(idx)
+                val count = itemSummary.count
                 Seq(
-                    (TR.item_name, itemSummaries(i).product.name),
+                    (TR.item_name, itemSummary.product.name),
                     (TR.item_count, if (count == 1) "" else R.string.itemListCountItem.r2String.format(count))
                 ).foreach(p => vh.view.findView(p._1).setText(p._2))
-            }
-
-            override def onCreateViewHolder(viewGroup: ViewGroup, itemIdx: Int): ItemViewHolder = {
-                val view = inflater.inflate(R.layout.item_list_item, viewGroup, false)
-                view.onLongClick {
-                    val popup = new PopupMenu(guiContext, view)
+                vh.view.onLongClick {
+                    val popup = new PopupMenu(guiContext, vh.view)
                     val inflater = popup.getMenuInflater
                     inflater.inflate(R.menu.item_popup, popup.getMenu)
                     popup.setOnMenuItemClickListener(new OnMenuItemClickListener {
                         override def onMenuItemClick(item: MenuItem) = {
-                            val itemSummary = itemSummaries(itemIdx)
                             item.getItemId match {
                                 case R.id.item_popup_remove =>
                                     storage.removeItem(itemSummary.lastItemId) onComplete {
@@ -297,6 +293,10 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                     popup.show()
                     true
                 }
+            }
+
+            override def onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ItemViewHolder = {
+                val view = inflater.inflate(R.layout.item_list_item, viewGroup, false)
                 new ItemViewHolder(view)
             }
         }
