@@ -1,0 +1,48 @@
+package no.simplicityworks.kitchenlogistics
+
+import java.security.MessageDigest
+import java.util.UUID
+
+import unfiltered.Cookie
+import unfiltered.filter.Planify
+import unfiltered.request._
+import unfiltered.response._
+
+import scala.slick.driver.JdbcDriver.simple._
+
+trait BasicAuthenticationPlanModule extends AuthenticationPlanModule with DatabaseModule with SessionHandlerModule {
+
+    private val md5 = MessageDigest.getInstance("MD5")
+
+    private val AuthenticatedUsername = sessionHandler.AuthenticatedUsername
+    private val AuthenticatedUser = sessionHandler.AuthenticatedUser
+
+    def authenticationPlan = Planify {
+        case Path(Seg("rest" :: "itemGroups" :: IntString(itemGroupId) :: Nil)) & AuthenticatedUser(user) =>
+            database withSession { implicit session =>
+                if (ItemGroups.query.filter(_.id === itemGroupId).list.forall(_.userId == user.id)) Pass
+                else Forbidden
+            }
+        case Path(Seg("rest" :: "items" :: IntString(itemId) :: Nil)) & AuthenticatedUser(user) =>
+            database withSession { implicit session =>
+                if (Items.query.filter(_.id === itemId).list.forall(_.userId == user.id)) Pass
+                else Forbidden
+            }
+        case Path(Seg("rest" :: _)) & AuthenticatedUsername(username) =>
+            Pass
+        case Path(path) & BasicAuth(name, pass) =>
+            val user = database withSession { implicit session: Session =>
+                (for {user <- TableQuery[Users] if user.username === name} yield user).firstOption
+            }
+            if (user.exists(user => user.password.sameElements(md5.digest((Users.passwordSalt + pass).getBytes("UTF-8"))))) {
+                val uuid = UUID.randomUUID
+                synchronized(sessionHandler.sessionCache += (uuid -> name))
+                SetCookies(Cookie("auth", uuid.toString, maxAge = Some(1000 * 60 * 30))) ~> Redirect(path)
+            } else {
+                Unauthorized ~> ResponseHeader("WWW-Authenticate", "Basic realm=\"kitlog\"" :: Nil)
+            }
+        case req@Path(Seg("rest" :: _)) =>
+            Unauthorized ~> ResponseHeader("WWW-Authenticate", "Basic realm=\"kitlog\"" :: Nil)
+    }
+
+}

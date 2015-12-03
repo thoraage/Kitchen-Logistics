@@ -2,8 +2,8 @@ package no.simplicityworks.kitchenlogistics
 
 import unfiltered.filter.Plan
 
-trait PlanCollectionModule {
+trait AuthenticationPlanModule {
 
-    def plans: List[Plan] = Nil
+    def authenticationPlan: Plan
 
 }

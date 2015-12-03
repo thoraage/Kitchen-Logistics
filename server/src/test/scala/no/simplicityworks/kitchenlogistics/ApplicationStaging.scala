@@ -2,7 +2,9 @@ package no.simplicityworks.kitchenlogistics
 
 object ApplicationStaging extends Application {
 
-    lazy override val stack = new RestPlanModule with DatabaseModule {
+    lazy override val stack = new RestPlanModule
+        with BasicAuthenticationPlanModule
+        with DatabaseModule {
 
         override lazy val databaseProfile = new DatabaseProfile {
             override val generation = DatabaseGeneration.flyway

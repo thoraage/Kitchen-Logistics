@@ -12,7 +12,10 @@ trait KitLogSpecBase extends BeforeAndAfterAll { this: Suite =>
     val port = 58008
     Properties.setProp("PORT", port.toString)
 
-    val stack = new RestPlanModule with InMemoryDatabaseModule
+    val stack = new RestPlanModule
+        with InMemoryDatabaseModule
+        with BasicAuthenticationPlanModule
+
     val http = unfiltered.jetty.Http(port)
     http.current.setBaseResource(Resource.newResource(getClass.getResource("/public").toExternalForm, false))
     stack.plans.foldLeft(http)((http, plan) => http.plan(plan))
