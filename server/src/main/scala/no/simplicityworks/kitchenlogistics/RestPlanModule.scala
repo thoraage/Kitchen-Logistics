@@ -5,6 +5,7 @@ import org.json4s.jackson.Serialization
 import org.json4s.jackson.Serialization.{read, write}
 import unfiltered.directives.Directives._
 import unfiltered.directives._
+import unfiltered.filter.Planify
 import unfiltered.request._
 import unfiltered.response._
 
@@ -12,7 +13,7 @@ import scala.slick.driver.JdbcDriver.simple._
 
 trait RestPlanModule extends PlanCollectionModule with DatabaseModule with SessionHandlerModule with AuthenticationPlanModule {
 
-    override def plans = authenticationPlan :: restPlan :: super.plans
+    override def plans = authenticationPlan :: authorizationPlan :: restPlan :: super.plans
 
     private val AuthenticatedUser = sessionHandler.AuthenticatedUser
     private implicit val formats = Serialization.formats(NoTypeHints)
@@ -27,7 +28,20 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule with Sessi
 
     case class ItemSummary(count: Int, product: Product, lastItemId: Int)
 
-    private val restPlan = unfiltered.filter.Planify {
+    private val authorizationPlan = Planify {
+        case Path(Seg("rest" :: "itemGroups" :: IntString(itemGroupId) :: Nil)) & AuthenticatedUser(user) =>
+            database withSession { implicit session =>
+                if (ItemGroups.query.filter(_.id === itemGroupId).list.forall(_.userId == user.id)) Pass
+                else Forbidden
+            }
+        case Path(Seg("rest" :: "items" :: IntString(itemId) :: Nil)) & AuthenticatedUser(user) =>
+            database withSession { implicit session =>
+                if (Items.query.filter(_.id === itemId).list.forall(_.userId == user.id)) Pass
+                else Forbidden
+            }
+    }
+
+    private val restPlan = Planify {
         val default = LiteralColumn(1) === LiteralColumn(1)
         def isDefined(strings: Seq[String], restrict: Column[Boolean]) = if (strings.isEmpty) default else restrict
 

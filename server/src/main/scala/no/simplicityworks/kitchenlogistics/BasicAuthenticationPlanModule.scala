@@ -18,17 +18,7 @@ trait BasicAuthenticationPlanModule extends AuthenticationPlanModule with Databa
     private val AuthenticatedUser = sessionHandler.AuthenticatedUser
 
     def authenticationPlan = Planify {
-        case Path(Seg("rest" :: "itemGroups" :: IntString(itemGroupId) :: Nil)) & AuthenticatedUser(user) =>
-            database withSession { implicit session =>
-                if (ItemGroups.query.filter(_.id === itemGroupId).list.forall(_.userId == user.id)) Pass
-                else Forbidden
-            }
-        case Path(Seg("rest" :: "items" :: IntString(itemId) :: Nil)) & AuthenticatedUser(user) =>
-            database withSession { implicit session =>
-                if (Items.query.filter(_.id === itemId).list.forall(_.userId == user.id)) Pass
-                else Forbidden
-            }
-        case Path(Seg("rest" :: _)) & AuthenticatedUsername(username) =>
+        case Path(Seg("rest" :: _)) & AuthenticatedUsername(_) =>
             Pass
         case Path(path) & BasicAuth(name, pass) =>
             val user = database withSession { implicit session: Session =>
