@@ -16,21 +16,21 @@ trait SessionHandlerModule extends DatabaseModule {
 
         def getAuthenticatedUsername(uuid: String) = sessionCache.get(UUID.fromString(uuid))
 
-        object AuthenticatedUsername {
+        object AuthenticatedUserId {
             def unapply[T](req: HttpRequest[T]): Option[String] =
                 for {
                     cookieMap <- Cookies.unapply(req)
                     authCookie <- cookieMap("auth")
-                    username <- sessionCache.get(UUID.fromString(authCookie.value))
-                } yield username
+                    email <- sessionCache.get(UUID.fromString(authCookie.value))
+                } yield email
         }
 
         object AuthenticatedUser {
             def unapply[T](req: HttpRequest[T]): Option[User] =
                 database withSession { implicit session: Session =>
                     for {
-                        uuid <- AuthenticatedUsername.unapply(req)
-                        user <- (for {user <- TableQuery[Users] if user.username === uuid} yield user).firstOption
+                        email <- AuthenticatedUserId.unapply(req)
+                        user <- (for {user <- TableQuery[Users] if user.email === email} yield user).firstOption
                     } yield user
                 }
         }

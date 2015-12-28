@@ -14,11 +14,11 @@ trait BasicAuthenticationPlanModule extends AuthenticationPlanModule with Databa
 
     private val md5 = MessageDigest.getInstance("MD5")
 
-    private val AuthenticatedUsername = sessionHandler.AuthenticatedUsername
+    private val AuthenticatedUsername = sessionHandler.AuthenticatedUserId
     private val AuthenticatedUser = sessionHandler.AuthenticatedUser
 
-    def authenticationPlan = Planify {
-        case Path(Seg("rest" :: _)) & AuthenticatedUsername(_) =>
+    override def authenticationPlan = Planify {
+        case Path(Seg("rest" :: _)) & AuthenticatedUserId(_) =>
             Pass
         case Path(path) & BasicAuth(name, pass) =>
             val user = database withSession { implicit session: Session =>
@@ -26,7 +26,7 @@ trait BasicAuthenticationPlanModule extends AuthenticationPlanModule with Databa
             }
             if (user.exists(user => user.password.sameElements(md5.digest((Users.passwordSalt + pass).getBytes("UTF-8"))))) {
                 val uuid = UUID.randomUUID
-                synchronized(sessionHandler.sessionCache += (uuid -> name))
+                synchronized(sessionHandler.sessionCache += (uuid -> user.get.email))
                 SetCookies(Cookie("auth", uuid.toString, maxAge = Some(1000 * 60 * 30))) ~> Redirect(path)
             } else {
                 Unauthorized ~> ResponseHeader("WWW-Authenticate", "Basic realm=\"kitlog\"" :: Nil)

@@ -4,16 +4,14 @@ import java.util.Date
 
 import org.scalatest._
 
-import scala.concurrent.{Future, Await}
-import scala.concurrent.duration.Duration.Inf
 import scala.util.Random
 
-class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
-    def await[T](future: Future[T]): T = Await.result(future, Inf)
+class RestPlanSpec extends FeatureSpec with SpecBase with GivenWhenThen {
+    override lazy val app = new RestPlanModule
+        with InMemoryDatabaseModule
+        with BasicAuthenticationPlanModule
 
-
-    val user = stack.Users("thoredge").get
-    val product =
+    lazy val product =
         await(client.storage.saveProduct(client.Product(None, "fdjks", "ting", new Date)))
     def createItemGroup =
         await(client.storage.saveItemGroup(client.ItemGroup(None, None, s"test${Random.nextInt()}", new Date)))
@@ -36,9 +34,9 @@ class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
 
     feature("Item group get all") {
         scenario("Ok") {
-            val itemGroups = stack.ItemGroups.getForUser(user)
+            val itemGroups = app.ItemGroups.getForUser(thoredge)
             assert(allGroups.seq.size === itemGroups.size)
-            assert(itemGroups.forall(_.userId === user.id))
+            assert(itemGroups.forall(_.userId === thoredge.id))
         }
         scenario("Item group is not seen by other user") {
             val itemGroup = createItemGroup
@@ -85,8 +83,8 @@ class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
     }
 
     feature("Item get") {
-        val itemGroup = createItemGroup
-        val otherItemGroup = createItemGroup
+        lazy val itemGroup = createItemGroup
+        lazy val otherItemGroup = createItemGroup
         scenario("Ok") {
             createItem(itemGroup)
             createItem(itemGroup)
@@ -105,12 +103,13 @@ class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
     // TODO scenario unauthorized
 
     feature("Item update") {
-        val itemGroupA = createItemGroup
-        val itemGroupB = createItemGroup
-        val item = createItem(itemGroupA)
-        assert(1 === itemsOf(itemGroupA).size)
-        assert(0 === itemsOf(itemGroupB).size)
+        lazy val itemGroupA = createItemGroup
+        lazy val itemGroupB = createItemGroup
+        lazy val item = createItem(itemGroupA)
         scenario("Ok") {
+            item
+            assert(1 === itemsOf(itemGroupA).size)
+            assert(0 === itemsOf(itemGroupB).size)
             await(client.storage.saveItem(item.copy(itemGroupId = itemGroupB.id.get)))
             assert(0 === itemsOf(itemGroupA).size)
             assert(1 === itemsOf(itemGroupB).size)
@@ -132,7 +131,7 @@ class RestSpec extends FeatureSpec with GivenWhenThen with KitLogSpecBase {
     }
 
     feature("Item delete") {
-        val itemGroup = createItemGroup
+        lazy val itemGroup = createItemGroup
         scenario("Ok") {
             val item = createItem(itemGroup)
             client.storage.findItemsByGroup(Some(itemGroup))

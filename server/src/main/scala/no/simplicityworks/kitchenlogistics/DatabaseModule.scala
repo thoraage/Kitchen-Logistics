@@ -158,18 +158,18 @@ trait DatabaseModule extends DatabaseProfileModule {
         }
         Database.forDataSource(ds)
     }
-    if (databaseProfile.generation == DatabaseGeneration.slickDdl) {
-        database withSession { implicit session: Session =>
-            val ddls = Seq(TableQuery[Products].ddl, TableQuery[Users].ddl, TableQuery[ItemGroups].ddl, TableQuery[Items].ddl)
-            ddls.foreach(_.create)
-            TableQuery[Products].insertAll(
-                Product(None, "5423", "Nexus S"),
-                Product(None, "43123", "Motorola XOOM™ with Wi-Fi"),
-                Product(None, "43728432", "ROLA XOOM™"))
-            val userId = Users.insert(new User(None, "thoredge", "thoraageeldby@gmail.com", Users.saltPassword("pass"), new Date))
-            TableQuery[ItemGroups].insert(ItemGroup(None, Some(userId), "Kjøleskap"))
-        }
-    }
+    val databaseDdls = Seq(TableQuery[Products].ddl, TableQuery[Users].ddl, TableQuery[ItemGroups].ddl, TableQuery[Items].ddl)
+//    if (databaseProfile.generation == DatabaseGeneration.slickDdl) {
+//        database withSession { implicit session: Session =>
+//            ddls.foreach(_.create)
+//            TableQuery[Products].insertAll(
+//                Product(None, "5423", "Nexus S"),
+//                Product(None, "43123", "Motorola XOOM™ with Wi-Fi"),
+//                Product(None, "43728432", "ROLA XOOM™"))
+//            val userId = Users.insert(new User(None, "thoredge", "thoraageeldby@gmail.com", Users.saltPassword("pass"), new Date))
+//            TableQuery[ItemGroups].insert(ItemGroup(None, Some(userId), "Kjøleskap"))
+//        }
+//    }
 
 }
 
