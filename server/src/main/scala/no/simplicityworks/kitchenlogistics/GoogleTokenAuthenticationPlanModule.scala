@@ -12,10 +12,10 @@ import scala.slick.driver.JdbcDriver.simple._
 
 trait GoogleTokenAuthenticationPlanModule extends AuthenticationPlanModule with SessionHandlerModule with GoogleTokenVerifierPlanModule with DatabaseModule {
 
-    private val AuthenticatedUsername = sessionHandler.AuthenticatedUserId
+    private val AuthenticatedUserId = sessionHandler.AuthenticatedUserId
     private val AuthenticatedUser = sessionHandler.AuthenticatedUser
 
-    def authenticationPlan = Planify {
+    override def authenticationPlan = Planify {
         case Path(Seg("rest" :: _)) & AuthenticatedUserId(_) =>
             Pass
         case Path(path) & GoogleTokenAuth(token) =>

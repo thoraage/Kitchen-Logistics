@@ -18,14 +18,15 @@ trait DatabaseModule extends DatabaseProfileModule {
             d => new java.util.Date(d.getTime))
 
     object Products {
+        val query = TableQuery[Products]
+
         def findByCode(code: String) =
             database withSession { implicit session: Session =>
-                TableQuery[Products].filter(_.code === code).list
+                query.filter(_.code === code).list
             }
 
         def insert(product: Product): Int =
             database withSession { implicit session: Session =>
-                val query = TableQuery[Products]
                 query returning query.map(_.id) += product
             }
     }
@@ -159,17 +160,6 @@ trait DatabaseModule extends DatabaseProfileModule {
         Database.forDataSource(ds)
     }
     val databaseDdls = Seq(TableQuery[Products].ddl, TableQuery[Users].ddl, TableQuery[ItemGroups].ddl, TableQuery[Items].ddl)
-//    if (databaseProfile.generation == DatabaseGeneration.slickDdl) {
-//        database withSession { implicit session: Session =>
-//            ddls.foreach(_.create)
-//            TableQuery[Products].insertAll(
-//                Product(None, "5423", "Nexus S"),
-//                Product(None, "43123", "Motorola XOOM™ with Wi-Fi"),
-//                Product(None, "43728432", "ROLA XOOM™"))
-//            val userId = Users.insert(new User(None, "thoredge", "thoraageeldby@gmail.com", Users.saltPassword("pass"), new Date))
-//            TableQuery[ItemGroups].insert(ItemGroup(None, Some(userId), "Kjøleskap"))
-//        }
-//    }
 
 }
 

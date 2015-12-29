@@ -14,7 +14,7 @@ trait BasicAuthenticationPlanModule extends AuthenticationPlanModule with Databa
 
     private val md5 = MessageDigest.getInstance("MD5")
 
-    private val AuthenticatedUsername = sessionHandler.AuthenticatedUserId
+    private val AuthenticatedUserId = sessionHandler.AuthenticatedUserId
     private val AuthenticatedUser = sessionHandler.AuthenticatedUser
 
     override def authenticationPlan = Planify {

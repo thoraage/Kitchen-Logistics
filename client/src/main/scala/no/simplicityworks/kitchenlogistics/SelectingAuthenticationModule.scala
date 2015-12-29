@@ -83,7 +83,9 @@ trait SelectingAuthenticationModule extends AuthenticationModule with GuiContext
                     val token = GoogleAuthUtil.getToken(guiContext, account, scopes)
                     Log.i(logContext, s"##### Token: $token")
                     WidgetHelpers.toast(s"Token is $token")
-                    Map("Authorization" -> s"GoogleToken ${Base64.encodeToString(token.getBytes, Base64.DEFAULT)}")
+                    val encodedString = Base64.encodeToString(token.getBytes, Base64.NO_WRAP)
+                    Log.i(logContext, s"##### Encoded token: $encodedString")
+                    Map("Authorization" -> s"GoogleToken $encodedString")
                 }
             } catch {
                 case e: UserRecoverableAuthException =>

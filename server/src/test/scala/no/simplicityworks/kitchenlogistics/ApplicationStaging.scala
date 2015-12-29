@@ -3,7 +3,8 @@ package no.simplicityworks.kitchenlogistics
 object ApplicationStaging extends Application {
 
     lazy override val stack = new RestPlanModule
-        with BasicAuthenticationPlanModule
+        with GoogleTokenAuthenticationPlanModule
+        with GoogleTokenVerifierPlanImplModule
         with DatabaseModule {
 
         override lazy val databaseProfile = new DatabaseProfile {

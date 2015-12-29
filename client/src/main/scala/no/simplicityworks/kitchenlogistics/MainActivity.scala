@@ -1,23 +1,11 @@
 package no.simplicityworks.kitchenlogistics
 
-import android.accounts.{AccountManager, Account}
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.util.{Log, Base64}
-import android.view.{Menu, Window, MenuItem}
-import com.google.android.gms.auth.{UserRecoverableAuthException, GoogleAuthUtil}
-import com.google.android.gms.auth.api.Auth
-import com.google.android.gms.common.Scopes
-import com.google.android.gms.common.api.GoogleApiClient
-import com.google.android.gms.common.api.GoogleApiClient.Builder
-import com.google.android.gms.plus.Plus
+import android.view.{Menu, MenuItem, Window}
 import org.scaloid.common._
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Future, Await, Promise}
-import scala.util.{Success, Random}
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Random
 
 class MainActivity extends SActivity with TypedFindView {
 
@@ -33,7 +21,7 @@ class MainActivity extends SActivity with TypedFindView {
             override def guiContext = MainActivity.this
 
             override def storageConfiguration = new StorageConfiguration {
-                private val ipAddress = "192.168.0.195"
+                private val ipAddress = "192.168.0.193"
                 override lazy val hostAddress = "http://" + ipAddress + ":8080"
                 override lazy val authenticator = new Authenticator {
                     override def headers(wwwAuthenticate: Option[String]) = authentication.headers(wwwAuthenticate)
