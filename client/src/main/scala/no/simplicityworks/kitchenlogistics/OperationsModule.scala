@@ -64,63 +64,71 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
         }
 
         override def scanNewItem() {
-            scanner.startScanner { code =>
-                def saveItem(product: Product, itemGroupId: Int) {
-                    storage.saveItem(Item(None, None, product.id.get, itemGroupId, new Date)) onComplete {
-                        case Success(_) =>
-                            guiContext.runOnUiThread(reloadItemList())
-                        case Failure(t) => handleFailure(t)
-                    }
-                }
-                def createItem(product: Product) {
-                    selectedItemGroup match {
-                        case Some(ItemGroup(Some(itemGroupId), _, _, _)) =>
-                            saveItem(product, itemGroupId)
-                            WidgetHelpers.toast(R.string.itemNewCreated)
-                        case _ =>
-                            selectItemGroupExplicitly(R.string.selectItemGroupCancelled, itemGroup => {
-                                itemGroup.id.foreach(saveItem(product, _))
-                                changeItemGroup(itemGroup)
-                            })
-                    }
-                    selectedItemGroup.flatMap(_.id).foreach(saveItem(product, _))
-                }
-                storage.findProductByCode(code) onComplete {
-                    // TODO case many =>
-                    case Success(product #:: _) =>
-                        createItem(product)
-                    case Success(Stream.Empty) =>
-                        runOnUiThread(
-                            dialogs.withField(R.string.productNameTitle, (name, feedback) => {
-                                if (name.trim.length == 0) {
-                                    feedback(R.string.fieldRequired.r2String)
-                                } else {
-                                    storage.saveProduct(Product(None, code, name, new Date)) onComplete {
-                                        case Success(product) =>
-                                            createItem(product)
-                                            WidgetHelpers.toast(R.string.productNewCreated)
-                                        case Failure(t) =>
-                                            handleFailure(t)
-                                    }
-                                }
-                            }))
+            def saveItem(product: Product, itemGroupId: Int) {
+                storage.saveItem(Item(None, None, product.id.get, itemGroupId, new Date)) onComplete {
+                    case Success(_) =>
+                        guiContext.runOnUiThread(reloadItemList())
                     case Failure(t) => handleFailure(t)
                 }
+            }
+            def createItem(product: Product) {
+                selectedItemGroup match {
+                    case Some(ItemGroup(Some(itemGroupId), _, _, _)) =>
+                        saveItem(product, itemGroupId)
+                        WidgetHelpers.toast(R.string.itemNewCreated)
+                    case _ =>
+                        selectItemGroupExplicitly(R.string.selectItemGroupCancelled, itemGroup => {
+                            itemGroup.id.foreach(saveItem(product, _))
+                            changeItemGroup(itemGroup)
+                        })
+                }
+                selectedItemGroup.flatMap(_.id).foreach(saveItem(product, _))
+            }
+            scanner.startScanner().onComplete {
+                case Success(Some(code)) =>
+                    storage.findProductByCode(code) onComplete {
+                        // TODO case many =>
+                        case Success(product #:: _) =>
+                            createItem(product)
+                        case Success(Stream.Empty) =>
+                            runOnUiThread(
+                                dialogs.withField(R.string.productNameTitle, (name, feedback) => {
+                                    if (name.trim.length == 0) {
+                                        feedback(R.string.fieldRequired.r2String)
+                                    } else {
+                                        storage.saveProduct(Product(None, code, name, new Date)) onComplete {
+                                            case Success(product) =>
+                                                createItem(product)
+                                                WidgetHelpers.toast(R.string.productNewCreated)
+                                            case Failure(t) =>
+                                                handleFailure(t)
+                                        }
+                                    }
+                                }))
+                        case Failure(t) => handleFailure(t)
+                    }
+                case Success(None) =>
+                case Failure(e) =>
+                    handleFailure(e)
             }
         }
 
         override def scanRemoveItem() {
-            scanner.startScanner { code =>
-                storage.findItemsByCode(code).map(_.toList) onComplete {
-                    case Success(Nil) =>
-                        dialogs.withMessage(R.string.notFoundTitle, R.string.itemWithCodeNotFoundMessage)
-                    case Success(item :: Nil) =>
-                        storage.removeItem(item.lastItemId) onFailure PartialFunction(handleFailure)
-                    case Success(items) =>
-                        handleFailure(new NotImplementedError(""))
-                    case Failure(t) =>
-                        handleFailure(t)
-                }
+            scanner.startScanner().onComplete{
+                case Success(Some(code)) =>
+                    storage.findItemsByCode(code).map(_.toList) onComplete {
+                        case Success(Nil) =>
+                            dialogs.withMessage(R.string.notFoundTitle, R.string.itemWithCodeNotFoundMessage)
+                        case Success(item :: Nil) =>
+                            storage.removeItem(item.lastItemId) onFailure PartialFunction(handleFailure)
+                        case Success(items) =>
+                            handleFailure(new NotImplementedError(""))
+                        case Failure(t) =>
+                            handleFailure(t)
+                    }
+                case Success(None) =>
+                case Failure(e) =>
+                    handleFailure(e)
             }
         }
 

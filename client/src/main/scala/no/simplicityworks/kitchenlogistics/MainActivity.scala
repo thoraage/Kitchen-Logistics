@@ -14,7 +14,7 @@ class MainActivity extends SActivity with TypedFindView {
     var app =
         new OperationsImplModule
             with KitLogRestStorageModule
-            with MockDialogScannerModule
+            with ZXingScannerModule
             with DialogsModule
             with SelectingAuthenticationModule
             with SimpleSynchronizedActivityIntentBrokerModule {

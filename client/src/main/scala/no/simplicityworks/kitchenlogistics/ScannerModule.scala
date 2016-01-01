@@ -1,5 +1,7 @@
 package no.simplicityworks.kitchenlogistics
 
+import scala.concurrent.Future
+
 trait ScannerModule {
 
   def scanner: Scanner
@@ -8,6 +10,6 @@ trait ScannerModule {
 
 trait Scanner {
 
-  def startScanner(f: (String) => Unit)
+  def startScanner(): Future[Option[String]]
 
 }
