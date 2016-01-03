@@ -25,18 +25,20 @@ trait StorageModule {
 
         def findItemsByGroup(itemGroup: Option[ItemGroup] = None): Future[Seq[ItemSummary]]
 
+        def searchItems(search: String): Future[Seq[ItemSummary]]
+
         def getItemGroups: Future[Seq[ItemGroup]]
 
         def saveItemGroup(itemGroup: ItemGroup): Future[ItemGroup]
     }
 
-    case class Product(id: Option[Int], code: String, name: String, created: Date)
+    case class Product(id: Option[Int], code: String, name: String, created: Date = new Date)
 
     case class ItemSummary(count: Int, product: Product, lastItemId: Int)
 
-    case class ItemGroup(id: Option[Int], userId: Option[Int], name: String, created: Date)
+    case class ItemGroup(id: Option[Int], userId: Option[Int], name: String, created: Date = new Date)
 
-    case class Item(id: Option[Int], userId: Option[Int], productId: Int, itemGroupId: Int, created: Date)
+    case class Item(id: Option[Int], userId: Option[Int], productId: Int, itemGroupId: Int, created: Date = new Date)
 
 }
 

@@ -100,8 +100,6 @@ class RestPlanSpec extends FeatureSpec with SpecBase with GivenWhenThen {
         }
     }
 
-    // TODO scenario unauthorized
-
     feature("Item update") {
         lazy val itemGroupA = createItemGroup
         lazy val itemGroupB = createItemGroup
@@ -151,6 +149,23 @@ class RestPlanSpec extends FeatureSpec with SpecBase with GivenWhenThen {
             assert(0 === await(client.storage.findProductByCode(code)).size)
             await(client.storage.saveProduct(client.Product(None, code, "MyName", new Date)))
             assert(1 === await(client.storage.findProductByCode(code)).size)
+        }
+    }
+
+    feature("Search for product") {
+        scenario("Ok") {
+            val summaries = await(client.storage.searchItems("rang"))
+            assert(summaries.seq.size === 0)
+            val itemGroup = await(client.storage.saveItemGroup(client.ItemGroup(None, None, "Cupboard")))
+            val products = List(await(client.storage.saveProduct(client.Product(None, "gnufdjskfds", "OrAnge"))),
+                await(client.storage.saveProduct(client.Product(None, "jklfds", "Rangpur"))),
+                await(client.storage.saveProduct(client.Product(None, "8493tgtf", "Apple"))))
+            products.foreach(p => await(client.storage.saveItem(client.Item(None, None, p.id.get, itemGroup.id.get))))
+            val itemGroup2 = await(otherClient.storage.saveItemGroup(otherClient.ItemGroup(None, None, "Cupboard")))
+            await(otherClient.storage.saveItem(otherClient.Item(None, None, products(0).id.get, itemGroup2.id.get)))
+            val summaries2 = await(client.storage.searchItems("rang"))
+            assert(summaries2.seq.size === 2)
+            assert(summaries2.seq.forall(_.count == 1))
         }
     }
 

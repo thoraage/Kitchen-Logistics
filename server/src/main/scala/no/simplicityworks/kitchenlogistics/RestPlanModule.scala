@@ -57,11 +57,18 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule with Sessi
             }
 
             case Path(Seg("rest" :: "items" :: Nil)) & AuthenticatedUser(user) => {
-                for {_ <- GET; _ <- Accepts.Json; r <- request[Any]; itemGroups <- parameterValues("itemGroup"); codes <- parameterValues("code")} yield {
+                for {
+                    _ <- GET; _ <- Accepts.Json; r <- request[Any]
+                    itemGroups <- parameterValues("itemGroup")
+                    codes <- parameterValues("code");
+                    filters <- parameterValues("filter")
+                } yield {
                     val items = (database withSession { implicit session: Session =>
                         (for {
                             item <- TableQuery[Items] if item.userId === user.id && isDefined(itemGroups, item.itemGroupId inSet itemGroups.map(_.toInt))
-                            product <- item.product if isDefined(codes, product.code inSet codes)
+                            product <- item.product if isDefined(codes, product.code inSet codes) &&
+                                filters.foldLeft(default)((query, filter) => query &&
+                                product.name.toLowerCase.like(s"%${filter.toLowerCase}%"))
                         } yield (product, item))
                             .groupBy(p => p._1)
                             .map { case (product, pair) => (product, pair.length, pair.map(_._2.id).max)}.list

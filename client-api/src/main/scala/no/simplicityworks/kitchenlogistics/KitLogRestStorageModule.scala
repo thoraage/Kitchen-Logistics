@@ -60,6 +60,10 @@ trait KitLogRestStorageModule extends StorageModule with StorageConfigurationMod
             Parse.decodeOption[Stream[ItemSummary]](get("/rest/items", queryItemGroup.toList)).get
         }
 
+        override def searchItems(search: String): Future[Seq[ItemSummary]] = Future {
+            Parse.decodeOption[Stream[ItemSummary]](get("/rest/items", List("filter" -> search))).get
+        }
+
         def get(path: String, queryParameters: List[(String, String)] = Nil): String = {
             val query = queryParameters.map(p => s"${p._1}=${URLEncoder.encode(p._2, "UTF-8")}").mkString("?", "&", "")
             http.accept(json).get(s"$path$query")
