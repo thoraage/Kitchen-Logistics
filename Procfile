@@ -1,2 +1,2 @@
-web: target/universal/stage/bin/kitlog
+web: server/target/universal/stage/bin/kitlog
 
