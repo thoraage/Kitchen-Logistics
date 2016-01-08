@@ -19,18 +19,21 @@ trait GoogleTokenAuthenticationPlanModule extends AuthenticationPlanModule with 
         case Path(Seg("rest" :: _)) & AuthenticatedUserId(_) =>
             Pass
         case Path(path) & GoogleTokenAuth(token) =>
-            val result = googleTokenVerifier.verify(token)
-            result.map { result =>
-                database withSession { implicit session =>
-                    val user = Users.query.filter(_.email === result.user_id).firstOption
-                    if (user.isEmpty) {
-                        Users.insert(User(None, result.user_id, result.user_id, Array(), new Date))
-                    }
+            val result = for {
+                _ <- googleTokenVerifier.verify(token)
+                userInfo <- googleTokenVerifier.getUserInfo(token)
+                email <- userInfo.email
+                userId <- userInfo.id
+            } yield database withSession { implicit session =>
+                val user = Users.query.filter(_.email === email).firstOption
+                if (user.isEmpty) {
+                    Users.insert(User(None, userId, email, Array(), new Date))
                 }
                 val uuid = UUID.randomUUID
-                synchronized(sessionHandler.sessionCache += (uuid -> result.user_id))
+                synchronized(sessionHandler.sessionCache += (uuid -> email))
                 SetCookies(Cookie("auth", uuid.toString, maxAge = Some(1000 * 60 * 30))) ~> Redirect(path)
-            }.getOrElse(unauthorized)
+            }
+            result.getOrElse(unauthorized)
         case req@Path(Seg("rest" :: _)) =>
             val a = req.headers(HttpHeaders.AUTHORIZATION)
             unauthorized

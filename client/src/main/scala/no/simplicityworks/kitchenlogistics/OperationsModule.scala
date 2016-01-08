@@ -40,6 +40,7 @@ trait Operations {
 
     def removeItemGroupName()
 
+    def searchItems()
 }
 
 trait OperationsImplModule extends OperationsModule with ScannerModule with StorageModule with GuiContextModule with DialogsModule {
@@ -224,6 +225,14 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             })
         }
 
+        def changeItemSummaries(items: List[ItemSummary]) {
+            ItemAdapter.itemSummaries = items
+            futureOnUiThread {
+                ItemAdapter.notifyDataSetChanged()
+                guiContext.setTitle(toString)
+            }
+        }
+
         class ItemGroupDrawerMenuChoice(val itemGroup: Option[ItemGroup]) extends DrawerMenuChoice {
             override def toString = itemGroup.map(_.name).getOrElse(R.string.drawerMenuAll.r2String)
 
@@ -231,12 +240,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                 selectedItemGroup = itemGroup
                 updateMenu()
                 storage.findItemsByGroup(selectedItemGroup).map(_.toList) onComplete {
-                    case Success(items) =>
-                        ItemAdapter.itemSummaries = items
-                        futureOnUiThread {
-                            ItemAdapter.notifyDataSetChanged()
-                            guiContext.setTitle(toString)
-                        }
+                    case Success(items) => changeItemSummaries(items)
                     case Failure(e) => handleFailure(e)
                 }
             }
@@ -337,6 +341,14 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             }
         }
 
+        override def searchItems() {
+            dialogs.withField(R.string.searchTitle, (search, _) => {
+                storage.searchItems(search).map(_.toList).onComplete {
+                    case Success(items) => changeItemSummaries(items)
+                    case Failure(e) => handleFailure(e)
+                }
+            })
+        }
     }
 
 }

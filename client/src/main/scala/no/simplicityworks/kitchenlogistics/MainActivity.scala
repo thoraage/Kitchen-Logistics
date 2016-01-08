@@ -37,9 +37,9 @@ class MainActivity extends SActivity with TypedFindView {
 
     override def onOptionsItemSelected(item: MenuItem): Boolean = {
         item.getItemId match {
-//            case R.id.actionBarSearch =>
-//                //search
-//                true
+            case R.id.actionBarSearch =>
+                app.operations.searchItems()
+                true
             case R.id.action_bar_scan_new =>
                 app.operations.scanNewItem()
                 true

@@ -57,4 +57,6 @@
     <string name="itemPopupRemove">Remove</string>
     <string name="itemMoveCancelled">Item move cancelled</string>
     <string name="itemMovedToItemGroup">One item {0} moved to item group {1}</string>
+
+    <string name="searchTitle">Search</string>
 </resources>

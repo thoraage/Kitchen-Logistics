@@ -78,7 +78,7 @@ trait SelectingAuthenticationModule extends AuthenticationModule with GuiContext
                     Log.i(logContext, s"Account name = $accountName")
                     if (accountName == null) sys.error("Not logged into google account")
                     val account = new Account(accountName, GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE)
-                    val scopes = "oauth2:https://www.googleapis.com/auth/userinfo.profile"
+                    val scopes = "oauth2:https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email"
                     // "audience:server:client_id:" + clientId
                     val token = GoogleAuthUtil.getToken(guiContext, account, scopes)
                     Log.i(logContext, s"##### Token: $token")
