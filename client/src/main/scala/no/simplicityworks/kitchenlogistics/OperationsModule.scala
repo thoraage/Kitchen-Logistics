@@ -83,7 +83,6 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                             changeItemGroup(itemGroup)
                         })
                 }
-                selectedItemGroup.flatMap(_.id).foreach(saveItem(product, _))
             }
             scanner.startScanner().onComplete {
                 case Success(Some(code)) =>
