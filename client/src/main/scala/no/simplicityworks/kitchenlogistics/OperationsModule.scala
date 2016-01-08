@@ -229,11 +229,11 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             })
         }
 
-        def changeItemSummaries(items: List[ItemSummary]) {
+        def changeItemSummaries(title: String, items: List[ItemSummary]) {
             ItemAdapter.itemSummaries = items
             futureOnUiThread {
                 ItemAdapter.notifyDataSetChanged()
-                guiContext.setTitle(toString)
+                guiContext.setTitle(title)
             }
         }
 
@@ -244,7 +244,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                 selectedItemGroup = itemGroup
                 updateMenu()
                 storage.findItemsByGroup(selectedItemGroup).map(_.toList) onComplete {
-                    case Success(items) => changeItemSummaries(items)
+                    case Success(items) => changeItemSummaries(toString, items)
                     case Failure(e) => handleFailure(e)
                 }
             }
@@ -348,7 +348,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
         override def searchItems() {
             dialogs.withField(R.string.searchTitle, (search, _) => {
                 storage.searchItems(search).map(_.toList).onComplete {
-                    case Success(items) => changeItemSummaries(items)
+                    case Success(items) => changeItemSummaries(R.string.searchTitle.r2String, items)
                     case Failure(e) => handleFailure(e)
                 }
             })
