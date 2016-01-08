@@ -50,8 +50,8 @@ trait GoogleTokenVerifierPlanImplModule extends GoogleTokenVerifierPlanModule {
 
         override def verify(token: String): Option[TokenInfo] = {
             val a = Try(HttpConnection("https://www.googleapis.com").get(s"/oauth2/v1/tokeninfo?access_token=$token"))
-            println(s"Access token $token")
-            println(s"Token found: $a")
+//            println(s"Access token $token")
+//            println(s"Token found: $a")
             a match {
                 case Success(result) =>
                     Some(read[TokenInfo](result))
@@ -64,7 +64,7 @@ trait GoogleTokenVerifierPlanImplModule extends GoogleTokenVerifierPlanModule {
 
         override def getUserInfo(token: String): Option[UserInfo] = {
             val a = Try(HttpConnection(s"https://www.googleapis.com").get(s"/oauth2/v1/userinfo?access_token=$token"))
-            println(s"UserInfo found: $a")
+//            println(s"UserInfo found: $a")
             a match {
                 case Success(result) =>
                     Some(read[UserInfo](result))
