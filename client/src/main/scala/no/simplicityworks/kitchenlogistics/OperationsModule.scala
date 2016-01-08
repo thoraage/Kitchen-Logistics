@@ -121,7 +121,12 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                         case Success(Nil) =>
                             dialogs.withMessage(R.string.notFoundTitle, R.string.itemWithCodeNotFoundMessage)
                         case Success(item :: Nil) =>
-                            storage.removeItem(item.lastItemId) onFailure PartialFunction(handleFailure)
+                            storage.removeItem(item.lastItemId) onComplete {
+                                case Success(_) =>
+                                    reloadItemList()
+                                    WidgetHelpers.toast(R.string.removedItem)
+                                case Failure(e) => handleFailure(e)
+                            }
                         case Success(items) =>
                             handleFailure(new NotImplementedError(""))
                         case Failure(t) =>
