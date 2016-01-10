@@ -82,7 +82,7 @@ case class HttpConnection(baseUrl: String, authenticator: Authenticator = NoAuth
         }.get
     }
 
-    protected def readString(stream: InputStream, encoding: String) = Source.fromInputStream(stream).mkString
+    protected def readString(stream: InputStream, encoding: String) = Source.fromInputStream(stream, encoding).mkString
 
 }
 
@@ -98,7 +98,7 @@ object HttpStatus {
 }
 
 object ContentType {
-    lazy val json = ContentType("application/json")
+    lazy val json = ContentType("application/json;charset=UTF-8")
 }
 
 case class ContentType(contentType: String)
