@@ -7,6 +7,7 @@ import org.scalatest._
 import scala.util.Random
 
 class RestPlanSpec extends FeatureSpec with SpecBase with GivenWhenThen {
+
     override lazy val app = new RestPlanModule
         with InMemoryDatabaseModule
         with BasicAuthenticationPlanModule
@@ -48,9 +49,10 @@ class RestPlanSpec extends FeatureSpec with SpecBase with GivenWhenThen {
     feature("Item group create") {
         scenario("Ok") {
             val initialCount = allGroups.size
-            val itemGroup = await(client.storage.saveItemGroup(client.ItemGroup(None, None, "Mine", new Date)))
+            val itemGroup = await(client.storage.saveItemGroup(client.ItemGroup(None, None, "Måse", new Date)))
             assert(itemGroup.id !== None)
             assert(allGroups.seq.size === initialCount + 1)
+            assert(allGroups.seq.find(_.id == itemGroup.id).get.name === "Måse")
         }
     }
 

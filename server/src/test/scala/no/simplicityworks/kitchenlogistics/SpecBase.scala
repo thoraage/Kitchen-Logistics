@@ -9,7 +9,7 @@ import scala.concurrent.duration.Duration._
 import scala.concurrent.{Await, Future}
 import scala.slick.driver.JdbcDriver.simple._
 import scala.slick.jdbc.StaticQuery
-import scala.util.{Try, Properties}
+import scala.util.Properties
 
 trait SpecBase extends BeforeAndAfterAll { this: Suite =>
     def await[T](future: Future[T]): T = Await.result(future, Inf)
