@@ -32,8 +32,6 @@ trait Operations {
 
     def scanRemoveItem()
 
-    def populateDrawerMenu(): Future[Unit]
-
     def createNewItemGroup()
 
     def renameItemGroupName()
@@ -43,16 +41,17 @@ trait Operations {
     def searchItems()
 }
 
-trait OperationsImplModule extends OperationsModule with ScannerModule with StorageModule with GuiContextModule with DialogsModule {
+trait OperationsImplModule extends OperationsModule with ScannerModule with StorageModule with GuiContextModule with DialogsModule with StableValuesModule {
 
     override lazy val operations = new Operations {
 
-        var selectedItemGroup: Option[ItemGroup] = None
         var itemGroupDrawerMenuChoices: List[ItemGroupDrawerMenuChoice] = Nil
-        lazy val leftDrawer = guiContext.findView(TR.left_drawer)
         var menu: Option[Menu] = None
 
+        val leftDrawer = guiContext.findView(TR.left_drawer)
+
         override def initiate() {
+            menu = None
             val view = guiContext.findView(TR.recycler_view)
             view.setHasFixedSize(true)
             view.setLayoutManager(new LinearLayoutManager(guiContext))
@@ -62,6 +61,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                 guiContext.findView(TR.drawer_layout).closeDrawer(guiContext.findView(TR.left_drawer))
                 choice.onSelect()
             }
+            populateDrawerMenu()
         }
 
         override def scanNewItem() {
@@ -73,7 +73,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                 }
             }
             def createItem(product: Product) {
-                selectedItemGroup match {
+                stableValues.selectedItemGroup match {
                     case Some(ItemGroup(Some(itemGroupId), _, _, _)) =>
                         saveItem(product, itemGroupId)
                         WidgetHelpers.toast(R.string.itemNewCreated)
@@ -147,7 +147,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
 
         val allItems = new ItemGroupDrawerMenuChoice(None)
 
-        override def populateDrawerMenu(): Future[Unit] = {
+        def populateDrawerMenu(): Future[Unit] = {
             val future = storage.getItemGroups.map(_.toList).flatMap { itemGroups =>
                 futureOnUiThread {
                     itemGroupDrawerMenuChoices = itemGroups.map(itemGroup => new ItemGroupDrawerMenuChoice(Some(itemGroup)))
@@ -192,7 +192,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                 if (name.trim.length == 0) {
                     feedback(R.string.fieldRequired.r2String)
                 } else {
-                    selectedItemGroup.foreach { itemGroup =>
+                    stableValues.selectedItemGroup.foreach { itemGroup =>
                         storage.saveItemGroup(itemGroup.copy(name = name)) onComplete {
                             case Success(_) =>
                                 populateDrawerMenu() onComplete {
@@ -212,7 +212,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
 
         override def removeItemGroupName() {
             dialogs.confirm(R.string.confirmRemoveItemGroupNameTitle, {
-                selectedItemGroup.flatMap(_.id).foreach { itemGroupId =>
+                stableValues.selectedItemGroup.flatMap(_.id).foreach { itemGroupId =>
                     storage.removeItemGroup(itemGroupId) onComplete {
                         case Success(_) =>
                             populateDrawerMenu() onComplete {
@@ -241,9 +241,9 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             override def toString = itemGroup.map(_.name).getOrElse(R.string.drawerMenuAll.r2String)
 
             override def onSelect() {
-                selectedItemGroup = itemGroup
+                stableValues.selectedItemGroup = itemGroup
                 updateMenu()
-                storage.findItemsByGroup(selectedItemGroup).map(_.toList) onComplete {
+                storage.findItemsByGroup(stableValues.selectedItemGroup).map(_.toList) onComplete {
                     case Success(items) => changeItemSummaries(toString, items)
                     case Failure(e) => handleFailure(e)
                 }
@@ -254,7 +254,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             for {
                 menu <- menu.toSeq
                 item <- Seq(R.id.action_bar_rename_item_group, R.id.action_bar_remove_item_group)
-            } menu.findItem(item).setVisible(selectedItemGroup.nonEmpty)
+            } menu.findItem(item).setVisible(stableValues.selectedItemGroup.nonEmpty)
         }
 
         def handleFailure(throwable: Throwable) {
@@ -266,7 +266,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             val inflater = LayoutInflater.from(guiContext)
             var itemSummaries: List[ItemSummary] = Nil
 
-            new ItemGroupDrawerMenuChoice(None).onSelect()
+            new ItemGroupDrawerMenuChoice(stableValues.selectedItemGroup).onSelect()
 
             override def getItemCount: Int = itemSummaries.size
 
@@ -325,7 +325,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
         class ItemViewHolder(val view: View) extends RecyclerView.ViewHolder(view)
 
         def reloadItemList() {
-            new ItemGroupDrawerMenuChoice(selectedItemGroup).onSelect()
+            new ItemGroupDrawerMenuChoice(stableValues.selectedItemGroup).onSelect()
         }
 
         def selectItemGroupExplicitly(cancelMessageId: CharSequence, doWithItemGroup: (ItemGroup) => Unit) {

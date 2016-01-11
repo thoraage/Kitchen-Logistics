@@ -24,28 +24,25 @@ trait ActivityIntentBrokerService {
 
 }
 
-trait SimpleSynchronizedActivityIntentBrokerModule extends ActivityIntentBrokerModule {
+trait SimpleSynchronizedActivityIntentBrokerModule extends ActivityIntentBrokerModule with StableValuesModule {
 
     override lazy val activityIntentBroker = new ActivityIntentBrokerService {
-        // TODO Unanswered old promises should be purged
-        private val activityResultPromises = mutable.Map[Int, Promise[(Int, Intent)]]()
-        private val counter = new AtomicInteger(4711)
 
         override def getResponseOn(intentSender: (Int) => Unit): Future[(Int, Intent)] = {
-            val requestCode = counter.incrementAndGet()
+            val requestCode = stableValues.intentRequestIdCounter.incrementAndGet()
             val promise = Promise[(Int, Intent)]()
-            activityResultPromises.synchronized {
-                activityResultPromises.put(requestCode, promise)
+            stableValues.activityResultPromises.synchronized {
+                stableValues.activityResultPromises.put(requestCode, promise)
             }
             intentSender(requestCode)
             promise.future
         }
 
         override def addActivityResult(requestCode: Int, resultCode: Int, intent: Intent) {
-            activityResultPromises.synchronized {
-                activityResultPromises.get(requestCode).foreach { promise =>
+            stableValues.activityResultPromises.synchronized {
+                stableValues.activityResultPromises.get(requestCode).foreach { promise =>
                     Log.i(logContext, s"Found promise which is currently: isCompleted = ${promise.isCompleted}")
-                    activityResultPromises.remove(requestCode)
+                    stableValues.activityResultPromises.remove(requestCode)
                     promise.complete(Success((resultCode, intent)))
                 }
             }

@@ -21,8 +21,8 @@ class MainActivity extends SActivity with TypedFindView {
             override def guiContext = MainActivity.this
 
             override def storageConfiguration = new StorageConfiguration {
-                private val ipAddress = "192.168.0.193"
-                override lazy val hostAddress = "http://" + ipAddress + ":8080"
+                override lazy val hostAddress = "https://kitlog.herokuapp.com"
+                    //"http://192.168.0.193:8080"
                 override lazy val authenticator = new Authenticator {
                     override def headers(wwwAuthenticate: Option[String]) = authentication.headers(wwwAuthenticate)
                 }
@@ -65,7 +65,6 @@ class MainActivity extends SActivity with TypedFindView {
         requestWindowFeature(Window.FEATURE_ACTION_BAR)
         setContentView(R.layout.main)
         app.operations.initiate()
-        app.operations.populateDrawerMenu()
     }
 
     override def onCreateOptionsMenu(menu: Menu): Boolean = {
