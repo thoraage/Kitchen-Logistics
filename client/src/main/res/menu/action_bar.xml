@@ -1,10 +1,10 @@
 <menu xmlns:a="http://schemas.android.com/apk/res/android">
     <item a:id="@+id/action_bar_scan_new"
-          a:icon="@drawable/ic_action_new"
+          a:icon="@drawable/scan_plus"
           a:title="@string/actionBarNewAlt"
           a:showAsAction="always"/>
     <item a:id="@+id/action_bar_scan_remove"
-          a:icon="@drawable/ic_action_discard"
+          a:icon="@drawable/scan_minus"
           a:title="@string/actionBarRemoveAlt"
           a:showAsAction="always"/>
     <item a:icon="@drawable/ic_action_overflow"
