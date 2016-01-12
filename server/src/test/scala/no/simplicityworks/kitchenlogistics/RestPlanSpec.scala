@@ -197,7 +197,6 @@ class RestPlanSpec extends FeatureSpec with SpecBase with GivenWhenThen {
             assert(newProductId !== myProduct.id.get)
             val newProduct = await(client.storage.getProduct(newProductId))
             assert(newProduct.name === "NewName")
-            println(s"myProduct: $myProduct, newProduct: $newProduct")
 
             await(client.storage.saveProduct(newProduct.copy(name = "MyName")))
 
