@@ -92,7 +92,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                             createItem(product)
                         case Success(Stream.Empty) =>
                             runOnUiThread(
-                                dialogs.withField(R.string.productNameTitle, (name, feedback) => {
+                                dialogs.withField(R.string.productNameTitle, "", (name, feedback) => {
                                     if (name.trim.length == 0) {
                                         feedback(R.string.fieldRequired.r2String)
                                     } else {
@@ -120,12 +120,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                         case Success(Nil) =>
                             dialogs.withMessage(R.string.notFoundTitle, R.string.itemWithCodeNotFoundMessage)
                         case Success(item :: Nil) =>
-                            storage.removeItem(item.lastItemId) onComplete {
-                                case Success(_) =>
-                                    reloadItemList()
-                                    WidgetHelpers.toast(R.string.removedItem)
-                                case Failure(e) => handleFailure(e)
-                            }
+                            removeItem(item.lastItemId)
                         case Success(items) =>
                             handleFailure(new NotImplementedError(""))
                         case Failure(t) =>
@@ -169,7 +164,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
         }
 
         override def createNewItemGroup() {
-            dialogs.withField(R.string.createItemGroupNameTitle, (name, feedback) => {
+            dialogs.withField(R.string.createItemGroupNameTitle, "", (name, feedback) => {
                 if (name.trim.length == 0) {
                     feedback(R.string.fieldRequired.r2String)
                 } else {
@@ -188,7 +183,8 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
         }
 
         override def renameItemGroupName() {
-            dialogs.withField(R.string.renameItemGroupNameTitle, (name, feedback) => {
+            val name = stableValues.selectedItemGroup.map(_.name).getOrElse("")
+            dialogs.withField(R.string.renameItemGroupNameTitle, name, (name, feedback) => {
                 if (name.trim.length == 0) {
                     feedback(R.string.fieldRequired.r2String)
                 } else {
@@ -284,13 +280,11 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                     popup.setOnMenuItemClickListener(new OnMenuItemClickListener {
                         override def onMenuItemClick(item: MenuItem) = {
                             item.getItemId match {
+                                case R.id.item_popup_rename =>
+                                    saveProduct(itemSummary.product)
+                                    true
                                 case R.id.item_popup_remove =>
-                                    storage.removeItem(itemSummary.lastItemId) onComplete {
-                                        case Success(_) =>
-                                            reloadItemList()
-                                            WidgetHelpers.toast(R.string.removedItem)
-                                        case Failure(f) => handleFailure(f)
-                                    }
+                                    removeItem(itemSummary.lastItemId)
                                     true
                                 case R.id.item_popup_move =>
                                     selectItemGroupExplicitly(R.string.itemMoveCancelled, { itemGroup =>
@@ -314,6 +308,30 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             override def onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ItemViewHolder = {
                 val view = inflater.inflate(R.layout.item_list_item, viewGroup, false)
                 new ItemViewHolder(view)
+            }
+        }
+
+        def saveProduct(product: Product) {
+            dialogs.withField(R.string.productRenameTitle, product.name, (name, feedback) => {
+                if (name.trim.length == 0) {
+                    feedback(R.string.fieldRequired.r2String)
+                } else {
+                    storage.saveProduct(product.copy(name = name)) onComplete {
+                        case Success(items) =>
+                            WidgetHelpers.toast(R.string.itemProductRenamed.r2String)
+                            reloadItemList()
+                        case Failure(e) => handleFailure(e)
+                    }
+                }
+            })
+        }
+
+        def removeItem(itemId: Int): Unit = {
+            storage.removeItem(itemId) onComplete {
+                case Success(_) =>
+                    reloadItemList()
+                    WidgetHelpers.toast(R.string.removedItem)
+                case Failure(f) => handleFailure(f)
             }
         }
 
@@ -346,7 +364,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
         }
 
         override def searchItems() {
-            dialogs.withField(R.string.searchTitle, (search, _) => {
+            dialogs.withField(R.string.searchTitle, "", (search, _) => {
                 storage.searchItems(search).map(_.toList).onComplete {
                     case Success(items) => changeItemSummaries(R.string.searchTitle.r2String, items)
                     case Failure(e) => handleFailure(e)

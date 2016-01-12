@@ -53,8 +53,11 @@
     <string name="fieldRequired">Non-empty input required</string>
 
     <string name="itemListCountItem">Count %d</string>
+    <string name="itemPopupRename">Rename product</string>
     <string name="itemPopupMove">Move to group...</string>
     <string name="itemPopupRemove">Remove</string>
+    <string name="productRenameTitle">Rename product</string>
+    <string name="itemProductRenamed">Product renamed</string>
     <string name="itemMoveCancelled">Item move cancelled</string>
     <string name="itemMovedToItemGroup">One item {0} moved to item group {1}</string>
 

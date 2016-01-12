@@ -40,8 +40,8 @@ trait DialogsModule extends GuiContextModule {
             }
         }
 
-        def withField(titleId: Int, validate: (String, String => Unit) => Unit) {
-            def show(text: String = "", feedback: String = "") {
+        def withField(titleId: Int, text: String, validate: (String, String => Unit) => Unit) {
+            def show(text: String, feedback: String = "") {
                 val builder = new Builder(guiContext)
                 builder.setTitle(titleId)
                 builder.setNegativeButton(R.string.inputDialogCancel, new OnClickListener {
@@ -62,7 +62,7 @@ trait DialogsModule extends GuiContextModule {
                 })
                 builder.show()
             }
-            show()
+            show(text)
         }
 
     }

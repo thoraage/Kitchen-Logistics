@@ -9,7 +9,7 @@ trait MockDialogScannerModule extends ScannerModule with GuiContextModule with D
 
         override def startScanner() = {
             val promise = Promise[Option[String]]()
-            dialogs.withField(R.string.mockScanTitle, (code, _) => promise.complete(Success(Some(code))))
+            dialogs.withField(R.string.mockScanTitle, "", (code, _) => promise.complete(Success(Some(code))))
             promise.future
         }
 

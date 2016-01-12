@@ -21,8 +21,9 @@ class MainActivity extends SActivity with TypedFindView {
             override def guiContext = MainActivity.this
 
             override def storageConfiguration = new StorageConfiguration {
-                override lazy val hostAddress = "https://kitlog.herokuapp.com"
-                    //"http://192.168.0.193:8080"
+                override lazy val hostAddress =
+//                    "https://kitlog.herokuapp.com"
+                    "http://192.168.0.193:8080"
                 override lazy val authenticator = new Authenticator {
                     override def headers(wwwAuthenticate: Option[String]) = authentication.headers(wwwAuthenticate)
                 }

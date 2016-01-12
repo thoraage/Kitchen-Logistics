@@ -1,4 +1,6 @@
 <menu xmlns:a="http://schemas.android.com/apk/res/android">
+    <item a:id="@+id/item_popup_rename"
+          a:title="@string/itemPopupRename"/>
     <item a:id="@+id/item_popup_move"
           a:title="@string/itemPopupMove"/>
     <item a:id="@+id/item_popup_remove"
