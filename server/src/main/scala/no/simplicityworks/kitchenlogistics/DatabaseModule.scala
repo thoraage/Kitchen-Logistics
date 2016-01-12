@@ -20,6 +20,9 @@ trait DatabaseModule extends DatabaseProfileModule {
     object Products {
         val query = TableQuery[Products]
 
+        def essentiallySameQuery(product: Product) =
+            query.filter(p => p.id =!= product.id && p.code === product.code && p.name === product.name)
+
         def findByCode(code: String) =
             database withSession { implicit session: Session =>
                 query.filter(_.code === code).list

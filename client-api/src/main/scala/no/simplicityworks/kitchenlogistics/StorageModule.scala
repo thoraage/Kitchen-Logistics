@@ -11,6 +11,8 @@ trait StorageModule {
     trait Storage {
         def getItem(itemId: Int): Future[Item]
 
+        def getProduct(productId: Int): Future[Product]
+
         def removeItemGroup(itemGroupId: Int): Future[Unit]
 
         def removeItem(itemId: Int): Future[Unit]

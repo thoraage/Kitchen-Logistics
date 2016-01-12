@@ -40,7 +40,10 @@ trait KitLogRestStorageModule extends StorageModule with StorageConfigurationMod
         }
 
         override def saveProduct(product: Product): Future[Product] = Future {
-            product.copy(id = put(s"/rest/products", product))
+            product.id.map { id =>
+                put(s"/rest/products/$id", product)
+                product
+            }.getOrElse(product.copy(id = put(s"/rest/products", product)))
         }
 
         def put[T](path: String, obj: T)(implicit code: CodecJson[T]): Option[Int] = {
@@ -92,6 +95,10 @@ trait KitLogRestStorageModule extends StorageModule with StorageConfigurationMod
 
         override def getItem(itemId: Int): Future[Item] = {
             Future(Parse.decodeOption[Item](get(s"/rest/items/$itemId")).getOrElse(sys.error("Unexpected Item representation received")))
+        }
+
+        override def getProduct(productId: Int): Future[Product] = {
+            Future(Parse.decodeOption[Product](get(s"/rest/products/$productId")).getOrElse(sys.error("Unexpected Item representation received")))
         }
     }
 

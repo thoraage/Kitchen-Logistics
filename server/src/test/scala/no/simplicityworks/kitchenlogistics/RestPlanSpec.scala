@@ -23,13 +23,15 @@ class RestPlanSpec extends FeatureSpec with SpecBase with GivenWhenThen {
     def itemsOf(itemGroup: client.ItemGroup) =
         await(client.storage.findItemsByGroup(Some(itemGroup)))
 
-    def assertForbidden(f: => Any) {
+    def assertForbidden(f: => Any) = assertStatus(403, f)
+
+    def assertStatus(httpStatus: Int, f: => Any): Unit = {
         try {
             val result = f
             fail(s"Received: $result")
         } catch {
             case StatusCodeException(_, status, _) =>
-                assert(status === 403)
+                assert(status === httpStatus)
         }
     }
 
@@ -171,4 +173,37 @@ class RestPlanSpec extends FeatureSpec with SpecBase with GivenWhenThen {
         }
     }
 
+    feature("Product rename") {
+        lazy val itemGroup = createItemGroup
+        def createCode = s"mycode${Random.nextInt()}"
+        def createProduct = await(client.storage.saveProduct(client.Product(None, createCode, "MyName")))
+        scenario("Soul owner changes the product") {
+            val myProduct = createProduct
+            val item = await(client.storage.saveItem(client.Item(None, None, myProduct.id.get, itemGroup.id.get)))
+            await(client.storage.saveProduct(myProduct.copy(name = "NewName")))
+            assert(await(client.storage.findProductByCode(myProduct.code)).map(_.name) === List("NewName"))
+        }
+        scenario("Multiple owners leads to new product and deletes it if the name changes back") {
+            val myProduct = createProduct
+            val item = await(client.storage.saveItem(client.Item(None, None, myProduct.id.get, itemGroup.id.get)))
+            val otherUserItemGroup = await(otherClient.storage.saveItemGroup(otherClient.ItemGroup(None, None, "Yeah")))
+            val otherUserItem = await(otherClient.storage.saveItem(otherClient.Item(None, None, myProduct.id.get, otherUserItemGroup.id.get)))
+
+            await(client.storage.saveProduct(myProduct.copy(name = "NewName")))
+
+            assert(await(client.storage.getProduct(myProduct.id.get)).name === "MyName")
+            assert(await(otherClient.storage.getItem(otherUserItem.id.get)).productId === myProduct.id.get)
+            val newProductId = await(client.storage.getItem(item.id.get)).productId
+            assert(newProductId !== myProduct.id.get)
+            val newProduct = await(client.storage.getProduct(newProductId))
+            assert(newProduct.name === "NewName")
+            println(s"myProduct: $myProduct, newProduct: $newProduct")
+
+            await(client.storage.saveProduct(newProduct.copy(name = "MyName")))
+
+            val newerProductId = await(client.storage.getItem(item.id.get)).productId
+            assert(newerProductId === myProduct.id.get)
+            assertStatus(404, await(client.storage.getProduct(newProductId)))
+        }
+    }
 }

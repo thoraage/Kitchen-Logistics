@@ -1,5 +1,7 @@
 package no.simplicityworks.kitchenlogistics
 
+import java.util.Date
+
 import org.json4s.NoTypeHints
 import org.json4s.jackson.Serialization
 import org.json4s.jackson.Serialization.{read, write}
@@ -56,11 +58,49 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule with Sessi
                 }
             }
 
+            case Path(Seg("rest" :: "products" :: IntString(productId) :: Nil)) & AuthenticatedUser(user) => {
+                for {_ <- PUT; r <- request[Any]} yield {
+                    database withSession { implicit session =>
+                        val product = read[Product](Body string r)
+                        if (Items.query.filter(i => i.productId === productId && i.userId =!= user.id.get).length.run == 0) {
+                            val sameProduct = Products.essentiallySameQuery(product).list
+                            println(s"product: $product, sameProduct: $sameProduct")
+                            if (sameProduct.isEmpty) {
+                                Products.query.filter(_.id === productId).update(product)
+                            } else {
+                                val first :: rest = (product :: sameProduct).sortBy(_.created)
+                                println(s"first: $first, rest: $rest")
+                                val restIds = rest.flatMap(_.id)
+                                Items.query.filter(_.productId inSet restIds).map(_.productId).update(first.id.get)
+                                if (first.id == product.id) Products.query.filter(_.id === product.id).update(product)
+                                Products.query.filter(_.id inSet restIds).delete
+                            }
+                        } else {
+                            Products.query.list.foreach(println)
+                            val newProductId = Products.insert(product.copy(id = None, created = new Date))
+                            Items.query.filter(i => i.productId === productId && i.userId === user.id.get).map(_.productId).update(newProductId)
+                        }
+                    }
+                    Ok ~> NoContent
+                }
+            } orElse {
+                for {_ <- GET} yield {
+                    database withSession { implicit session: Session =>
+                        Products.query.filter(_.id === productId).list.headOption match {
+                            case Some(product) =>
+                                Ok ~> ResponseString(write(product))
+                            case None =>
+                                NotFound
+                        }
+                    }
+                }
+            }
+
             case Path(Seg("rest" :: "items" :: Nil)) & AuthenticatedUser(user) => {
                 for {
                     _ <- GET; _ <- Accepts.Json; r <- request[Any]
                     itemGroups <- parameterValues("itemGroup")
-                    codes <- parameterValues("code");
+                    codes <- parameterValues("code")
                     filters <- parameterValues("filter")
                 } yield {
                     val items = (database withSession { implicit session: Session =>
@@ -94,7 +134,7 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule with Sessi
             } orElse {
                 database withSession { implicit session: Session =>
                     for {_ <- GET} yield {
-                        TableQuery[Items].filter(_.id === itemId).list.headOption match {
+                        Items.query.filter(_.id === itemId).list.headOption match {
                             case Some(item) =>
                                 Ok ~> ResponseString(write(item))
                             case None =>
