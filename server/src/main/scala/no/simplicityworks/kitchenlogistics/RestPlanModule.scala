@@ -108,7 +108,7 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule with Sessi
                                 product.name.toLowerCase.like(s"%${filter.toLowerCase}%"))
                         } yield (product, item))
                             .groupBy(p => p._1)
-                            .map { case (product, pair) => (product, pair.length, pair.map(_._2.id).max)}.list
+                            .map { case (product, pair) => (product, pair.length, pair.map(_._2.id).max)}.sortBy(_._1.name).list
                     }).map(p => ItemSummary(p._2, p._1, p._3.get))
                     Ok ~> ResponseString(write(items))
                 }

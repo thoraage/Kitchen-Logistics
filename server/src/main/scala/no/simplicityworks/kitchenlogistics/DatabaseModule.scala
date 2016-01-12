@@ -58,7 +58,7 @@ trait DatabaseModule extends DatabaseProfileModule {
         }
 
         def getForUser(user: User) = database withSession { implicit s =>
-            query.filter(_.userId === user.id).list
+            query.filter(_.userId === user.id).sortBy(_.name).list
         }
 
         def insert(itemGroup: ItemGroup): Int = database withSession { implicit s =>
