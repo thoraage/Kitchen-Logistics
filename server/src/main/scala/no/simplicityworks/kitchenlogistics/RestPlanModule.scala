@@ -61,7 +61,7 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule with Sessi
             case Path(Seg("rest" :: "products" :: IntString(productId) :: Nil)) & AuthenticatedUser(user) => {
                 for {_ <- PUT; r <- request[Any]} yield {
                     database withSession { implicit session =>
-                        val product = read[Product](Body string r)
+                        val product = read[Product](Body string r).copy(id = Some(productId))
                         if (Items.query.filter(i => i.productId === productId && i.userId =!= user.id.get).length.run == 0) {
                             val sameProduct = Products.essentiallySameQuery(product).list
                             println(s"product: $product, sameProduct: $sameProduct")
