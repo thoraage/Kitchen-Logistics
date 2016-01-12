@@ -53,6 +53,7 @@ trait DialogsModule extends GuiContextModule {
                 val dialogInputField = inputView.findView(TR.dialogInputField)
                 val dialogInputFeedback = inputView.findView(TR.dialogInputFeedback)
                 dialogInputField.setText(text)
+                dialogInputField.setSelection(text.length)
                 dialogInputFeedback.setText(feedback)
                 builder.setPositiveButton(R.string.inputDialogOk, new OnClickListener {
                     override def onClick(d: DialogInterface, which: Int) {
