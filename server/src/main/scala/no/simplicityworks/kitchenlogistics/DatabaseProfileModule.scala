@@ -10,6 +10,7 @@ trait DatabaseProfile {
     val driverClass: String
     val jdbcUrl: String
     val generation: DatabaseGeneration.Type
+    lazy val explainPlan: Boolean = false
 }
 
 object DatabaseGeneration extends Enumeration {

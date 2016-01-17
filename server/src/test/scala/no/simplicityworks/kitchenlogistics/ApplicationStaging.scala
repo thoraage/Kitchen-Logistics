@@ -13,6 +13,7 @@ object ApplicationStaging extends Application {
             override val username: String = "kitlog"
             override val jdbcUrl: String = "jdbc:postgresql://localhost/kitlog"
             override val driverClass: String = "org.postgresql.Driver"
+            override lazy val explainPlan: Boolean = true
         }
 
     }

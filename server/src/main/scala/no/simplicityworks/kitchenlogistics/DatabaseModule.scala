@@ -4,7 +4,6 @@ import java.security.MessageDigest
 import java.util.Date
 
 import com.mchange.v2.c3p0.ComboPooledDataSource
-
 import org.flywaydb.core.Flyway
 
 import scala.slick.driver.JdbcDriver.simple._
@@ -155,6 +154,8 @@ trait DatabaseModule extends DatabaseProfileModule {
         ds.setDriverClass(databaseProfile.driverClass)
         ds.setUser(databaseProfile.username)
         ds.setPassword(databaseProfile.password)
+        if (databaseProfile.explainPlan)
+            ds.setConnectionCustomizerClassName(classOf[ExplainPlanConnectionCustomizer].getName)
         if (databaseProfile.generation == DatabaseGeneration.flyway) {
             val flyway = new Flyway
             flyway.setDataSource(ds)
