@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">KitchenLogistics</string>
+    <string name="app_name">KitLog</string>
     <string name="registerProduct">Register</string>
     <string name="showProduct">Show</string>
     <string name="removeProduct">Remove</string>
