@@ -7,61 +7,50 @@ import android.content.DialogInterface
 import android.support.v7.widget.{LinearLayoutManager, RecyclerView}
 import android.util.Log
 import android.view._
+import android.widget.PopupMenu
 import android.widget.PopupMenu.OnMenuItemClickListener
-import android.widget.{AdapterView, ArrayAdapter, PopupMenu}
 import no.simplicityworks.kitchenlogistics.TypedResource._
 import org.scaloid.common._
 
-import scala.collection.JavaConverters.seqAsJavaListConverter
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Future, Promise}
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Success}
 
-trait OperationsModule {
+trait OperationsModule extends StorageModule {
 
     def operations: Operations
 
+    trait Operations {
+        def initiate()
+
+        def scanNewItem()
+
+        def scanRemoveItem()
+
+        def createNewItemGroup()
+
+        def renameItemGroupName()
+
+        def removeItemGroupName()
+
+        def searchItems()
+
+        def handleFailure(throwable: Throwable)
+
+        def changeItemSummaries(title: String, items: List[ItemSummary])
+    }
+
 }
 
-trait Operations {
-    def setMenu(menu: Menu)
-
-    def initiate()
-
-    def scanNewItem()
-
-    def scanRemoveItem()
-
-    def createNewItemGroup()
-
-    def renameItemGroupName()
-
-    def removeItemGroupName()
-
-    def searchItems()
-}
-
-trait OperationsImplModule extends OperationsModule with ScannerModule with StorageModule with GuiContextModule with DialogsModule with StableValuesModule {
+trait OperationsImplModule extends OperationsModule with ScannerModule with GuiContextModule with DialogsModule with StableValuesModule with DrawerMenuModule {
 
     override lazy val operations = new Operations {
 
-        var itemGroupDrawerMenuChoices: List[ItemGroupDrawerMenuChoice] = Nil
-        var menu: Option[Menu] = None
-
-        val leftDrawer = guiContext.findView(TR.left_drawer)
-
         override def initiate() {
-            menu = None
             val view = guiContext.findView(TR.recycler_view)
             view.setHasFixedSize(true)
             view.setLayoutManager(new LinearLayoutManager(guiContext))
             view.setAdapter(ItemAdapter)
-            leftDrawer.onItemClick { (_: AdapterView[_], _: View, position: Int, _: Long) =>
-                val choice = leftDrawer.getAdapter.getItem(position).asInstanceOf[DrawerMenuChoice]
-                guiContext.findView(TR.drawer_layout).closeDrawer(guiContext.findView(TR.left_drawer))
-                choice.onSelect()
-            }
-            populateDrawerMenu()
+            drawerMenu.initiate()
         }
 
         override def scanNewItem() {
@@ -80,7 +69,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                     case _ =>
                         selectItemGroupExplicitly(R.string.selectItemGroupCancelled, itemGroup => {
                             itemGroup.id.foreach(saveItem(product, _))
-                            changeItemGroup(itemGroup)
+                            drawerMenu.changeItemGroup(itemGroup)
                         })
                 }
             }
@@ -132,37 +121,6 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             }
         }
 
-        def futureOnUiThread[T](f: => T): Future[T] = {
-            val promise = Promise[T]()
-            guiContext.runOnUiThread {
-                promise.complete(Try(f))
-            }
-            promise.future
-        }
-
-        val allItems = new ItemGroupDrawerMenuChoice(None)
-
-        def populateDrawerMenu(): Future[Unit] = {
-            val future = storage.getItemGroups.map(_.toList).flatMap { itemGroups =>
-                futureOnUiThread {
-                    itemGroupDrawerMenuChoices = itemGroups.map(itemGroup => new ItemGroupDrawerMenuChoice(Some(itemGroup)))
-                    val choices = allItems :: itemGroupDrawerMenuChoices
-                    leftDrawer.setAdapter(new ArrayAdapter(guiContext, R.layout.itemgroup_list_itemgroup, choices.asJava))
-                }
-            }
-            future.onFailure { case t: Throwable => handleFailure(t) }
-            future
-        }
-
-        trait DrawerMenuChoice {
-            def onSelect(): Unit
-        }
-
-        def changeItemGroup(itemGroup: ItemGroup): Unit = {
-            val choice = itemGroupDrawerMenuChoices.find(_.itemGroup.exists(_.id == itemGroup.id))
-            choice.foreach(_.onSelect())
-        }
-
         override def createNewItemGroup() {
             dialogs.withField(R.string.createItemGroupNameTitle, "", (name, feedback) => {
                 if (name.trim.length == 0) {
@@ -170,11 +128,8 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                 } else {
                     storage.saveItemGroup(ItemGroup(None, None, name, new Date)) onComplete {
                         case Success(itemGroup) =>
-                            populateDrawerMenu() onSuccess {
-                                case _ =>
-                                    changeItemGroup(itemGroup)
-                                    WidgetHelpers.toast(R.string.createdItemGroup)
-                            }
+                            drawerMenu.populateDrawerMenu(Some(itemGroup))
+                            WidgetHelpers.toast(R.string.createdItemGroup)
                         case Failure(t) =>
                             handleFailure(t)
                     }
@@ -191,13 +146,8 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                     stableValues.selectedItemGroup.foreach { itemGroup =>
                         storage.saveItemGroup(itemGroup.copy(name = name)) onComplete {
                             case Success(_) =>
-                                populateDrawerMenu() onComplete {
-                                    case Success(_) =>
-                                        changeItemGroup(itemGroup)
-                                        WidgetHelpers.toast(R.string.renamedItemGroup)
-                                    case Failure(t) =>
-                                        handleFailure(t)
-                                }
+                                drawerMenu.populateDrawerMenu(Some(itemGroup))
+                                WidgetHelpers.toast(R.string.renamedItemGroup)
                             case Failure(t) =>
                                 handleFailure(t)
                         }
@@ -211,13 +161,8 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                 stableValues.selectedItemGroup.flatMap(_.id).foreach { itemGroupId =>
                     storage.removeItemGroup(itemGroupId) onComplete {
                         case Success(_) =>
-                            populateDrawerMenu() onComplete {
-                                case Success(_) =>
-                                    allItems.onSelect()
-                                    WidgetHelpers.toast(R.string.removedItemGroup)
-                                case Failure(t) =>
-                                    handleFailure(t)
-                            }
+                            drawerMenu.populateDrawerMenu(None)
+                            WidgetHelpers.toast(R.string.removedItemGroup)
                         case Failure(e) =>
                             handleFailure(e)
                     }
@@ -225,35 +170,15 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             })
         }
 
-        def changeItemSummaries(title: String, items: List[ItemSummary]) {
+        override def changeItemSummaries(title: String, items: List[ItemSummary]) {
             ItemAdapter.itemSummaries = items
-            futureOnUiThread {
+            guiContext.futureOnUiThread {
                 ItemAdapter.notifyDataSetChanged()
                 guiContext.setTitle(title)
             }
         }
 
-        class ItemGroupDrawerMenuChoice(val itemGroup: Option[ItemGroup]) extends DrawerMenuChoice {
-            override def toString = itemGroup.map(_.name).getOrElse(R.string.drawerMenuAll.r2String)
-
-            override def onSelect() {
-                stableValues.selectedItemGroup = itemGroup
-                updateMenu()
-                storage.findItemsByGroup(stableValues.selectedItemGroup).map(_.toList) onComplete {
-                    case Success(items) => changeItemSummaries(toString, items)
-                    case Failure(e) => handleFailure(e)
-                }
-            }
-        }
-
-        def updateMenu() {
-            for {
-                menu <- menu.toSeq
-                item <- Seq(R.id.action_bar_rename_item_group, R.id.action_bar_remove_item_group)
-            } menu.findItem(item).setVisible(stableValues.selectedItemGroup.nonEmpty)
-        }
-
-        def handleFailure(throwable: Throwable) {
+        override def handleFailure(throwable: Throwable) {
             Log.e(getClass.getSimpleName, "GUI error", throwable)
             WidgetHelpers.toast(R.string.errorIntro + throwable.getMessage)
         }
@@ -262,7 +187,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             val inflater = LayoutInflater.from(guiContext)
             var itemSummaries: List[ItemSummary] = Nil
 
-            new ItemGroupDrawerMenuChoice(stableValues.selectedItemGroup).onSelect()
+            reloadItemList()
 
             override def getItemCount: Int = itemSummaries.size
 
@@ -273,42 +198,44 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
                     (TR.item_name, itemSummary.product.name),
                     (TR.item_count, if (count == 1) "" else R.string.itemListCountItem.r2String.format(count))
                 ).foreach(p => vh.view.findView(p._1).setText(p._2))
-                vh.view.onLongClick {
-                    val popup = new PopupMenu(guiContext, vh.view)
-                    val inflater = popup.getMenuInflater
-                    inflater.inflate(R.menu.item_popup, popup.getMenu)
-                    popup.setOnMenuItemClickListener(new OnMenuItemClickListener {
-                        override def onMenuItemClick(item: MenuItem) = {
-                            item.getItemId match {
-                                case R.id.item_popup_rename =>
-                                    saveProduct(itemSummary.product)
-                                    true
-                                case R.id.item_popup_remove =>
-                                    removeItem(itemSummary.lastItemId)
-                                    true
-                                case R.id.item_popup_move =>
-                                    selectItemGroupExplicitly(R.string.itemMoveCancelled, { itemGroup =>
-                                        storage.getItem(itemSummary.lastItemId).map(_.copy(itemGroupId = itemGroup.id.get)).flatMap(storage.saveItem) onComplete {
-                                            case Success(_) =>
-                                                reloadItemList()
-                                                WidgetHelpers.toast(new MessageFormat(R.string.itemMovedToItemGroup.r2String).format(Array(itemSummary.product.name, itemGroup.name)))
-                                            case Failure(f) => handleFailure(f)
-                                        }
-                                    })
-                                    true
-                                case _ => false
-                            }
-                        }
-                    })
-                    popup.show()
-                    true
-                }
-            }
+                vh.view.onLongClick(popupItemMenu(vh, itemSummary))
+        }
 
             override def onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ItemViewHolder = {
                 val view = inflater.inflate(R.layout.item_list_item, viewGroup, false)
                 new ItemViewHolder(view)
             }
+        }
+
+        def popupItemMenu(vh: ItemViewHolder, itemSummary: ItemSummary): Boolean = {
+            val popup = new PopupMenu(guiContext, vh.view)
+            val inflater = popup.getMenuInflater
+            inflater.inflate(R.menu.item_popup, popup.getMenu)
+            popup.setOnMenuItemClickListener(new OnMenuItemClickListener {
+                override def onMenuItemClick(item: MenuItem) = {
+                    item.getItemId match {
+                        case R.id.item_popup_rename =>
+                            saveProduct(itemSummary.product)
+                            true
+                        case R.id.item_popup_remove =>
+                            removeItem(itemSummary.lastItemId)
+                            true
+                        case R.id.item_popup_move =>
+                            selectItemGroupExplicitly(R.string.itemMoveCancelled, { itemGroup =>
+                                storage.getItem(itemSummary.lastItemId).map(_.copy(itemGroupId = itemGroup.id.get)).flatMap(storage.saveItem) onComplete {
+                                    case Success(_) =>
+                                        reloadItemList()
+                                        WidgetHelpers.toast(new MessageFormat(R.string.itemMovedToItemGroup.r2String).format(Array(itemSummary.product.name, itemGroup.name)))
+                                    case Failure(f) => handleFailure(f)
+                                }
+                            })
+                            true
+                        case _ => false
+                    }
+                }
+            })
+            popup.show()
+            true
         }
 
         def saveProduct(product: Product) {
@@ -335,15 +262,10 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with Stor
             }
         }
 
-        override def setMenu(menu: Menu) {
-            this.menu = Some(menu)
-            updateMenu()
-        }
-
         class ItemViewHolder(val view: View) extends RecyclerView.ViewHolder(view)
 
         def reloadItemList() {
-            new ItemGroupDrawerMenuChoice(stableValues.selectedItemGroup).onSelect()
+            drawerMenu.reloadItemGroupList()
         }
 
         def selectItemGroupExplicitly(cancelMessageId: CharSequence, doWithItemGroup: (ItemGroup) => Unit) {

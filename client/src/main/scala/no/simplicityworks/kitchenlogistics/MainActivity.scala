@@ -5,19 +5,21 @@ import android.os.Bundle
 import android.view.{Menu, MenuItem, Window}
 import org.scaloid.common._
 
-import scala.util.Random
+import scala.concurrent.{Promise, Future}
+import scala.util.{Try, Random}
 
-class MainActivity extends SActivity with TypedFindView {
+class MainActivity extends GuiContext {
 
     val authenticationRequestCode = Random.nextInt()
 
-    var app =
-        new OperationsImplModule
+    var app = new OperationsImplModule
+            with DrawerMenuImplModule
             with KitLogRestStorageModule
             with ZXingScannerModule
             with DialogsModule
             with SelectingAuthenticationModule
             with SimpleSynchronizedActivityIntentBrokerModule {
+
             override def guiContext = MainActivity.this
 
             override def storageConfiguration = new StorageConfiguration {
@@ -33,6 +35,15 @@ class MainActivity extends SActivity with TypedFindView {
     override def onActivityResult(requestCode: Int, resultCode: Int, data: Intent): Unit = {
         app.activityIntentBroker.addActivityResult(requestCode, resultCode, data)
     }
+
+    override def futureOnUiThread[T](f: => T): Future[T] = {
+        val promise = Promise[T]()
+        runOnUiThread {
+            promise.complete(Try(f))
+        }
+        promise.future
+    }
+
 
     lazy val logContext = getClass.getSimpleName
 
@@ -71,7 +82,7 @@ class MainActivity extends SActivity with TypedFindView {
     override def onCreateOptionsMenu(menu: Menu): Boolean = {
         val inflater = getMenuInflater
         inflater.inflate(R.menu.action_bar, menu)
-        app.operations.setMenu(menu)
+        app.drawerMenu.setMenu(menu)
         super.onCreateOptionsMenu(menu)
     }
 
