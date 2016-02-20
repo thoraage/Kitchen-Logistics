@@ -6,7 +6,7 @@
 
     <string name="mockScanTitle">Mock Scan Code - Enter Code</string>
 
-    <string name="productNameTitle">Unknown Product - Please enter name</string>
+    <string name="productNameTitle">Unknown code {0} - Please enter product</string>
     <string name="productNewCreated">New product created</string>
 
     <string name="createItemGroupNameTitle">Create New Item Group</string>
@@ -54,7 +54,7 @@
 
     <string name="itemListCountItem">Count %d</string>
     <string name="itemPopupRename">Rename product</string>
-    <string name="itemPopupMove">Move to group...</string>
+    <string name="itemPopupMove">Move to group…</string>
     <string name="itemPopupRemove">Remove</string>
     <string name="productRenameTitle">Rename product</string>
     <string name="itemProductRenamed">Product renamed</string>

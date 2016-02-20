@@ -40,10 +40,10 @@ trait DialogsModule extends GuiContextModule {
             }
         }
 
-        def withField(titleId: Int, text: String, validate: (String, String => Unit) => Unit) {
+        def withField(title: String, text: String, validate: (String, String => Unit) => Unit) {
             def show(text: String, feedback: String = "") {
                 val builder = new Builder(guiContext)
-                builder.setTitle(titleId)
+                builder.setTitle(title)
                 builder.setNegativeButton(R.string.inputDialogCancel, new OnClickListener {
                     override def onClick(dialog: DialogInterface, which: Int): Unit = dialog.cancel()
                 })

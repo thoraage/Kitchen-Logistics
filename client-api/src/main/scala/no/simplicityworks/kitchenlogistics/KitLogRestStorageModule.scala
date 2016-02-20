@@ -27,7 +27,7 @@ trait KitLogRestStorageModule extends StorageModule with StorageConfigurationMod
         implicit def idCodeJson: CodecJson[Id] =
             casecodec1(Id.apply, Id.unapply)("id")
         implicit def productCodecJson: CodecJson[Product] =
-            casecodec4(Product.apply, Product.unapply)("id", "code", "name", "created")
+            casecodec5(Product.apply, Product.unapply)("id", "code", "name", "languageIso639_2", "created")
         implicit def itemSummaryCodecJson: CodecJson[ItemSummary] =
             casecodec3(ItemSummary.apply, ItemSummary.unapply)("count", "product", "lastItemId")
         implicit def itemGroupCodecJson: CodecJson[ItemGroup] =

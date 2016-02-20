@@ -42,7 +42,9 @@ trait DatabaseModule extends DatabaseProfileModule {
 
         def created = column[Date]("created")
 
-        def * = (id.?, code, name, created) <>(Product.tupled, Product.unapply)
+        def languageIso639_2 = column[String]("languageiso6392")
+
+        def * = (id.?, code, name, languageIso639_2, created) <>(Product.tupled, Product.unapply)
     }
 
     object ItemGroups {

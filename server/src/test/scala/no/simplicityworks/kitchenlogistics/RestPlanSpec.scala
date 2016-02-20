@@ -13,7 +13,7 @@ class RestPlanSpec extends FeatureSpec with SpecBase with GivenWhenThen {
         with BasicAuthenticationPlanModule
 
     lazy val product =
-        await(client.storage.saveProduct(client.Product(None, "fdjks", "ting", new Date)))
+        await(client.storage.saveProduct(client.Product(None, "fdjks", "ting", "nob", new Date)))
     def createItemGroup =
         await(client.storage.saveItemGroup(client.ItemGroup(None, None, s"test${Random.nextInt()}", new Date)))
     def createItem(itemGroup: client.ItemGroup) =
@@ -151,7 +151,7 @@ class RestPlanSpec extends FeatureSpec with SpecBase with GivenWhenThen {
         scenario("Ok") {
             val code = s"mycode${Random.nextInt()}"
             assert(0 === await(client.storage.findProductByCode(code)).size)
-            await(client.storage.saveProduct(client.Product(None, code, "MyName", new Date)))
+            await(client.storage.saveProduct(client.Product(None, code, "MyName", "nob", new Date)))
             assert(1 === await(client.storage.findProductByCode(code)).size)
         }
     }
@@ -161,9 +161,9 @@ class RestPlanSpec extends FeatureSpec with SpecBase with GivenWhenThen {
             val summaries = await(client.storage.searchItems("rang"))
             assert(summaries.seq.size === 0)
             val itemGroup = await(client.storage.saveItemGroup(client.ItemGroup(None, None, "Cupboard")))
-            val products = List(await(client.storage.saveProduct(client.Product(None, "gnufdjskfds", "OrAnge"))),
-                await(client.storage.saveProduct(client.Product(None, "jklfds", "Rangpur"))),
-                await(client.storage.saveProduct(client.Product(None, "8493tgtf", "Apple"))))
+            val products = List(await(client.storage.saveProduct(client.Product(None, "gnufdjskfds", "OrAnge", "nob"))),
+                await(client.storage.saveProduct(client.Product(None, "jklfds", "Rangpur", "nob"))),
+                await(client.storage.saveProduct(client.Product(None, "8493tgtf", "Apple", "nob"))))
             products.foreach(p => await(client.storage.saveItem(client.Item(None, None, p.id.get, itemGroup.id.get))))
             val itemGroup2 = await(otherClient.storage.saveItemGroup(otherClient.ItemGroup(None, None, "Cupboard")))
             await(otherClient.storage.saveItem(otherClient.Item(None, None, products(0).id.get, itemGroup2.id.get)))
@@ -176,7 +176,7 @@ class RestPlanSpec extends FeatureSpec with SpecBase with GivenWhenThen {
     feature("Product rename") {
         lazy val itemGroup = createItemGroup
         def createCode = s"mycode${Random.nextInt()}"
-        def createProduct = await(client.storage.saveProduct(client.Product(None, createCode, "MyName")))
+        def createProduct = await(client.storage.saveProduct(client.Product(None, createCode, "MyName", "nob")))
         scenario("Soul owner changes the product") {
             val myProduct = createProduct
             val item = await(client.storage.saveItem(client.Item(None, None, myProduct.id.get, itemGroup.id.get)))

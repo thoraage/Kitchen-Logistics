@@ -1,7 +1,7 @@
 package no.simplicityworks.kitchenlogistics
 
 import java.text.MessageFormat
-import java.util.Date
+import java.util.{Date, Locale}
 
 import android.content.DialogInterface
 import android.support.v7.widget.{LinearLayoutManager, RecyclerView}
@@ -80,12 +80,13 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
                         case Success(product #:: _) =>
                             createItem(product)
                         case Success(Stream.Empty) =>
-                            runOnUiThread(
-                                dialogs.withField(R.string.productNameTitle, "", (name, feedback) => {
+                            runOnUiThread {
+                                val title = new MessageFormat(R.string.productNameTitle.r2String).format(Array(code))
+                                dialogs.withField(title, "", (name, feedback) => {
                                     if (name.trim.length == 0) {
                                         feedback(R.string.fieldRequired.r2String)
                                     } else {
-                                        storage.saveProduct(Product(None, code, name, new Date)) onComplete {
+                                        storage.saveProduct(Product(None, code, name.trim, Locale.getDefault.getISO3Language, new Date)) onComplete {
                                             case Success(product) =>
                                                 createItem(product)
                                                 WidgetHelpers.toast(R.string.productNewCreated)
@@ -93,7 +94,8 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
                                                 handleFailure(t)
                                         }
                                     }
-                                }))
+                                })
+                            }
                         case Failure(t) => handleFailure(t)
                     }
                 case Success(None) =>
@@ -122,7 +124,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
         }
 
         override def createNewItemGroup() {
-            dialogs.withField(R.string.createItemGroupNameTitle, "", (name, feedback) => {
+            dialogs.withField(R.string.createItemGroupNameTitle.r2String, "", (name, feedback) => {
                 if (name.trim.length == 0) {
                     feedback(R.string.fieldRequired.r2String)
                 } else {
@@ -139,7 +141,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
 
         override def renameItemGroupName() {
             val name = stableValues.selectedItemGroup.map(_.name).getOrElse("")
-            dialogs.withField(R.string.renameItemGroupNameTitle, name, (name, feedback) => {
+            dialogs.withField(R.string.renameItemGroupNameTitle.r2String, name, (name, feedback) => {
                 if (name.trim.length == 0) {
                     feedback(R.string.fieldRequired.r2String)
                 } else {
@@ -239,7 +241,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
         }
 
         def saveProduct(product: Product) {
-            dialogs.withField(R.string.productRenameTitle, product.name, (name, feedback) => {
+            dialogs.withField(R.string.productRenameTitle.r2String, product.name, (name, feedback) => {
                 if (name.trim.length == 0) {
                     feedback(R.string.fieldRequired.r2String)
                 } else {
@@ -286,7 +288,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
         }
 
         override def searchItems() {
-            dialogs.withField(R.string.searchTitle, "", (search, _) => {
+            dialogs.withField(R.string.searchTitle.r2String, "", (search, _) => {
                 storage.searchItems(search).map(_.toList).onComplete {
                     case Success(items) => changeItemSummaries(R.string.searchTitle.r2String, items)
                     case Failure(e) => handleFailure(e)
