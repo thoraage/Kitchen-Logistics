@@ -63,6 +63,11 @@ trait KitLogRestStorageModule extends StorageModule with StorageConfigurationMod
             Parse.decodeOption[Stream[ItemSummary]](get("/rest/items", queryItemGroup.toList)).get
         }
 
+        override def getRecentItems(limit: Int): Future[Seq[ItemSummary]] = Future {
+            val queryParam = List("limit" -> limit.toString, "sortBy" -> "latest")
+            Parse.decodeOption[Stream[ItemSummary]](get("/rest/items", queryParam)).get
+        }
+
         override def searchItems(search: String): Future[Seq[ItemSummary]] = Future {
             Parse.decodeOption[Stream[ItemSummary]](get("/rest/items", List("filter" -> search))).get
         }

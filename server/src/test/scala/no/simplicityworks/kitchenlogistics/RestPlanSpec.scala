@@ -102,6 +102,18 @@ class RestPlanSpec extends FeatureSpec with SpecBase with GivenWhenThen {
             val results = await(otherClient.storage.findItemsByGroup(None))
             assert(!results.exists(item => item.lastItemId == item1.id.get || item.lastItemId == item2.id.get))
         }
+        scenario("Recent items independent of group") {
+            val itemGroupA = await(client.storage.saveItemGroup(new client.ItemGroup(None, None, "A")))
+            val item1 = await(client.storage.saveItem(new client.Item(None, None, product.id.get, itemGroupA.id.get)))
+            val itemGroupB = await(client.storage.saveItemGroup(new client.ItemGroup(None, None, "B")))
+            val product2 = await(client.storage.saveProduct(new client.Product(None, "something", "A thing", "nob")))
+            val item2 = await(client.storage.saveItem(new client.Item(None, None, product2.id.get, itemGroupB.id.get)))
+            val item3 = await(client.storage.saveItem(new client.Item(None, None, product.id.get, itemGroupB.id.get)))
+            println(await(client.storage.findItemsByGroup(None)))
+            val results = await(client.storage.getRecentItems(3)).toList
+            assert(results.sliding(2).forall(l => l.head.lastItemId > l(1).lastItemId))
+            assert(results.size === 3)
+        }
     }
 
     feature("Item update") {

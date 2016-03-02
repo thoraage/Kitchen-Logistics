@@ -27,7 +27,7 @@ trait DrawerMenuImplModule extends DrawerMenuModule with DialogsModule with Oper
 
     override lazy val drawerMenu = new DrawerMenu {
 
-        val allItems = new ItemGroupDrawerMenuChoice(None)
+        val recentItems = new ItemGroupDrawerMenuChoice(None)
 
         var itemGroupDrawerMenuChoices: List[ItemGroupDrawerMenuChoice] = Nil
 
@@ -49,14 +49,14 @@ trait DrawerMenuImplModule extends DrawerMenuModule with DialogsModule with Oper
             val future = storage.getItemGroups.map(_.toList).flatMap { itemGroups =>
                 guiContext.futureOnUiThread {
                     itemGroupDrawerMenuChoices = itemGroups.map(itemGroup => new ItemGroupDrawerMenuChoice(Some(itemGroup)))
-                    val choices = allItems :: itemGroupDrawerMenuChoices
+                    val choices = recentItems :: itemGroupDrawerMenuChoices
                     leftDrawer.setAdapter(new ArrayAdapter(guiContext, R.layout.itemgroup_list_itemgroup, choices.asJava))
                 }
             }
             future onComplete {
                 case Success(_) =>
                     itemGroup.foreach(changeItemGroup)
-                    if (itemGroup.isEmpty) allItems.onSelect()
+                    if (itemGroup.isEmpty) recentItems.onSelect()
                 case Failure(t) =>
                     operations.handleFailure(t)
             }
@@ -72,12 +72,12 @@ trait DrawerMenuImplModule extends DrawerMenuModule with DialogsModule with Oper
         }
 
         class ItemGroupDrawerMenuChoice(val itemGroup: Option[ItemGroup]) extends DrawerMenuChoice {
-            override def toString = itemGroup.map(_.name).getOrElse(R.string.drawerMenuAll.r2String)
+            override def toString = itemGroup.map(_.name).getOrElse(R.string.drawerMenuRecent.r2String)
 
             override def onSelect() {
                 stableValues.selectedItemGroup = itemGroup
                 updateMenu()
-                storage.findItemsByGroup(stableValues.selectedItemGroup).map(_.toList) onComplete {
+                stableValues.selectedItemGroup.map(ig => storage.findItemsByGroup(Some(ig))).getOrElse(storage.getRecentItems(10)).map(_.toList) onComplete {
                     case Success(items) => operations.changeItemSummaries(toString, items)
                     case Failure(e) => operations.handleFailure(e)
                 }

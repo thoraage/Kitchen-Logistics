@@ -23,7 +23,7 @@
     <string name="noResultTitle">No Result Received</string>
     <string name="noResultMessage">Cancelled</string>
 
-    <string name="drawerMenuAll">All</string>
+    <string name="drawerMenuRecent">Recent</string>
     <string name="drawerMenuNewItemGroup">New Item Group</string>
 
     <string name="inputDialogOk">OK</string>

@@ -27,6 +27,8 @@ trait StorageModule {
 
         def findItemsByGroup(itemGroup: Option[ItemGroup] = None): Future[Seq[ItemSummary]]
 
+        def getRecentItems(limit: Int): Future[Seq[ItemSummary]]
+
         def searchItems(search: String): Future[Seq[ItemSummary]]
 
         def getItemGroups: Future[Seq[ItemGroup]]

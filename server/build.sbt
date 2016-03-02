@@ -16,7 +16,7 @@ libraryDependencies ++= Seq(
     "net.databinder"            %% "unfiltered-json4s" % "0.8.4",
     "org.json4s"                %% "json4s-jackson" % "3.2.9",
     "com.typesafe.slick"        %% "slick" % "2.1.0",
-    "com.h2database"            %  "h2"              % "1.3.166" % "compile",
+    "com.h2database"            %  "h2"              % "1.4.191" % "compile",
     "org.postgresql"            % "postgresql"       % "9.4-1200-jdbc41" % "compile",
     "c3p0"                      %  "c3p0"            % "0.9.1.2" % "compile",
     "org.flywaydb"              %  "flyway-core"     % "3.1" % "compile",

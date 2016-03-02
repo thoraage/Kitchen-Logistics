@@ -11,6 +11,7 @@ import unfiltered.filter.Planify
 import unfiltered.request._
 import unfiltered.response._
 
+import scala.language.higherKinds
 import scala.slick.driver.JdbcDriver.simple._
 
 trait RestPlanModule extends PlanCollectionModule with DatabaseModule with SessionHandlerModule with AuthenticationPlanModule {
@@ -29,6 +30,13 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule with Sessi
 //        new Params.Extract("code", Params.first ~> Params.nonempty)
 
     case class ItemSummary(count: Int, product: Product, lastItemId: Int)
+
+    implicit class PimpedQuery[T, U, V[_]](query: Query[T ,U, V]) {
+        def takeConditional(limits: Seq[String]) = limits match {
+            case Seq(IntString(limit), _*) => query.take(limit)
+            case _ => query
+        }
+    }
 
     private val authorizationPlan = Planify {
         case Path(Seg("rest" :: "itemGroups" :: IntString(itemGroupId) :: Nil)) & AuthenticatedUser(user) =>
@@ -50,7 +58,7 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule with Sessi
         Directive.Intent {
             case Path(Seg("rest" :: "products" :: Nil)) => {
                 for {_ <- GET; _ <- Accepts.Json; code <- parameterValues("code")} yield
-                    Ok ~> ResponseString(write(Products.findByCode(code.head))) // TODO will crash
+                    Ok ~> ResponseString(write(Products.findByCode(code.head)))
             } orElse {
                 for {_ <- PUT; r <- request[Any]} yield {
                     val id = Products.insert(read[Product](Body string r))
@@ -99,16 +107,24 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule with Sessi
                     itemGroups <- parameterValues("itemGroup")
                     codes <- parameterValues("code")
                     filters <- parameterValues("filter")
+                    limit <- parameterValues("limit")
+                    sortBy <- parameterValues("sortBy")
                 } yield {
                     val items = (database withSession { implicit session: Session =>
-                        (for {
+                        val productItem = for {
                             item <- TableQuery[Items] if item.userId === user.id && isDefined(itemGroups, item.itemGroupId inSet itemGroups.map(_.toInt))
                             product <- item.product if isDefined(codes, product.code inSet codes) &&
                                 filters.foldLeft(default)((query, filter) => query &&
                                 product.name.toLowerCase.like(s"%${filter.toLowerCase}%"))
-                        } yield (product, item))
-                            .groupBy(p => p._1)
-                            .map { case (product, pair) => (product, pair.length, pair.map(_._2.id).max)}.sortBy(_._1.name).list
+                        } yield (product, item)
+                        sortBy.headOption match {
+                            case Some("latest") =>
+                                productItem.sortBy(_._2.created.desc).takeConditional(limit)
+                                    .map { case (product, item) => (product, 1, item.id?)}.list
+                            case _ =>
+                                productItem.groupBy(p => p._1).takeConditional(limit)
+                                    .map { case (product, pair) => (product, pair.length, pair.map(_._2.id).max)}.sortBy(_._1.name).list
+                        }
                     }).map(p => ItemSummary(p._2, p._1, p._3.get))
                     Ok ~> ResponseString(write(items))
                 }
