@@ -119,7 +119,7 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule with Sessi
                         } yield (product, item)
                         sortBy.headOption match {
                             case Some("latest") =>
-                                productItem.sortBy(_._2.created.desc).takeConditional(limit)
+                                productItem.sortBy(_._2.id.desc).takeConditional(limit)
                                     .map { case (product, item) => (product, 1, item.id?)}.list
                             case _ =>
                                 productItem.groupBy(p => p._1).takeConditional(limit)
