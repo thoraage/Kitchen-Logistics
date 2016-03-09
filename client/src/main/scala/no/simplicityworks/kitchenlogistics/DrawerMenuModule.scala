@@ -47,6 +47,7 @@ trait DrawerMenuImplModule extends DrawerMenuModule with DialogsModule with Oper
 
         override def populateDrawerMenu(itemGroup: Option[ItemGroup]) {
             val future = storage.getItemGroups.map(_.toList).flatMap { itemGroups =>
+                stableValues.itemGroups = itemGroups
                 guiContext.futureOnUiThread {
                     itemGroupDrawerMenuChoices = itemGroups.map(itemGroup => new ItemGroupDrawerMenuChoice(Some(itemGroup)))
                     val choices = recentItems :: itemGroupDrawerMenuChoices

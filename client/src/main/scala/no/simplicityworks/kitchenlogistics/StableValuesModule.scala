@@ -14,6 +14,11 @@ trait StableValuesModule extends StorageModule {
     object SingletonObjectStableValues {
         import SingletonObjectStableValueHolder._
 
+        def itemGroups = map.getOrElse("itemGroups", Nil).asInstanceOf[List[ItemGroup]]
+        def itemGroups_=(itemGroups: List[ItemGroup]) {
+            map += "itemGroups" -> itemGroups
+        }
+
         def selectedItemGroup = map.getOrElse("selectedItemGroup", None).asInstanceOf[Option[ItemGroup]]
         def selectedItemGroup_=(itemGroup: Option[ItemGroup]) {
             map += "selectedItemGroup" -> itemGroup

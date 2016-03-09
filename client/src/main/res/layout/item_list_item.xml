@@ -17,6 +17,16 @@
               a:layout_height="wrap_content"
               a:layout_alignParentEnd="true"
               a:layout_alignParentRight="true"
+              a:id="@+id/item_group"
+              a:text="Skapet">
+    </TextView>
+    <TextView xmlns:a="http://schemas.android.com/apk/res/android"
+              a:textSize="12sp"
+              a:layout_width="wrap_content"
+              a:layout_height="wrap_content"
+              a:layout_below="@id/item_group"
+              a:layout_alignParentEnd="true"
+              a:layout_alignParentRight="true"
               a:id="@+id/item_count"
               a:text="Count 5">
     </TextView>

@@ -29,7 +29,7 @@ trait KitLogRestStorageModule extends StorageModule with StorageConfigurationMod
         implicit def productCodecJson: CodecJson[Product] =
             casecodec5(Product.apply, Product.unapply)("id", "code", "name", "languageIso639_2", "created")
         implicit def itemSummaryCodecJson: CodecJson[ItemSummary] =
-            casecodec3(ItemSummary.apply, ItemSummary.unapply)("count", "product", "lastItemId")
+            casecodec4(ItemSummary.apply, ItemSummary.unapply)("count", "product", "lastItemId", "itemGroupId")
         implicit def itemGroupCodecJson: CodecJson[ItemGroup] =
             casecodec4(ItemGroup.apply, ItemGroup.unapply)("id", "userId", "name", "created")
         implicit def itemCodecJson: CodecJson[Item] =
@@ -81,6 +81,10 @@ trait KitLogRestStorageModule extends StorageModule with StorageConfigurationMod
             Parse.decodeOption[Stream[ItemGroup]](get("/rest/itemGroups")).get
         }
 
+        override def getItemGroup(itemGroupId: Int) = Future {
+            Parse.decodeOption[ItemGroup](get(s"/rest/itemGroups/$itemGroupId")).getOrElse(sys.error("Unexpected Item group representation received"))
+        }
+
         override def saveItemGroup(itemGroup: ItemGroup): Future[ItemGroup] = Future {
             itemGroup.id.map { id =>
                 put(s"/rest/itemGroups/$id", itemGroup)
@@ -88,7 +92,7 @@ trait KitLogRestStorageModule extends StorageModule with StorageConfigurationMod
             }.getOrElse(itemGroup.copy(id = put(s"/rest/itemGroups", itemGroup)))
         }
 
-        override def removeItem(itemId: Int): Future[Unit] =
+        override def removeItem(itemId: Int) =
             Future(http.delete(s"/rest/items/$itemId"))
 
         override def findItemsByCode(code: String): Future[Seq[ItemSummary]] = Future {
@@ -98,12 +102,12 @@ trait KitLogRestStorageModule extends StorageModule with StorageConfigurationMod
         override def removeItemGroup(itemGroupId: Int): Future[Unit] =
             Future(http.delete(s"/rest/itemGroups/$itemGroupId"))
 
-        override def getItem(itemId: Int): Future[Item] = {
-            Future(Parse.decodeOption[Item](get(s"/rest/items/$itemId")).getOrElse(sys.error("Unexpected Item representation received")))
+        override def getItem(itemId: Int) = Future {
+            Parse.decodeOption[Item](get(s"/rest/items/$itemId")).getOrElse(sys.error("Unexpected Item representation received"))
         }
 
-        override def getProduct(productId: Int): Future[Product] = {
-            Future(Parse.decodeOption[Product](get(s"/rest/products/$productId")).getOrElse(sys.error("Unexpected Item representation received")))
+        override def getProduct(productId: Int) = Future {
+            Parse.decodeOption[Product](get(s"/rest/products/$productId")).getOrElse(sys.error("Unexpected Item representation received"))
         }
     }
 

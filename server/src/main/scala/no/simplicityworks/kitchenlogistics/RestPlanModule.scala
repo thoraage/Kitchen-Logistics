@@ -29,7 +29,7 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule with Sessi
 //    private def extract: Params.Extract[Nothing, String] =
 //        new Params.Extract("code", Params.first ~> Params.nonempty)
 
-    case class ItemSummary(count: Int, product: Product, lastItemId: Int)
+    case class ItemSummary(count: Int, product: Product, lastItemId: Int, itemGroupId: Int)
 
     implicit class PimpedQuery[T, U, V[_]](query: Query[T ,U, V]) {
         def takeConditional(limits: Seq[String]) = limits match {
@@ -120,12 +120,12 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule with Sessi
                         sortBy.headOption match {
                             case Some("latest") =>
                                 productItem.sortBy(_._2.id.desc).takeConditional(limit)
-                                    .map { case (product, item) => (product, 1, item.id?)}.list
+                                    .map { case (product, item) => (1, product, item.id?, item.itemGroupId)}.list
                             case _ =>
-                                productItem.groupBy(p => p._1).takeConditional(limit)
-                                    .map { case (product, pair) => (product, pair.length, pair.map(_._2.id).max)}.sortBy(_._1.name).list
+                                productItem.groupBy(p => (p._1, p._2.itemGroupId)).takeConditional(limit)
+                                    .map { case ((product, itemGroupId), pair) => (pair.length, product, pair.map(_._2.id).max, itemGroupId) }.sortBy(_._2.name).list
                         }
-                    }).map(p => ItemSummary(p._2, p._1, p._3.get))
+                    }).map(p => ItemSummary(p._1, p._2, p._3.get, p._4))
                     Ok ~> ResponseString(write(items))
                 }
             } orElse {
@@ -178,6 +178,15 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule with Sessi
             }
 
             case Path(Seg("rest" :: "itemGroups" :: IntString(itemGroupId) :: Nil)) & AuthenticatedUser(user) => {
+                database withSession { implicit s =>
+                    for {_ <- GET } yield {
+                        ItemGroups.query.filter(_.id === itemGroupId).list.headOption match {
+                            case Some(itemGroup) => Ok ~> ResponseString(write(itemGroup))
+                            case None => NotFound
+                        }
+                    }
+                }
+            } orElse {
                 for {_ <- PUT; r <- request[Any]} yield {
                     val itemGroup = read[ItemGroup](Body string r).copy(id = Some(itemGroupId))
                     ItemGroups.update(itemGroup)

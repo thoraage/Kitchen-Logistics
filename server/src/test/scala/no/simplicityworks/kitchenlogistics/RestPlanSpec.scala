@@ -54,7 +54,7 @@ class RestPlanSpec extends FeatureSpec with SpecBase with GivenWhenThen {
             val itemGroup = await(client.storage.saveItemGroup(client.ItemGroup(None, None, "Måse", new Date)))
             assert(itemGroup.id !== None)
             assert(allGroups.seq.size === initialCount + 1)
-            assert(allGroups.seq.find(_.id == itemGroup.id).get.name === "Måse")
+            assert(await(client.storage.getItemGroup(itemGroup.id.get)).name === "Måse")
         }
     }
 

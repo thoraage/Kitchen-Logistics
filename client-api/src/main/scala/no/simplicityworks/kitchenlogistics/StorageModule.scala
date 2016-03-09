@@ -33,12 +33,14 @@ trait StorageModule {
 
         def getItemGroups: Future[Seq[ItemGroup]]
 
+        def getItemGroup(itemGroupId: Int): Future[ItemGroup]
+
         def saveItemGroup(itemGroup: ItemGroup): Future[ItemGroup]
     }
 
     case class Product(id: Option[Int], code: String, name: String, languageIso639_2: String, created: Date = new Date)
 
-    case class ItemSummary(count: Int, product: Product, lastItemId: Int)
+    case class ItemSummary(count: Int, product: Product, lastItemId: Int, itemGroupId: Int)
 
     case class ItemGroup(id: Option[Int], userId: Option[Int], name: String, created: Date = new Date)
 

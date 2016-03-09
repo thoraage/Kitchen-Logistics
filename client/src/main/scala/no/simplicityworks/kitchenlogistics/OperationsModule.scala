@@ -198,7 +198,10 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
                 val count = itemSummary.count
                 Seq(
                     (TR.item_name, itemSummary.product.name),
-                    (TR.item_count, if (count == 1) "" else R.string.itemListCountItem.r2String.format(count))
+                    (TR.item_count, if (count == 1) "" else R.string.itemListCountItem.r2String.format(count)),
+                    (TR.item_group,
+                        if (stableValues.selectedItemGroup.isDefined) ""
+                        else stableValues.itemGroups.find(_.id.exists(_ == itemSummary.itemGroupId)).map(_.name).getOrElse(""))
                 ).foreach(p => vh.view.findView(p._1).setText(p._2))
                 vh.view.onLongClick(popupItemMenu(vh, itemSummary))
         }
