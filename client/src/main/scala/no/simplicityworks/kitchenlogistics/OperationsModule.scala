@@ -293,7 +293,9 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
         override def searchItems() {
             dialogs.withField(R.string.searchTitle.r2String, "", (search, _) => {
                 storage.searchItems(search).map(_.toList).onComplete {
-                    case Success(items) => changeItemSummaries(R.string.searchTitle.r2String, items)
+                    case Success(items) =>
+                        stableValues.selectedItemGroup = None
+                        changeItemSummaries(R.string.searchTitle.r2String, items)
                     case Failure(e) => handleFailure(e)
                 }
             })
