@@ -51,6 +51,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
             view.setLayoutManager(new LinearLayoutManager(guiContext))
             view.setAdapter(ItemAdapter)
             drawerMenu.initiate()
+            dialogs.restick()
         }
 
         override def scanNewItem() {

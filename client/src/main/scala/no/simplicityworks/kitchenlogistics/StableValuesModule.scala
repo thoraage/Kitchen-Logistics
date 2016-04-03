@@ -24,6 +24,11 @@ trait StableValuesModule extends StorageModule {
             map += "selectedItemGroup" -> itemGroup
         }
 
+        def dialogStickFunction = map.getOrElse("dialogStickFunction", None).asInstanceOf[Option[() => Unit]]
+        def dialogStickFunction_=(f: Option[() => Unit]): Unit = {
+            map += "dialogStickFunction" -> f
+        }
+
         def intentRequestIdCounter = map.getOrElseUpdate("intentRequestIdCounter", new AtomicInteger(4711)).asInstanceOf[AtomicInteger]
         // TODO Unanswered old promises should be purged
         def activityResultPromises = map.getOrElseUpdate("activityResultPromises", mutable.Map[Int, Promise[(Int, Intent)]]()).asInstanceOf[mutable.Map[Int, Promise[(Int, Intent)]]]
