@@ -186,9 +186,54 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
             WidgetHelpers.toast(R.string.errorIntro + throwable.getMessage)
         }
 
+        trait ViewTypeHandler {
+            val viewType: Int
+            val layout: Int
+            def populate(view: View, itemSummary: ItemSummary)
+        }
+
         object ItemAdapter extends RecyclerView.Adapter[ItemViewHolder] {
+            object ShortViewTypeHandler extends ViewTypeHandler {
+                override val viewType = 0
+                override val layout = R.layout.item_list_item
+
+                override def populate(view: View, itemSummary: ItemSummary) {
+                    val count = itemSummary.count
+                    Seq(
+                        (TR.item_name, itemSummary.product.name),
+                        (TR.item_count, if (count == 1) "" else R.string.itemListCountItem.r2String.format(count)),
+                        (TR.item_group,
+                            if (stableValues.selectedItemGroup.isDefined) ""
+                            else stableValues.itemGroups.find(_.id.exists(_ == itemSummary.itemGroupId)).map(_.name).getOrElse(""))
+                    ).foreach(p => view.findView(p._1).setText(p._2))
+                }
+            }
             val inflater = LayoutInflater.from(guiContext)
+            object LongViewTypeHandler extends ViewTypeHandler {
+                override val viewType = ShortViewTypeHandler.viewType + 1
+                override val layout = R.layout.item_list_item_selected
+
+                override def populate(view: View, itemSummary: ItemSummary) {
+                    Seq(
+                        (TR.item_name, itemSummary.product.name),
+                        (TR.item_group,
+                            if (stableValues.selectedItemGroup.isDefined) ""
+                            else stableValues.itemGroups.find(_.id.exists(_ == itemSummary.itemGroupId)).map(_.name).getOrElse(""))
+                    ).foreach(p => view.findView(p._1).setText(p._2))
+                    val itemScanList = view.findView(TR.items)
+                    itemScanList.removeAllViews()
+                    selectedItems.foreach(_._2.foreach { item =>
+                        val scannedItem = inflater.inflate(R.layout.item_list_item_selected_scan, itemScanList, false)
+                        scannedItem.findView(TR.time).setText(item.created.toString)
+                        itemScanList.addView(scannedItem)
+                    })
+                }
+            }
+            val viewTypeMap = Seq(ShortViewTypeHandler, LongViewTypeHandler).map(h => (h.viewType, h)).toMap
             var itemSummaries: List[ItemSummary] = Nil
+            var selected: Option[Int] = None
+            var selectedVerbose = false
+            var selectedItems: Option[(Int, Seq[Item])] = None
 
             reloadItemList()
 
@@ -196,20 +241,41 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
 
             override def onBindViewHolder(vh: ItemViewHolder, idx: Int) {
                 val itemSummary = itemSummaries(idx)
-                val count = itemSummary.count
-                Seq(
-                    (TR.item_name, itemSummary.product.name),
-                    (TR.item_count, if (count == 1) "" else R.string.itemListCountItem.r2String.format(count)),
-                    (TR.item_group,
-                        if (stableValues.selectedItemGroup.isDefined) ""
-                        else stableValues.itemGroups.find(_.id.exists(_ == itemSummary.itemGroupId)).map(_.name).getOrElse(""))
-                ).foreach(p => vh.view.findView(p._1).setText(p._2))
-                vh.view.onLongClick(popupItemMenu(vh, itemSummary))
-        }
+                vh.viewTypeHandler.populate(vh.view, itemSummary)
+                def selectIdx() {
+                    selectedItems = None
+                    selected.foreach(notifyItemChanged)
+                    selected = Some(idx)
+                    selected.foreach(notifyItemChanged)
+                }
+                vh.view.onLongClick({
+                    selectIdx()
+                    popupItemMenu(vh, itemSummary)
+                })
+                vh.view onClick { _: View =>
+                    selectIdx()
+                    for (productId <- itemSummary.product.id) {
+                        storage.getItemsByProductAndGroup(productId, stableValues.selectedItemGroup.flatMap(_.id)).andThen {
+                            case Success(items) =>
+                                selectedItems = Some((idx, items))
+                                notifyItemChanged(idx)
+                                ItemAdapter.notifyDataSetChanged()
+                            case Failure(e) => handleFailure(e)
+                        }
+                    }
+                }
+                vh.view.setSelected(selected.contains(idx))
+            }
+
+            override def getItemViewType(idx: Int) = {
+                val viewType1 = (if (selectedItems.exists(_._1 == idx)) LongViewTypeHandler else ShortViewTypeHandler).viewType
+                viewType1
+            }
 
             override def onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ItemViewHolder = {
-                val view = inflater.inflate(R.layout.item_list_item, viewGroup, false)
-                new ItemViewHolder(view)
+                val viewTypeHandler = viewTypeMap(viewType)
+                val view = inflater.inflate(viewTypeHandler.layout, viewGroup, false)
+                new ItemViewHolder(view, viewGroup, viewTypeHandler)
             }
         }
 
@@ -268,7 +334,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
             }
         }
 
-        class ItemViewHolder(val view: View) extends RecyclerView.ViewHolder(view)
+        class ItemViewHolder(var view: View, val viewGroup: ViewGroup, val viewTypeHandler: ViewTypeHandler) extends RecyclerView.ViewHolder(view)
 
         def reloadItemList() {
             drawerMenu.reloadItemGroupList()

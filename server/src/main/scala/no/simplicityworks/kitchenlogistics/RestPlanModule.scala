@@ -109,24 +109,37 @@ trait RestPlanModule extends PlanCollectionModule with DatabaseModule with Sessi
                     filters <- parameterValues("filter")
                     limit <- parameterValues("limit")
                     sortBy <- parameterValues("sortBy")
+                    itemsOnly <- parameterValues("itemsOnly")
+                    productIds <- parameterValues("product")
                 } yield {
-                    val items = (database withSession { implicit session: Session =>
-                        val productItem = for {
-                            item <- TableQuery[Items] if item.userId === user.id && isDefined(itemGroups, item.itemGroupId inSet itemGroups.map(_.toInt))
-                            product <- item.product if isDefined(codes, product.code inSet codes) &&
-                                filters.foldLeft(default)((query, filter) => query &&
-                                product.name.toLowerCase.like(s"%${filter.toLowerCase}%"))
-                        } yield (product, item)
-                        sortBy.headOption match {
-                            case Some("latest") =>
-                                productItem.sortBy(_._2.id.desc).takeConditional(limit)
-                                    .map { case (product, item) => (1, product, item.id?, item.itemGroupId)}.list
-                            case _ =>
-                                productItem.groupBy(p => (p._1, p._2.itemGroupId)).takeConditional(limit)
-                                    .map { case ((product, itemGroupId), pair) => (pair.length, product, pair.map(_._2.id).max, itemGroupId) }.sortBy(_._2.name).list
+                    database withSession { implicit session: Session =>
+                        val itemQuery = TableQuery[Items].filter { item =>
+                            item.userId === user.id &&
+                                isDefined(itemGroups, item.itemGroupId inSet itemGroups.map(_.toInt)) &&
+                                isDefined(productIds, item.productId inSet productIds.map(_.toInt))
                         }
-                    }).map(p => ItemSummary(p._1, p._2, p._3.get, p._4))
-                    Ok ~> ResponseString(write(items))
+                        if (itemsOnly.headOption.exists(_.toBoolean)) {
+                            Ok ~> ResponseString(write(itemQuery.sortBy(_.id.desc).list))
+                        } else {
+                            val itemSummaries = {
+                                val productItem = for {
+                                    item <- itemQuery
+                                    product <- item.product if isDefined(codes, product.code inSet codes) &&
+                                    filters.foldLeft(default)((query, filter) => query &&
+                                        product.name.toLowerCase.like(s"%${filter.toLowerCase}%"))
+                                } yield (product, item)
+                                sortBy.headOption match {
+                                    case Some("latest") =>
+                                        productItem.sortBy(_._2.id.desc).takeConditional(limit)
+                                            .map { case (product, item) => (1, product, item.id ?, item.itemGroupId) }.list
+                                    case _ =>
+                                        productItem.groupBy(p => (p._1, p._2.itemGroupId)).takeConditional(limit)
+                                            .map { case ((product, itemGroupId), pair) => (pair.length, product, pair.map(_._2.id).max, itemGroupId) }.sortBy(_._2.name).list
+                                }
+                            }.map(p => ItemSummary(p._1, p._2, p._3.get, p._4))
+                            Ok ~> ResponseString(write(itemSummaries))
+                        }
+                    }
                 }
             } orElse {
                 for {_ <- PUT; r <- request[Any]} yield {

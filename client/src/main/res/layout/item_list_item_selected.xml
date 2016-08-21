@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
+              a:background="@drawable/selector_row"
+              a:padding="10dp"
+              a:orientation="vertical"
+              a:layout_width="fill_parent"
+              a:layout_height="wrap_content">
+    <RelativeLayout
+            a:orientation="horizontal"
+            a:layout_width="fill_parent"
+            a:layout_height="wrap_content">
+        <TextView xmlns:a="http://schemas.android.com/apk/res/android"
+                  a:textSize="16sp"
+                  a:layout_width="wrap_content"
+                  a:layout_height="wrap_content"
+                  a:id="@+id/item_name"
+                  a:text="Item">
+        </TextView>
+        <TextView xmlns:a="http://schemas.android.com/apk/res/android"
+                  a:textSize="12sp"
+                  a:layout_width="wrap_content"
+                  a:layout_height="wrap_content"
+                  a:layout_alignParentEnd="true"
+                  a:layout_alignParentRight="true"
+                  a:id="@+id/item_group"
+                  a:text="Skapet">
+        </TextView>
+    </RelativeLayout>
+    <LinearLayout a:layout_width="fill_parent"
+                  a:layout_height="wrap_content"
+                  a:layout_alignParentEnd="true"
+                  a:orientation="vertical"
+                  a:id="@+id/items">
+        <TextView xmlns:a="http://schemas.android.com/apk/res/android"
+                  a:textSize="12sp"
+                  a:layout_width="wrap_content"
+                  a:layout_height="wrap_content"
+                  a:text="Skapet1">
+        </TextView>
+        <TextView xmlns:a="http://schemas.android.com/apk/res/android"
+                  a:textSize="12sp"
+                  a:layout_width="wrap_content"
+                  a:layout_height="wrap_content"
+                  a:text="Skapet2">
+        </TextView>
+    </LinearLayout>
+</LinearLayout>

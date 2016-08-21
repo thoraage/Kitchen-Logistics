@@ -36,6 +36,8 @@ trait StorageModule {
         def getItemGroup(itemGroupId: Int): Future[ItemGroup]
 
         def saveItemGroup(itemGroup: ItemGroup): Future[ItemGroup]
+
+        def getItemsByProductAndGroup(productId: Int, itemGroupId: Option[Int]): Future[Seq[Item]]
     }
 
     case class Product(id: Option[Int], code: String, name: String, languageIso639_2: String, created: Date = new Date)

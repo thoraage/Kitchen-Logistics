@@ -3,7 +3,8 @@
               a:orientation="horizontal"
               a:layout_width="fill_parent"
               a:layout_height="wrap_content"
-              a:padding="10dp">
+              a:padding="10dp"
+              a:background="@drawable/selector_row">
     <TextView xmlns:a="http://schemas.android.com/apk/res/android"
               a:textSize="16sp"
               a:layout_width="wrap_content"

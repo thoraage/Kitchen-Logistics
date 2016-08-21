@@ -178,25 +178,26 @@ class RestPlanSpec extends FeatureSpec with SpecBase with GivenWhenThen {
                 await(client.storage.saveProduct(client.Product(None, "8493tgtf", "Apple", "nob"))))
             products.foreach(p => await(client.storage.saveItem(client.Item(None, None, p.id.get, itemGroup.id.get))))
             val itemGroup2 = await(otherClient.storage.saveItemGroup(otherClient.ItemGroup(None, None, "Cupboard")))
-            await(otherClient.storage.saveItem(otherClient.Item(None, None, products(0).id.get, itemGroup2.id.get)))
+            await(otherClient.storage.saveItem(otherClient.Item(None, None, products.head.id.get, itemGroup2.id.get)))
             val summaries2 = await(client.storage.searchItems("rang"))
             assert(summaries2.seq.size === 2)
             assert(summaries2.seq.forall(_.count == 1))
         }
     }
 
+    def createCode = s"mycode${Random.nextInt()}"
+    def createProduct() = await(client.storage.saveProduct(client.Product(None, createCode, "MyName", "nob")))
+
     feature("Product rename") {
         lazy val itemGroup = createItemGroup
-        def createCode = s"mycode${Random.nextInt()}"
-        def createProduct = await(client.storage.saveProduct(client.Product(None, createCode, "MyName", "nob")))
         scenario("Soul owner changes the product") {
-            val myProduct = createProduct
+            val myProduct = createProduct()
             val item = await(client.storage.saveItem(client.Item(None, None, myProduct.id.get, itemGroup.id.get)))
             await(client.storage.saveProduct(myProduct.copy(name = "NewName")))
             assert(await(client.storage.findProductByCode(myProduct.code)).map(_.name) === List("NewName"))
         }
         scenario("Multiple owners leads to new product and deletes it if the name changes back") {
-            val myProduct = createProduct
+            val myProduct = createProduct()
             val item = await(client.storage.saveItem(client.Item(None, None, myProduct.id.get, itemGroup.id.get)))
             val otherUserItemGroup = await(otherClient.storage.saveItemGroup(otherClient.ItemGroup(None, None, "Yeah")))
             val otherUserItem = await(otherClient.storage.saveItem(otherClient.Item(None, None, myProduct.id.get, otherUserItemGroup.id.get)))
@@ -215,6 +216,29 @@ class RestPlanSpec extends FeatureSpec with SpecBase with GivenWhenThen {
             val newerProductId = await(client.storage.getItem(item.id.get)).productId
             assert(newerProductId === myProduct.id.get)
             assertStatus(404, await(client.storage.getProduct(newProductId)))
+        }
+    }
+
+    feature("Items for product") {
+        def create() = {
+            val product = createProduct()
+            val otherProduct = createProduct()
+            val itemGroup = createItemGroup
+            val otherItemGroup = createItemGroup
+            for (product <- Seq(product, otherProduct); itemGroup <- Seq(itemGroup, otherItemGroup)) {
+                await(client.storage.saveItem(client.Item(None, None, product.id.get, itemGroup.id.get)))
+            }
+            (product, itemGroup)
+        }
+        scenario("Get for all itemgroups") {
+            val (product, itemGroup) = create()
+            val items = await(client.storage.getItemsByProductAndGroup(product.id.get, None))
+            assert(items.length === 2)
+        }
+        scenario("Get for one itemgroup") {
+            val (product, itemGroup) = create()
+            val items = await(client.storage.getItemsByProductAndGroup(product.id.get, itemGroup.id))
+            assert(items.length === 1)
         }
     }
 }

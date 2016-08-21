@@ -109,6 +109,11 @@ trait KitLogRestStorageModule extends StorageModule with StorageConfigurationMod
         override def getProduct(productId: Int) = Future {
             Parse.decodeOption[Product](get(s"/rest/products/$productId")).getOrElse(sys.error("Unexpected Item representation received"))
         }
+
+        override def getItemsByProductAndGroup(productId: Int, itemGroupId: Option[Int]) = Future {
+            val query = List("itemsOnly" -> "true", "product" -> productId.toString) ++ itemGroupId.map("itemGroup" -> _.toString).toList
+            Parse.decodeOption[Stream[Item]](get(s"/rest/items/", query)).get
+        }
     }
 
 }
