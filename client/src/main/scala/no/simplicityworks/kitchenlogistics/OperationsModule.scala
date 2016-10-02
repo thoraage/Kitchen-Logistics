@@ -41,9 +41,11 @@ trait OperationsModule extends StorageModule {
 
 }
 
-trait OperationsImplModule extends OperationsModule with ScannerModule with GuiContextModule with DialogsModule with StableValuesModule with DrawerMenuModule {
+trait OperationsImplModule extends OperationsModule with ScannerModule with GuiContextModule with DialogsModule with StableValuesModule with DrawerMenuModule with TimeModule {
 
-    override lazy val operations = new Operations {
+    override lazy val operations: OperationsImpl = new OperationsImpl
+
+    class OperationsImpl extends Operations {
 
         override def initiate() {
             val view = guiContext.findView(TR.recycler_view)
@@ -224,7 +226,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
                     itemScanList.removeAllViews()
                     selectedItems.foreach(_._2.foreach { item =>
                         val scannedItem = inflater.inflate(R.layout.item_list_item_selected_scan, itemScanList, false)
-                        scannedItem.findView(TR.time).setText(item.created.toString)
+                        scannedItem.findView(TR.time).setText(time.toHumanReadableDate(item.created))
                         itemScanList.addView(scannedItem)
                     })
                 }
@@ -367,6 +369,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
                 }
             })
         }
-    }
+
+     }
 
 }

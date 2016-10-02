@@ -25,6 +25,8 @@ packagingOptions in Android := PackagingOptions(excludes = Seq(
 libraryDependencies ++= Seq(
   "org.scaloid" %% "scaloid" % "3.6.1-10",
   "clientapi" %% "clientapi" % "0.1-SNAPSHOT",
+  "org.scalatest" %% "scalatest" % "2.2.5" % "test",
+  "org.mockito" % "mockito-core" % "1.10.19" % "test",
 //  aar("com.android.support" % "appcompat-v7" % "23.0.1"),
 //  aar("com.android.support" % "support-v4" % "23.0.1"),
   aar("com.android.support" % "recyclerview-v7" % "23.0.1")
