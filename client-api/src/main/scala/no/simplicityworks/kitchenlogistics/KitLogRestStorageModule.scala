@@ -3,8 +3,8 @@ package no.simplicityworks.kitchenlogistics
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
 
-import argonaut.Argonaut._
-import argonaut._
+import scalaz._, Scalaz._
+import argonaut._, Argonaut._
 import no.simplicityworks.kitchenlogistics.ContentType.json
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -33,11 +33,16 @@ trait KitLogRestStorageModule extends StorageModule with StorageConfigurationMod
         implicit def itemGroupCodecJson: CodecJson[ItemGroup] =
             casecodec4(ItemGroup.apply, ItemGroup.unapply)("id", "userId", "name", "created")
         implicit def itemCodecJson: CodecJson[Item] =
-            casecodec5(Item.apply, Item.unapply)("id", "userId", "productId", "itemGroupId", "created")
+            casecodec7(Item.apply, Item.unapply)("id", "userId", "productId", "itemGroupId", "amount", "created", "updated")
 
-        override def findProductByCode(identifier: String): Future[Seq[Product]] = Future {
-            Parse.decodeOption[Stream[Product]](get("/rest/products", ("code" -> identifier) :: Nil)).get
-        }
+        def parse[X: DecodeJson](str: String): X =
+            Parse.decodeEither[X](str) match {
+                case -\/(err) => sys.error(s"Trouble parsing $str: $err")
+                case \/-(x) => x
+            }
+
+        override def findProductByCode(identifier: String) =
+            Future(parse[List[Product]](get("/rest/products", ("code" -> identifier) :: Nil)))
 
         override def saveProduct(product: Product): Future[Product] = Future {
             product.id.map { id =>
@@ -58,14 +63,14 @@ trait KitLogRestStorageModule extends StorageModule with StorageConfigurationMod
             }.getOrElse(item.copy(id = put(s"/rest/items", item)))
         }
 
-        override def findItemsByGroup(itemGroup: Option[ItemGroup] = None): Future[Seq[ItemSummary]] = Future {
+        override def findItemsByGroup(itemGroup: Option[ItemGroup] = None) = Future {
             val queryItemGroup = itemGroup.flatMap(_.id).map("itemGroup" -> _.toString)
-            Parse.decodeOption[Stream[ItemSummary]](get("/rest/items", queryItemGroup.toList)).get
+            parse[List[ItemSummary]](get("/rest/items", queryItemGroup.toList))
         }
 
-        override def getRecentItems(limit: Int): Future[Seq[ItemSummary]] = Future {
+        override def getRecentItems(limit: Int) = Future {
             val queryParam = List("limit" -> limit.toString, "sortBy" -> "latest")
-            Parse.decodeOption[Stream[ItemSummary]](get("/rest/items", queryParam)).get
+            parse[List[ItemSummary]](get("/rest/items", queryParam))
         }
 
         override def searchItems(search: String): Future[Seq[ItemSummary]] = Future {
@@ -77,13 +82,11 @@ trait KitLogRestStorageModule extends StorageModule with StorageConfigurationMod
             http.accept(json).get(s"$path$query")
         }
 
-        override def getItemGroups: Future[Seq[ItemGroup]] = Future {
-            Parse.decodeOption[Stream[ItemGroup]](get("/rest/itemGroups")).get
-        }
+        override def getItemGroups =
+            Future(parse[List[ItemGroup]](get("/rest/itemGroups")))
 
-        override def getItemGroup(itemGroupId: Int) = Future {
-            Parse.decodeOption[ItemGroup](get(s"/rest/itemGroups/$itemGroupId")).getOrElse(sys.error("Unexpected Item group representation received"))
-        }
+        override def getItemGroup(itemGroupId: Int) =
+            Future(parse(get(s"/rest/itemGroups/$itemGroupId")))
 
         override def saveItemGroup(itemGroup: ItemGroup): Future[ItemGroup] = Future {
             itemGroup.id.map { id =>
@@ -95,24 +98,21 @@ trait KitLogRestStorageModule extends StorageModule with StorageConfigurationMod
         override def removeItem(itemId: Int) =
             Future(http.delete(s"/rest/items/$itemId"))
 
-        override def findItemsByCode(code: String): Future[Seq[ItemSummary]] = Future {
-            Parse.decodeOption[Stream[ItemSummary]](get("/rest/items", List("code" -> code))).get
-        }
+        override def findItemsByCode(code: String) =
+            Future(parse[List[ItemSummary]](get("/rest/items", List("code" -> code))))
 
         override def removeItemGroup(itemGroupId: Int): Future[Unit] =
             Future(http.delete(s"/rest/itemGroups/$itemGroupId"))
 
-        override def getItem(itemId: Int) = Future {
-            Parse.decodeOption[Item](get(s"/rest/items/$itemId")).getOrElse(sys.error("Unexpected Item representation received"))
-        }
+        override def getItem(itemId: Int) =
+            Future(parse(get(s"/rest/items/$itemId")))
 
-        override def getProduct(productId: Int) = Future {
-            Parse.decodeOption[Product](get(s"/rest/products/$productId")).getOrElse(sys.error("Unexpected Item representation received"))
-        }
+        override def getProduct(productId: Int) =
+            Future(parse(get(s"/rest/products/$productId")))
 
         override def getItemsByProductAndGroup(productId: Int, itemGroupId: Option[Int]) = Future {
             val query = List("itemsOnly" -> "true", "product" -> productId.toString) ++ itemGroupId.map("itemGroup" -> _.toString).toList
-            Parse.decodeOption[Stream[Item]](get(s"/rest/items/", query)).get
+            parse[List[Item]](get(s"/rest/items/", query))
         }
     }
 

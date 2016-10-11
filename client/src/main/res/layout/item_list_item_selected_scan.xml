@@ -1,14 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:a="http://schemas.android.com/apk/res/android"
-              a:orientation="horizontal"
+<LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
+              a:orientation="vertical"
               a:layout_width="fill_parent"
               a:layout_height="wrap_content"
               a:padding="10dp">
-    <TextView xmlns:a="http://schemas.android.com/apk/res/android"
-              a:textSize="12sp"
-              a:layout_width="wrap_content"
-              a:layout_height="wrap_content"
-              a:id="@+id/time"
-              a:text="now">
-    </TextView>
-</RelativeLayout>
+    <SeekBar a:layout_width="fill_parent"
+             a:layout_height="wrap_content"
+             a:id="@+id/amountBar"
+             a:max="1000"/>
+    <RelativeLayout a:layout_width="fill_parent" a:layout_height="wrap_content">
+        <TextView a:textSize="12sp"
+                  a:layout_width="wrap_content"
+                  a:layout_height="wrap_content"
+                  a:layout_alignParentLeft="true"
+                  a:text="@string/emptyItem"/>
+        <TextView a:textSize="12sp"
+                  a:layout_width="wrap_content"
+                  a:layout_height="wrap_content"
+                  a:layout_alignParentRight="true"
+                  a:text="@string/fullItem"/>
+    </RelativeLayout>
+    <RelativeLayout a:layout_width="fill_parent" a:layout_height="wrap_content">
+        <TextView a:layout_width="wrap_content"
+                  a:layout_height="wrap_content"
+                  a:id="@+id/time"
+                  a:layout_alignParentRight="true"
+                  a:text="now"/>
+        <TextView a:layout_width="wrap_content"
+                  a:layout_height="wrap_content"
+                  a:layout_toLeftOf="@id/time"
+                  a:text="Scanned: "/>
+    </RelativeLayout>
+    <RelativeLayout a:layout_width="fill_parent" a:layout_height="wrap_content">
+        <TextView a:layout_width="wrap_content"
+                  a:layout_height="wrap_content"
+                  a:id="@+id/updatedTime"
+                  a:layout_alignParentRight="true"
+                  a:text="now"/>
+        <TextView a:layout_width="wrap_content"
+                  a:layout_height="wrap_content"
+                  a:layout_toLeftOf="@id/updatedTime"
+                  a:text="Updated: "/>
+    </RelativeLayout>
+</LinearLayout>

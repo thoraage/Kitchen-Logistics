@@ -6,7 +6,7 @@ import java.util.Date
 
 case class Product(id: Option[Int], code: String, name: String, languageIso639_2: String, created: Date = new Date)
 
-case class Item(id: Option[Int], userId: Option[Int], productId: Int, itemGroupId: Int, created: Date = new Date)
+case class Item(id: Option[Int], userId: Option[Int], productId: Int, itemGroupId: Int, amount: Float, created: Date = new Date, updated: Date = new Date)
 
 case class ItemGroup(id: Option[Int], userId: Option[Int], name: String, created: Date = new Date)
 

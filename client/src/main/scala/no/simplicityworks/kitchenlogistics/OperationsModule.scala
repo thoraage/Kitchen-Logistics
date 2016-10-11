@@ -58,7 +58,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
 
         override def scanNewItem() {
             def saveItem(product: Product, itemGroupId: Int) {
-                storage.saveItem(Item(None, None, product.id.get, itemGroupId, new Date)) onComplete {
+                storage.saveItem(Item(None, None, product.id.get, itemGroupId, 1.0f)) onComplete {
                     case Success(_) =>
                         guiContext.runOnUiThread(reloadItemList())
                     case Failure(t) => handleFailure(t)
@@ -227,6 +227,8 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
                     selectedItems.foreach(_._2.foreach { item =>
                         val scannedItem = inflater.inflate(R.layout.item_list_item_selected_scan, itemScanList, false)
                         scannedItem.findView(TR.time).setText(time.toHumanReadableDate(item.created))
+                        scannedItem.findView(TR.updatedTime).setText(time.toHumanReadableDate(item.updated))
+                        scannedItem.findView(TR.amountBar).setProgress((item.amount * 1000).toInt)
                         itemScanList.addView(scannedItem)
                     })
                 }

@@ -13,11 +13,11 @@ class RestPlanSpec extends FeatureSpec with SpecBase with GivenWhenThen {
         with BasicAuthenticationPlanModule
 
     lazy val product =
-        await(client.storage.saveProduct(client.Product(None, "fdjks", "ting", "nob", new Date)))
+        await(client.storage.saveProduct(client.Product(None, "fdjks", "ting", "nob")))
     def createItemGroup =
-        await(client.storage.saveItemGroup(client.ItemGroup(None, None, s"test${Random.nextInt()}", new Date)))
+        await(client.storage.saveItemGroup(client.ItemGroup(None, None, s"test${Random.nextInt()}")))
     def createItem(itemGroup: client.ItemGroup) =
-        await(client.storage.saveItem(client.Item(None, None, product.id.get, itemGroup.id.get, new Date)))
+        await(client.storage.saveItem(client.Item(None, None, product.id.get, itemGroup.id.get, 1.0f)))
     def allGroups = await(client.storage.getItemGroups)
 
     def itemsOf(itemGroup: client.ItemGroup) =
@@ -104,11 +104,11 @@ class RestPlanSpec extends FeatureSpec with SpecBase with GivenWhenThen {
         }
         scenario("Recent items independent of group") {
             val itemGroupA = await(client.storage.saveItemGroup(new client.ItemGroup(None, None, "A")))
-            val item1 = await(client.storage.saveItem(new client.Item(None, None, product.id.get, itemGroupA.id.get)))
+            val item1 = await(client.storage.saveItem(new client.Item(None, None, product.id.get, itemGroupA.id.get, 1.0f)))
             val itemGroupB = await(client.storage.saveItemGroup(new client.ItemGroup(None, None, "B")))
             val product2 = await(client.storage.saveProduct(new client.Product(None, "something", "A thing", "nob")))
-            val item2 = await(client.storage.saveItem(new client.Item(None, None, product2.id.get, itemGroupB.id.get)))
-            val item3 = await(client.storage.saveItem(new client.Item(None, None, product.id.get, itemGroupB.id.get)))
+            val item2 = await(client.storage.saveItem(new client.Item(None, None, product2.id.get, itemGroupB.id.get, 1.0f)))
+            val item3 = await(client.storage.saveItem(new client.Item(None, None, product.id.get, itemGroupB.id.get, 1.0f)))
             println(await(client.storage.findItemsByGroup(None)))
             val results = await(client.storage.getRecentItems(3)).toList
             assert(results.sliding(2).forall(l => l.head.lastItemId > l(1).lastItemId))
@@ -130,7 +130,7 @@ class RestPlanSpec extends FeatureSpec with SpecBase with GivenWhenThen {
         }
         scenario("Other user forbidden") {
             val itemGroupC = createItemGroup
-            val newItem = otherClient.Item(item.id, item.userId, item.productId, itemGroupC.id.get, item.created)
+            val newItem = otherClient.Item(item.id, item.userId, item.productId, itemGroupC.id.get, 1.0f, item.created)
             assertForbidden(await(otherClient.storage.saveItem(newItem)))
             assert(0 === itemsOf(itemGroupC).size)
         }
@@ -176,9 +176,9 @@ class RestPlanSpec extends FeatureSpec with SpecBase with GivenWhenThen {
             val products = List(await(client.storage.saveProduct(client.Product(None, "gnufdjskfds", "OrAnge", "nob"))),
                 await(client.storage.saveProduct(client.Product(None, "jklfds", "Rangpur", "nob"))),
                 await(client.storage.saveProduct(client.Product(None, "8493tgtf", "Apple", "nob"))))
-            products.foreach(p => await(client.storage.saveItem(client.Item(None, None, p.id.get, itemGroup.id.get))))
+            products.foreach(p => await(client.storage.saveItem(client.Item(None, None, p.id.get, itemGroup.id.get, 1.0f))))
             val itemGroup2 = await(otherClient.storage.saveItemGroup(otherClient.ItemGroup(None, None, "Cupboard")))
-            await(otherClient.storage.saveItem(otherClient.Item(None, None, products.head.id.get, itemGroup2.id.get)))
+            await(otherClient.storage.saveItem(otherClient.Item(None, None, products.head.id.get, itemGroup2.id.get, 1.0f)))
             val summaries2 = await(client.storage.searchItems("rang"))
             assert(summaries2.seq.size === 2)
             assert(summaries2.seq.forall(_.count == 1))
@@ -192,15 +192,15 @@ class RestPlanSpec extends FeatureSpec with SpecBase with GivenWhenThen {
         lazy val itemGroup = createItemGroup
         scenario("Soul owner changes the product") {
             val myProduct = createProduct()
-            val item = await(client.storage.saveItem(client.Item(None, None, myProduct.id.get, itemGroup.id.get)))
+            val item = await(client.storage.saveItem(client.Item(None, None, myProduct.id.get, itemGroup.id.get, 1.0f)))
             await(client.storage.saveProduct(myProduct.copy(name = "NewName")))
             assert(await(client.storage.findProductByCode(myProduct.code)).map(_.name) === List("NewName"))
         }
         scenario("Multiple owners leads to new product and deletes it if the name changes back") {
             val myProduct = createProduct()
-            val item = await(client.storage.saveItem(client.Item(None, None, myProduct.id.get, itemGroup.id.get)))
+            val item = await(client.storage.saveItem(client.Item(None, None, myProduct.id.get, itemGroup.id.get, 1.0f)))
             val otherUserItemGroup = await(otherClient.storage.saveItemGroup(otherClient.ItemGroup(None, None, "Yeah")))
-            val otherUserItem = await(otherClient.storage.saveItem(otherClient.Item(None, None, myProduct.id.get, otherUserItemGroup.id.get)))
+            val otherUserItem = await(otherClient.storage.saveItem(otherClient.Item(None, None, myProduct.id.get, otherUserItemGroup.id.get, 1.0f)))
 
             await(client.storage.saveProduct(myProduct.copy(name = "NewName")))
 
@@ -226,7 +226,7 @@ class RestPlanSpec extends FeatureSpec with SpecBase with GivenWhenThen {
             val itemGroup = createItemGroup
             val otherItemGroup = createItemGroup
             for (product <- Seq(product, otherProduct); itemGroup <- Seq(itemGroup, otherItemGroup)) {
-                await(client.storage.saveItem(client.Item(None, None, product.id.get, itemGroup.id.get)))
+                await(client.storage.saveItem(client.Item(None, None, product.id.get, itemGroup.id.get, 1.0f)))
             }
             (product, itemGroup)
         }

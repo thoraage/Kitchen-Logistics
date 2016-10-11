@@ -65,4 +65,6 @@
     <string name="itemMovedToItemGroup">One item {0} moved to item group {1}</string>
 
     <string name="searchTitle">Search</string>
+    <string name="fullItem">Full</string>
+    <string name="emptyItem">Empty</string>
 </resources>

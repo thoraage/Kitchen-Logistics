@@ -104,7 +104,11 @@ trait DatabaseModule extends DatabaseProfileModule {
 
         def itemGroupId = column[Int]("item_group_id")
 
+        def amount = column[Float]("amount")
+
         def created = column[Date]("created")
+
+        def updated = column[Date]("updated")
 
         def user = foreignKey("item_user_fk", userId, TableQuery[Users])(_.id)
 
@@ -112,7 +116,7 @@ trait DatabaseModule extends DatabaseProfileModule {
 
         def itemGroup = foreignKey("item_item_group_fk", itemGroupId, TableQuery[ItemGroups])(_.id)
 
-        def * = (id.?, userId.?, productId, itemGroupId, created) <>(Item.tupled, Item.unapply)
+        def * = (id.?, userId.?, productId, itemGroupId, amount, created, updated) <>(Item.tupled, Item.unapply)
 
         def all = database withSession { implicit session: Session =>
             TableQuery[Items].list

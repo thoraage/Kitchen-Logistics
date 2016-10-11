@@ -25,7 +25,7 @@ class MainActivity extends GuiContext {
             override def storageConfiguration = new StorageConfiguration {
                 override lazy val hostAddress =
 //                    "https://kitlog.herokuapp.com"
-                    "http://192.168.0.101:8080"
+                    "http://192.168.0.102:8080"
                 override lazy val authenticator = new Authenticator {
                     override def headers(wwwAuthenticate: Option[String]) = authentication.headers(wwwAuthenticate)
                 }
