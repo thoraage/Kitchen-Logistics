@@ -7,7 +7,7 @@ import android.content.DialogInterface
 import android.support.v7.widget.{LinearLayoutManager, RecyclerView}
 import android.util.Log
 import android.view._
-import android.widget.PopupMenu
+import android.widget.{PopupMenu, SeekBar}
 import android.widget.PopupMenu.OnMenuItemClickListener
 import no.simplicityworks.kitchenlogistics.TypedResource._
 import org.scaloid.common._
@@ -68,7 +68,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
                 stableValues.selectedItemGroup match {
                     case Some(ItemGroup(Some(itemGroupId), _, _, _)) =>
                         saveItem(product, itemGroupId)
-                        WidgetHelpers.toast(R.string.itemNewCreated)
+                        notifyUpdated(R.string.itemNewCreated)
                     case _ =>
                         selectItemGroupExplicitly(R.string.selectItemGroupCancelled, itemGroup => {
                             itemGroup.id.foreach(saveItem(product, _))
@@ -92,7 +92,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
                                         storage.saveProduct(Product(None, code, name.trim, Locale.getDefault.getISO3Language, new Date)) onComplete {
                                             case Success(product) =>
                                                 createItem(product)
-                                                WidgetHelpers.toast(R.string.productNewCreated)
+                                                notifyUpdated(R.string.productNewCreated)
                                             case Failure(t) =>
                                                 handleFailure(t)
                                         }
@@ -134,7 +134,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
                     storage.saveItemGroup(ItemGroup(None, None, name, new Date)) onComplete {
                         case Success(itemGroup) =>
                             drawerMenu.populateDrawerMenu(Some(itemGroup))
-                            WidgetHelpers.toast(R.string.createdItemGroup)
+                            notifyUpdated(R.string.createdItemGroup)
                         case Failure(t) =>
                             handleFailure(t)
                     }
@@ -152,7 +152,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
                         storage.saveItemGroup(itemGroup.copy(name = name)) onComplete {
                             case Success(_) =>
                                 drawerMenu.populateDrawerMenu(Some(itemGroup))
-                                WidgetHelpers.toast(R.string.renamedItemGroup)
+                                notifyUpdated(R.string.renamedItemGroup)
                             case Failure(t) =>
                                 handleFailure(t)
                         }
@@ -167,7 +167,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
                     storage.removeItemGroup(itemGroupId) onComplete {
                         case Success(_) =>
                             drawerMenu.populateDrawerMenu(None)
-                            WidgetHelpers.toast(R.string.removedItemGroup)
+                            notifyUpdated(R.string.removedItemGroup)
                         case Failure(e) =>
                             handleFailure(e)
                     }
@@ -185,7 +185,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
 
         override def handleFailure(throwable: Throwable) {
             Log.e(getClass.getSimpleName, "GUI error", throwable)
-            WidgetHelpers.toast(R.string.errorIntro + throwable.getMessage)
+            notifyUpdated(R.string.errorIntro + throwable.getMessage)
         }
 
         trait ViewTypeHandler {
@@ -228,7 +228,9 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
                         val scannedItem = inflater.inflate(R.layout.item_list_item_selected_scan, itemScanList, false)
                         scannedItem.findView(TR.time).setText(time.toHumanReadableDate(item.created))
                         scannedItem.findView(TR.updatedTime).setText(time.toHumanReadableDate(item.updated))
-                        scannedItem.findView(TR.amountBar).setProgress((item.amount * 1000).toInt)
+                        val amountBar = scannedItem.findView(TR.amountBar)
+                        amountBar.setProgress((item.amount * 1000f).toInt)
+                        amountBar.onProgressChanged((_: SeekBar, amount: Int, _: Boolean) => changeAmount(item, amount.toFloat / 1000f))
                         itemScanList.addView(scannedItem)
                     })
                 }
@@ -283,6 +285,13 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
             }
         }
 
+        def changeAmount(item: Item, amount: Float) {
+            storage.saveItem(item.copy(amount = amount)) onComplete {
+                case Success(_) => notifyUpdated(R.string.changedItemAmount)
+                case Failure(f) => handleFailure(f)
+            }
+        }
+
         def popupItemMenu(vh: ItemViewHolder, itemSummary: ItemSummary): Boolean = {
             val popup = new PopupMenu(guiContext, vh.view)
             val inflater = popup.getMenuInflater
@@ -301,7 +310,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
                                 storage.getItem(itemSummary.lastItemId).map(_.copy(itemGroupId = itemGroup.id.get)).flatMap(storage.saveItem) onComplete {
                                     case Success(_) =>
                                         reloadItemList()
-                                        WidgetHelpers.toast(new MessageFormat(R.string.itemMovedToItemGroup.r2String).format(Array(itemSummary.product.name, itemGroup.name)))
+                                        notifyUpdated(new MessageFormat(R.string.itemMovedToItemGroup.r2String).format(Array(itemSummary.product.name, itemGroup.name)))
                                     case Failure(f) => handleFailure(f)
                                 }
                             })
@@ -321,7 +330,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
                 } else {
                     storage.saveProduct(product.copy(name = name)) onComplete {
                         case Success(items) =>
-                            WidgetHelpers.toast(R.string.itemProductRenamed.r2String)
+                            notifyUpdated(R.string.itemProductRenamed)
                             reloadItemList()
                         case Failure(e) => handleFailure(e)
                     }
@@ -333,7 +342,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
             storage.removeItem(itemId) onComplete {
                 case Success(_) =>
                     reloadItemList()
-                    WidgetHelpers.toast(R.string.removedItem)
+                    notifyUpdated(R.string.removedItem)
                 case Failure(f) => handleFailure(f)
             }
         }
@@ -348,7 +357,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
             storage.getItemGroups.map(_.toArray) onComplete {
                 case Success(itemGroups) =>
                     val builder = new AlertDialogBuilder(R.string.selectItemGroupTitle, null).negativeButton(R.string.inputDialogCancel, (dialog, _) => {
-                        WidgetHelpers.toast(cancelMessageId)
+                        notifyUpdated(cancelMessageId)
                         dialog.cancel()
                     })
                     builder.setItems(itemGroups.map(_.name.asInstanceOf[CharSequence]), new DialogInterface.OnClickListener {
@@ -371,6 +380,8 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
                 }
             })
         }
+
+        def notifyUpdated(message: CharSequence) = WidgetHelpers.toast(message)
 
      }
 

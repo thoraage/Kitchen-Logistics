@@ -3,6 +3,7 @@ package no.simplicityworks.kitchenlogistics
 import java.util.Date
 
 import org.scalatest._
+import org.scalatest.Matchers._
 
 import scala.util.Random
 
@@ -119,16 +120,23 @@ class RestPlanSpec extends FeatureSpec with SpecBase with GivenWhenThen {
     feature("Item update") {
         lazy val itemGroupA = createItemGroup
         lazy val itemGroupB = createItemGroup
-        lazy val item = createItem(itemGroupA)
-        scenario("Ok") {
-            item
+        scenario("Ok item group change") {
+            val item = createItem(itemGroupA)
             assert(1 === itemsOf(itemGroupA).size)
             assert(0 === itemsOf(itemGroupB).size)
             await(client.storage.saveItem(item.copy(itemGroupId = itemGroupB.id.get)))
             assert(0 === itemsOf(itemGroupA).size)
             assert(1 === itemsOf(itemGroupB).size)
         }
+        scenario("Ok amount change") {
+            val item = createItem(itemGroupA)
+            assert(item.amount === (1.0f +- 0.1f))
+            await(client.storage.saveItem(item.copy(amount = 0.5f)))
+            val changedItem = await(client.storage.getItem(item.id.get))
+            assert(changedItem.amount === (0.5f +- 0.1f))
+        }
         scenario("Other user forbidden") {
+            val item = createItem(itemGroupA)
             val itemGroupC = createItemGroup
             val newItem = otherClient.Item(item.id, item.userId, item.productId, itemGroupC.id.get, 1.0f, item.created)
             assertForbidden(await(otherClient.storage.saveItem(newItem)))
