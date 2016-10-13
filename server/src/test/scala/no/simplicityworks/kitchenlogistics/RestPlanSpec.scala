@@ -134,6 +134,7 @@ class RestPlanSpec extends FeatureSpec with SpecBase with GivenWhenThen {
             await(client.storage.saveItem(item.copy(amount = 0.5f)))
             val changedItem = await(client.storage.getItem(item.id.get))
             assert(changedItem.amount === (0.5f +- 0.1f))
+            assert(changedItem.updated !== item.updated)
         }
         scenario("Other user forbidden") {
             val item = createItem(itemGroupA)
