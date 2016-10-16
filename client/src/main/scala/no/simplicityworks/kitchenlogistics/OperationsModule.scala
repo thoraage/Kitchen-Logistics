@@ -1,14 +1,13 @@
 package no.simplicityworks.kitchenlogistics
 
 import java.text.MessageFormat
-import java.util.{Date, Locale}
+import java.util.Date
 
 import android.content.DialogInterface
 import android.support.v7.widget.{LinearLayoutManager, RecyclerView}
-import android.util.Log
 import android.view._
-import android.widget.{PopupMenu, SeekBar}
 import android.widget.PopupMenu.OnMenuItemClickListener
+import android.widget.{PopupMenu, SeekBar}
 import no.simplicityworks.kitchenlogistics.TypedResource._
 import org.scaloid.common._
 
@@ -34,14 +33,13 @@ trait OperationsModule extends StorageModule {
 
         def searchItems()
 
-        def handleFailure(throwable: Throwable)
-
         def changeItemSummaries(title: String, items: List[ItemSummary])
     }
 
 }
 
-trait OperationsImplModule extends OperationsModule with ScannerModule with GuiContextModule with DialogsModule with StableValuesModule with DrawerMenuModule with TimeModule {
+trait OperationsImplModule extends OperationsModule with ScannerModule with GuiContextModule with DialogsModule
+    with StableValuesModule with DrawerMenuModule with TimeModule with ItemOperationsModule with GeneralOperationsModule {
 
     override lazy val operations: OperationsImpl = new OperationsImpl
 
@@ -57,53 +55,16 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
         }
 
         override def scanNewItem() {
-            def saveItem(product: Product, itemGroupId: Int) {
-                storage.saveItem(Item(None, None, product.id.get, itemGroupId, 1.0f)) onComplete {
-                    case Success(_) =>
-                        guiContext.runOnUiThread(reloadItemList())
-                    case Failure(t) => handleFailure(t)
-                }
-            }
-            def createItem(product: Product) {
-                stableValues.selectedItemGroup match {
-                    case Some(ItemGroup(Some(itemGroupId), _, _, _)) =>
-                        saveItem(product, itemGroupId)
-                        notifyUpdated(R.string.itemNewCreated)
-                    case _ =>
-                        selectItemGroupExplicitly(R.string.selectItemGroupCancelled, itemGroup => {
-                            itemGroup.id.foreach(saveItem(product, _))
-                            drawerMenu.changeItemGroup(itemGroup)
-                        })
-                }
-            }
             scanner.startScanner().onComplete {
                 case Success(Some(code)) =>
                     storage.findProductByCode(code) onComplete {
                         // TODO case many =>
-                        case Success(product #:: _) =>
-                            createItem(product)
-                        case Success(Stream.Empty) =>
-                            runOnUiThread {
-                                val title = new MessageFormat(R.string.productNameTitle.r2String).format(Array(code))
-                                dialogs.withField(title, "", (name, feedback) => {
-                                    if (name.trim.length == 0) {
-                                        feedback(R.string.fieldRequired.r2String)
-                                    } else {
-                                        storage.saveProduct(Product(None, code, name.trim, Locale.getDefault.getISO3Language, new Date)) onComplete {
-                                            case Success(product) =>
-                                                createItem(product)
-                                                notifyUpdated(R.string.productNewCreated)
-                                            case Failure(t) =>
-                                                handleFailure(t)
-                                        }
-                                    }
-                                })
-                            }
-                        case Failure(t) => handleFailure(t)
+                        case Success(product #:: _) => itemOperations.createItem(product)
+                        case Success(Stream.Empty) => itemOperations.createNewProductItem(code)
+                        case Failure(t) => generalOperations.handleFailure(t)
                     }
                 case Success(None) =>
-                case Failure(e) =>
-                    handleFailure(e)
+                case Failure(e) => generalOperations.handleFailure(e)
             }
         }
 
@@ -116,13 +77,12 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
                         case Success(item :: Nil) =>
                             removeItem(item.lastItemId)
                         case Success(items) =>
-                            handleFailure(new NotImplementedError(""))
+                            generalOperations.handleFailure(new NotImplementedError(""))
                         case Failure(t) =>
-                            handleFailure(t)
+                            generalOperations.handleFailure(t)
                     }
                 case Success(None) =>
-                case Failure(e) =>
-                    handleFailure(e)
+                case Failure(e) => generalOperations.handleFailure(e)
             }
         }
 
@@ -134,9 +94,9 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
                     storage.saveItemGroup(ItemGroup(None, None, name, new Date)) onComplete {
                         case Success(itemGroup) =>
                             drawerMenu.populateDrawerMenu(Some(itemGroup))
-                            notifyUpdated(R.string.createdItemGroup)
+                            generalOperations.notifyUpdated(R.string.createdItemGroup)
                         case Failure(t) =>
-                            handleFailure(t)
+                            generalOperations.handleFailure(t)
                     }
                 }
             })
@@ -152,9 +112,9 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
                         storage.saveItemGroup(itemGroup.copy(name = name)) onComplete {
                             case Success(_) =>
                                 drawerMenu.populateDrawerMenu(Some(itemGroup))
-                                notifyUpdated(R.string.renamedItemGroup)
+                                generalOperations.notifyUpdated(R.string.renamedItemGroup)
                             case Failure(t) =>
-                                handleFailure(t)
+                                generalOperations.handleFailure(t)
                         }
                     }
                 }
@@ -167,9 +127,9 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
                     storage.removeItemGroup(itemGroupId) onComplete {
                         case Success(_) =>
                             drawerMenu.populateDrawerMenu(None)
-                            notifyUpdated(R.string.removedItemGroup)
+                            generalOperations.notifyUpdated(R.string.removedItemGroup)
                         case Failure(e) =>
-                            handleFailure(e)
+                            generalOperations.handleFailure(e)
                     }
                 }
             })
@@ -181,11 +141,6 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
                 ItemAdapter.notifyDataSetChanged()
                 guiContext.setTitle(title)
             }
-        }
-
-        override def handleFailure(throwable: Throwable) {
-            Log.e(getClass.getSimpleName, "GUI error", throwable)
-            notifyUpdated(R.string.errorIntro + throwable.getMessage)
         }
 
         trait ViewTypeHandler {
@@ -241,7 +196,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
             var selectedVerbose = false
             var selectedItems: Option[(Int, Seq[Item])] = None
 
-            reloadItemList()
+            drawerMenu.reloadItemAndItemGroupList()
 
             override def getItemCount: Int = itemSummaries.size
 
@@ -266,7 +221,7 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
                                 selectedItems = Some((idx, items))
                                 notifyItemChanged(idx)
                                 ItemAdapter.notifyDataSetChanged()
-                            case Failure(e) => handleFailure(e)
+                            case Failure(e) => generalOperations.handleFailure(e)
                         }
                     }
                 }
@@ -287,8 +242,8 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
 
         def changeAmount(item: Item, amount: Float) {
             storage.saveItem(item.copy(amount = amount)) onComplete {
-                case Success(_) => notifyUpdated(R.string.changedItemAmount)
-                case Failure(f) => handleFailure(f)
+                case Success(_) => generalOperations.notifyUpdated(R.string.changedItemAmount)
+                case Failure(f) => generalOperations.handleFailure(f)
             }
         }
 
@@ -306,12 +261,12 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
                             removeItem(itemSummary.lastItemId)
                             true
                         case R.id.item_popup_move =>
-                            selectItemGroupExplicitly(R.string.itemMoveCancelled, { itemGroup =>
+                            drawerMenu.selectItemGroupExplicitly(R.string.itemMoveCancelled, { itemGroup =>
                                 storage.getItem(itemSummary.lastItemId).map(_.copy(itemGroupId = itemGroup.id.get)).flatMap(storage.saveItem) onComplete {
                                     case Success(_) =>
-                                        reloadItemList()
-                                        notifyUpdated(new MessageFormat(R.string.itemMovedToItemGroup.r2String).format(Array(itemSummary.product.name, itemGroup.name)))
-                                    case Failure(f) => handleFailure(f)
+                                        drawerMenu.reloadItemAndItemGroupList()
+                                        generalOperations.notifyUpdated(new MessageFormat(R.string.itemMovedToItemGroup.r2String).format(Array(itemSummary.product.name, itemGroup.name)))
+                                    case Failure(f) => generalOperations.handleFailure(f)
                                 }
                             })
                             true
@@ -330,9 +285,9 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
                 } else {
                     storage.saveProduct(product.copy(name = name)) onComplete {
                         case Success(items) =>
-                            notifyUpdated(R.string.itemProductRenamed)
-                            reloadItemList()
-                        case Failure(e) => handleFailure(e)
+                            generalOperations.notifyUpdated(R.string.itemProductRenamed)
+                            drawerMenu.reloadItemAndItemGroupList()
+                        case Failure(e) => generalOperations.handleFailure(e)
                     }
                 }
             })
@@ -341,34 +296,13 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
         def removeItem(itemId: Int): Unit = {
             storage.removeItem(itemId) onComplete {
                 case Success(_) =>
-                    reloadItemList()
-                    notifyUpdated(R.string.removedItem)
-                case Failure(f) => handleFailure(f)
+                    drawerMenu.reloadItemAndItemGroupList()
+                    generalOperations.notifyUpdated(R.string.removedItem)
+                case Failure(f) => generalOperations.handleFailure(f)
             }
         }
 
         class ItemViewHolder(var view: View, val viewGroup: ViewGroup, val viewTypeHandler: ViewTypeHandler) extends RecyclerView.ViewHolder(view)
-
-        def reloadItemList() {
-            drawerMenu.reloadItemGroupList()
-        }
-
-        def selectItemGroupExplicitly(cancelMessageId: CharSequence, doWithItemGroup: (ItemGroup) => Unit) {
-            storage.getItemGroups.map(_.toArray) onComplete {
-                case Success(itemGroups) =>
-                    val builder = new AlertDialogBuilder(R.string.selectItemGroupTitle, null).negativeButton(R.string.inputDialogCancel, (dialog, _) => {
-                        notifyUpdated(cancelMessageId)
-                        dialog.cancel()
-                    })
-                    builder.setItems(itemGroups.map(_.name.asInstanceOf[CharSequence]), new DialogInterface.OnClickListener {
-                        override def onClick(dialog: DialogInterface, which: Int) {
-                            doWithItemGroup(itemGroups(which))
-                        }
-                    })
-                    builder.show()
-                case Failure(t) => handleFailure(t)
-            }
-        }
 
         override def searchItems() {
             dialogs.withField(R.string.searchTitle.r2String, "", (search, _) => {
@@ -376,12 +310,10 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
                     case Success(items) =>
                         stableValues.selectedItemGroup = None
                         changeItemSummaries(R.string.searchTitle.r2String, items)
-                    case Failure(e) => handleFailure(e)
+                    case Failure(e) => generalOperations.handleFailure(e)
                 }
             })
         }
-
-        def notifyUpdated(message: CharSequence) = WidgetHelpers.toast(message)
 
      }
 

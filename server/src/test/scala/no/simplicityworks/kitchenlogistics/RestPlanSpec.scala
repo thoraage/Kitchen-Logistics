@@ -110,7 +110,6 @@ class RestPlanSpec extends FeatureSpec with SpecBase with GivenWhenThen {
             val product2 = await(client.storage.saveProduct(new client.Product(None, "something", "A thing", "nob")))
             val item2 = await(client.storage.saveItem(new client.Item(None, None, product2.id.get, itemGroupB.id.get, 1.0f)))
             val item3 = await(client.storage.saveItem(new client.Item(None, None, product.id.get, itemGroupB.id.get, 1.0f)))
-            println(await(client.storage.findItemsByGroup(None)))
             val results = await(client.storage.getRecentItems(3)).toList
             assert(results.sliding(2).forall(l => l.head.lastItemId > l(1).lastItemId))
             assert(results.size === 3)

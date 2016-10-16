@@ -1,5 +1,6 @@
 package no.simplicityworks.kitchenlogistics
 
+import android.content.DialogInterface
 import android.view.{Menu, View}
 import android.widget.{AdapterView, ArrayAdapter}
 import org.scaloid.common._
@@ -17,13 +18,15 @@ trait DrawerMenuModule extends StorageModule {
         def populateDrawerMenu(itemGroup: Option[ItemGroup])
         def changeItemGroup(itemGroup: ItemGroup)
         def setMenu(menu: Menu)
-        def reloadItemGroupList()
+        def reloadItemAndItemGroupList()
+        def selectItemGroupExplicitly(cancelMessageId: CharSequence, doWithItemGroup: (ItemGroup) => Unit)
     }
 
 }
 
 
-trait DrawerMenuImplModule extends DrawerMenuModule with DialogsModule with OperationsModule with StableValuesModule {
+trait DrawerMenuImplModule extends DrawerMenuModule with DialogsModule with OperationsModule with StableValuesModule
+    with GeneralOperationsModule {
 
     override lazy val drawerMenu = new DrawerMenu {
 
@@ -59,7 +62,7 @@ trait DrawerMenuImplModule extends DrawerMenuModule with DialogsModule with Oper
                     itemGroup.foreach(changeItemGroup)
                     if (itemGroup.isEmpty) recentItems.onSelect()
                 case Failure(t) =>
-                    operations.handleFailure(t)
+                    generalOperations.handleFailure(t)
             }
         }
 
@@ -80,7 +83,7 @@ trait DrawerMenuImplModule extends DrawerMenuModule with DialogsModule with Oper
                 updateMenu()
                 stableValues.selectedItemGroup.map(ig => storage.findItemsByGroup(Some(ig))).getOrElse(storage.getRecentItems(10)).map(_.toList) onComplete {
                     case Success(items) => operations.changeItemSummaries(toString, items)
-                    case Failure(e) => operations.handleFailure(e)
+                    case Failure(e) => generalOperations.handleFailure(e)
                 }
             }
         }
@@ -97,8 +100,25 @@ trait DrawerMenuImplModule extends DrawerMenuModule with DialogsModule with Oper
             } menu.findItem(item).setVisible(stableValues.selectedItemGroup.nonEmpty)
         }
 
-        override def reloadItemGroupList() {
+        override def reloadItemAndItemGroupList() {
             new ItemGroupDrawerMenuChoice(stableValues.selectedItemGroup).onSelect()
+        }
+
+        override def selectItemGroupExplicitly(cancelMessageId: CharSequence, doWithItemGroup: (ItemGroup) => Unit) {
+            storage.getItemGroups.map(_.toArray) onComplete {
+                case Success(itemGroups) =>
+                    val builder = new AlertDialogBuilder(R.string.selectItemGroupTitle, null).negativeButton(R.string.inputDialogCancel, (dialog, _) => {
+                        generalOperations.notifyUpdated(cancelMessageId)
+                        dialog.cancel()
+                    })
+                    builder.setItems(itemGroups.map(_.name.asInstanceOf[CharSequence]), new DialogInterface.OnClickListener {
+                        override def onClick(dialog: DialogInterface, which: Int) {
+                            doWithItemGroup(itemGroups(which))
+                        }
+                    })
+                    builder.show()
+                case Failure(t) => generalOperations.handleFailure(t)
+            }
         }
 
     }
