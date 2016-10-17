@@ -136,6 +136,8 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
 
         override def changeItemSummaries(title: String, items: List[ItemSummary]) {
             ItemAdapter.itemSummaries = items
+            ItemAdapter.selected = None
+            ItemAdapter.selectedItems = None
             guiContext.futureOnUiThread {
                 ItemAdapter.notifyDataSetChanged()
                 guiContext.setTitle(title)
@@ -192,7 +194,6 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
             val viewTypeMap = Seq(ShortViewTypeHandler, LongViewTypeHandler).map(h => (h.viewType, h)).toMap
             var itemSummaries: List[ItemSummary] = Nil
             var selected: Option[Int] = None
-            var selectedVerbose = false
             var selectedItems: Option[(Int, Seq[Item])] = None
 
             drawerMenu.reloadItemAndItemGroupList()
