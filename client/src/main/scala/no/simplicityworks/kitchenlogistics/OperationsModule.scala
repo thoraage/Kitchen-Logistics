@@ -3,7 +3,6 @@ package no.simplicityworks.kitchenlogistics
 import java.text.MessageFormat
 import java.util.Date
 
-import android.content.DialogInterface
 import android.support.v7.widget.{LinearLayoutManager, RecyclerView}
 import android.view._
 import android.widget.PopupMenu.OnMenuItemClickListener
@@ -216,7 +215,12 @@ trait OperationsImplModule extends OperationsModule with ScannerModule with GuiC
                 vh.view onClick { _: View =>
                     selectIdx()
                     for (productId <- itemSummary.product.id) {
-                        storage.getItemsByProductAndGroup(productId, stableValues.selectedItemGroup.flatMap(_.id)).andThen {
+                        stableValues.selectedItemGroup.map { selectedItemGroup =>
+                            storage.getItemsByProductAndGroup(productId, selectedItemGroup.id).map(_.toList)
+                        }.getOrElse {
+                            // If we're showing recent items, then they will not be bundled. Each product is one item
+                            storage.getItem(itemSummary.lastItemId).map(_ :: Nil)
+                        } andThen {
                             case Success(items) =>
                                 selectedItems = Some((idx, items))
                                 notifyItemChanged(idx)
